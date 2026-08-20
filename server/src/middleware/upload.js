@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import sharp from "sharp";
-import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, sanitizeFilename, UPLOADS_DIR } from "../utils/fileUtils.js";
+import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
 
 // Memory storage for Sharp buffer processing
 const memoryStorage = multer.memoryStorage();
@@ -27,7 +27,8 @@ export const uploadMiddleware = multer({
 export async function processAndSaveFile(file, requestedFolder = "general") {
   ensureUploadDirectories();
   const folder = ALLOWED_MODULE_FOLDERS.includes(requestedFolder) ? requestedFolder : "general";
-  const targetDir = path.join(UPLOADS_DIR, folder);
+  const activeUploadsDir = resolveUploadsDirectory();
+  const targetDir = path.join(activeUploadsDir, folder);
 
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });

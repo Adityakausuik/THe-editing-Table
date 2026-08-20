@@ -3,14 +3,24 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Detect if running in Vercel / AWS Lambda serverless environment
+// Comprehensive detection for Vercel and AWS Lambda serverless runtime environments
 export function isServerlessEnvironment() {
+  const currentFilePath = typeof import.meta.url === "string" ? fileURLToPath(import.meta.url) : "";
+  const cwd = process.cwd() || "";
+
   return Boolean(
     process.env.VERCEL === "1" ||
     process.env.VERCEL === "true" ||
     process.env.VERCEL ||
+    process.env.VERCEL_ENV ||
+    process.env.VERCEL_REGION ||
+    process.env.NOW_REGION ||
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.LAMBDA_TASK_ROOT
+    process.env.LAMBDA_TASK_ROOT ||
+    cwd.includes("/var/task") ||
+    cwd.includes("\\var\\task") ||
+    currentFilePath.includes("/var/task") ||
+    currentFilePath.includes("\\var\\task")
   );
 }
 
@@ -22,9 +32,16 @@ export function resolveUploadsDirectory() {
   // Local development / dedicated server / container
   try {
     const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-    return path.join(serverRoot, "uploads");
+    const localDir = path.join(serverRoot, "uploads");
+
+    // Guard: Never return any path inside /var/task
+    if (localDir.includes("/var/task") || localDir.includes("\\var\\task")) {
+      return path.join(os.tmpdir() || "/tmp", "uploads");
+    }
+
+    return localDir;
   } catch {
-    return path.join(process.cwd(), "uploads");
+    return path.join(os.tmpdir() || "/tmp", "uploads");
   }
 }
 
@@ -50,20 +67,27 @@ export const ALLOWED_MODULE_FOLDERS = [
 ];
 
 export function ensureUploadDirectories() {
+  const targetBase = resolveUploadsDirectory();
+
+  // If path is somehow inside /var/task, abort immediately
+  if (targetBase.includes("/var/task") || targetBase.includes("\\var\\task")) {
+    return;
+  }
+
   try {
-    if (!fs.existsSync(BASE_UPLOADS_DIR)) {
-      fs.mkdirSync(BASE_UPLOADS_DIR, { recursive: true });
+    if (!fs.existsSync(targetBase)) {
+      fs.mkdirSync(targetBase, { recursive: true });
     }
 
     ALLOWED_MODULE_FOLDERS.forEach((folder) => {
-      const dir = path.join(BASE_UPLOADS_DIR, folder);
+      const dir = path.join(targetBase, folder);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
     });
   } catch (err) {
-    // Non-fatal warning: never crash serverless boot
-    console.warn(`[Uploads Notice] Could not initialize upload directory ${BASE_UPLOADS_DIR}: ${err.message}`);
+    // Non-fatal warning: never throw or crash on directory initialization
+    console.warn(`[Uploads Notice] Non-fatal directory note for ${targetBase}: ${err.message}`);
   }
 }
 
