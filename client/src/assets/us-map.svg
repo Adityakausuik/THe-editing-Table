@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 70" width="120" height="70">
+  <defs>
+    <clipPath id="us-clip">
+      <path d="M 12 10 Q 30 8 45 12 Q 60 8 80 10 Q 100 12 110 20 Q 112 35 105 50 Q 90 60 75 62 Q 50 65 30 58 Q 15 50 10 35 Z" />
+    </clipPath>
+  </defs>
+  <!-- US Map Outline Container -->
+  <g clip-path="url(#us-clip)">
+    <!-- Blue Canton with Stars -->
+    <rect x="0" y="0" width="55" height="38" fill="#002868" />
+    <!-- White Stars -->
+    <g fill="#FFFFFF">
+      <circle cx="10" cy="10" r="2"/><circle cx="25" cy="10" r="2"/><circle cx="40" cy="10" r="2"/>
+      <circle cx="17" cy="19" r="2"/><circle cx="32" cy="19" r="2"/><circle cx="47" cy="19" r="2"/>
+      <circle cx="10" cy="28" r="2"/><circle cx="25" cy="28" r="2"/><circle cx="40" cy="28" r="2"/>
+    </g>
+    <!-- Red & White Stripes -->
+    <rect x="55" y="0" width="65" height="6" fill="#BF0A30"/>
+    <rect x="55" y="6" width="65" height="6" fill="#FFFFFF"/>
+    <rect x="55" y="12" width="65" height="6" fill="#BF0A30"/>
+    <rect x="55" y="18" width="65" height="6" fill="#FFFFFF"/>
+    <rect x="55" y="24" width="65" height="6" fill="#BF0A30"/>
+    <rect x="55" y="30" width="65" height="6" fill="#FFFFFF"/>
+    <rect x="0" y="36" width="120" height="6" fill="#BF0A30"/>
+    <rect x="0" y="42" width="120" height="6" fill="#FFFFFF"/>
+    <rect x="0" y="48" width="120" height="6" fill="#BF0A30"/>
+    <rect x="0" y="54" width="120" height="6" fill="#FFFFFF"/>
+    <rect x="0" y="60" width="120" height="10" fill="#BF0A30"/>
+  </g>
+  <path d="M 12 10 Q 30 8 45 12 Q 60 8 80 10 Q 100 12 110 20 Q 112 35 105 50 Q 90 60 75 62 Q 50 65 30 58 Q 15 50 10 35 Z" fill="none" stroke="#5C4A3D" stroke-width="2"/>
+</svg>
