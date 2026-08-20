@@ -1,9 +1,34 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-export const UPLOADS_DIR = path.join(serverRoot, "uploads");
+// Detect if running in Vercel / AWS Lambda serverless environment
+export function isServerlessEnvironment() {
+  return Boolean(
+    process.env.VERCEL === "1" ||
+    process.env.VERCEL === "true" ||
+    process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.LAMBDA_TASK_ROOT
+  );
+}
+
+export function resolveUploadsDirectory() {
+  if (isServerlessEnvironment()) {
+    return path.join(os.tmpdir() || "/tmp", "uploads");
+  }
+
+  // Local development / dedicated server / container
+  try {
+    const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+    return path.join(serverRoot, "uploads");
+  } catch {
+    return path.join(process.cwd(), "uploads");
+  }
+}
+
+export const UPLOADS_DIR = resolveUploadsDirectory();
 const BASE_UPLOADS_DIR = UPLOADS_DIR;
 
 export const ALLOWED_MODULE_FOLDERS = [
@@ -25,16 +50,21 @@ export const ALLOWED_MODULE_FOLDERS = [
 ];
 
 export function ensureUploadDirectories() {
-  if (!fs.existsSync(BASE_UPLOADS_DIR)) {
-    fs.mkdirSync(BASE_UPLOADS_DIR, { recursive: true });
-  }
-
-  ALLOWED_MODULE_FOLDERS.forEach((folder) => {
-    const dir = path.join(BASE_UPLOADS_DIR, folder);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(BASE_UPLOADS_DIR)) {
+      fs.mkdirSync(BASE_UPLOADS_DIR, { recursive: true });
     }
-  });
+
+    ALLOWED_MODULE_FOLDERS.forEach((folder) => {
+      const dir = path.join(BASE_UPLOADS_DIR, folder);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
+  } catch (err) {
+    // Non-fatal warning: never crash serverless boot
+    console.warn(`[Uploads Notice] Could not initialize upload directory ${BASE_UPLOADS_DIR}: ${err.message}`);
+  }
 }
 
 export function sanitizeFilename(originalName = "file") {

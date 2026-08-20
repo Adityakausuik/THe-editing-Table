@@ -4,8 +4,6 @@ import multer from "multer";
 import sharp from "sharp";
 import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, sanitizeFilename, UPLOADS_DIR } from "../utils/fileUtils.js";
 
-ensureUploadDirectories();
-
 // Memory storage for Sharp buffer processing
 const memoryStorage = multer.memoryStorage();
 
@@ -27,6 +25,7 @@ export const uploadMiddleware = multer({
 });
 
 export async function processAndSaveFile(file, requestedFolder = "general") {
+  ensureUploadDirectories();
   const folder = ALLOWED_MODULE_FOLDERS.includes(requestedFolder) ? requestedFolder : "general";
   const targetDir = path.join(UPLOADS_DIR, folder);
 
