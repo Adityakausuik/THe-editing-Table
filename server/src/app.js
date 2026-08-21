@@ -4,8 +4,10 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import mongoose from "mongoose";
 import morgan from "morgan";
 import { API_PREFIX } from "../../shared/constants.js";
+import { connectDatabase } from "./config/db.js";
 import { env } from "./config/env.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import { rejectUnsafeInput } from "./middleware/requestSecurity.js";
@@ -21,7 +23,7 @@ import { adminVideoShowcaseRouter, publicVideoShowcaseRouter } from "./routes/vi
 import { adminPhotoShowcaseRouter, publicPhotoShowcaseRouter } from "./routes/photoShowcase.routes.js";
 import { adminContactRouter, publicContactRouter } from "./routes/contact.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
-import { ensureUploadDirectories, UPLOADS_DIR } from "./utils/fileUtils.js";
+import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 
 const allowedOrigins = new Set([
   env.CLIENT_ORIGIN,
@@ -63,6 +65,18 @@ export function createApp() {
   app.use(cookieParser());
   app.use(rejectUnsafeInput);
 
+  // Auto-connect to database in serverless runtime environments
+  app.use(async (req, res, next) => {
+    if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
+      try {
+        await connectDatabase();
+      } catch {
+        // Non-blocking: individual controllers that require DB will handle 503 if DB is down
+      }
+    }
+    next();
+  });
+
   app.use(API_PREFIX, (req, res, next) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -71,12 +85,14 @@ export function createApp() {
   });
 
   // Static uploads directory with caching headers for media assets
+  const staticUploadsDir = resolveUploadsDirectory();
   app.use(
     "/uploads",
-    express.static(UPLOADS_DIR, {
+    express.static(staticUploadsDir, {
       etag: true,
       maxAge: "30d",
       lastModified: true,
+      fallthrough: true,
       setHeaders(res) {
         res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
       }
@@ -122,3 +138,7 @@ export function createApp() {
 
   return app;
 }
+
+const app = createApp();
+
+export default app;
