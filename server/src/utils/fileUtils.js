@@ -59,6 +59,8 @@ export const ALLOWED_MODULE_FOLDERS = [
   "hero",
   "reviews",
   "general",
+  "resumes",
+  "careers",
   "video-showcase",
   "video-showcase/videos",
   "video-showcase/mobile",

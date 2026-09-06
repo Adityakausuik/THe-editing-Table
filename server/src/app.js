@@ -23,6 +23,7 @@ import { adminVideoShowcaseRouter, publicVideoShowcaseRouter } from "./routes/vi
 import { adminPhotoShowcaseRouter, publicPhotoShowcaseRouter } from "./routes/photoShowcase.routes.js";
 import { adminContactRouter, publicContactRouter } from "./routes/contact.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 
 const allowedOrigins = new Set([
@@ -133,6 +134,10 @@ export function createApp() {
   app.use(`${API_PREFIX}/contact`, publicContactRouter);
   app.use(`${API_PREFIX}/v1/admin/contact`, adminContactRouter);
   app.use(`${API_PREFIX}/admin/contact`, adminContactRouter);
+
+  // Careers & Job Applications Routes (Public & Admin)
+  app.use(`${API_PREFIX}/v1/careers`, careersRoutes);
+  app.use(`${API_PREFIX}/careers`, careersRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

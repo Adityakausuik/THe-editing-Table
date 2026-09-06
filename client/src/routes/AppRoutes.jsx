@@ -20,6 +20,7 @@ const BrandCollaborationDetailPage = lazy(() => import("../pages/BrandCollaborat
 const FounderPage = lazy(() => import("../pages/FounderPage.jsx"));
 const TeamPage = lazy(() => import("../pages/TeamPage.jsx"));
 const TeamDetailPage = lazy(() => import("../pages/TeamDetailPage.jsx"));
+const CareersPage = lazy(() => import("../pages/CareersPage.jsx"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage.jsx"));
 
 // Admin CMS Pages (Lazy Loaded)
@@ -36,6 +37,7 @@ const WeddingGalleryCMS = lazy(() => import("../admin/modules/WeddingGalleryCMS.
 const CollaborationsCMS = lazy(() => import("../admin/modules/CollaborationsCMS.jsx"));
 const BlogCMS = lazy(() => import("../admin/modules/BlogCMS.jsx"));
 const TeamCMS = lazy(() => import("../admin/modules/TeamCMS.jsx"));
+const CareersCMS = lazy(() => import("../admin/modules/CareersCMS.jsx"));
 const EnquiriesCMS = lazy(() => import("../admin/modules/EnquiriesCMS.jsx"));
 const ContactSettingsCMS = lazy(() => import("../admin/modules/ContactSettingsCMS.jsx"));
 const ReviewsCMS = lazy(() => import("../admin/modules/ReviewsCMS.jsx"));
@@ -82,6 +84,7 @@ export default function AppRoutes() {
               <Route path="/team" element={<TeamPage />} />
               <Route path="/team/:slug" element={<TeamDetailPage />} />
               <Route path="/founder" element={<FounderPage />} />
+              <Route path="/careers" element={<CareersPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 
@@ -100,6 +103,7 @@ export default function AppRoutes() {
               <Route path="collaborations" element={<CollaborationsCMS />} />
               <Route path="blog" element={<BlogCMS />} />
               <Route path="team" element={<TeamCMS />} />
+              <Route path="careers" element={<CareersCMS />} />
               <Route path="contact-settings" element={<ContactSettingsCMS />} />
               <Route path="enquiries" element={<EnquiriesCMS />} />
               <Route path="reviews" element={<ReviewsCMS />} />

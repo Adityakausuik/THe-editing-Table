@@ -14,6 +14,7 @@ const DEFAULT_NAV_LINKS = [
   { href: "/portfolio", label: "Portfolio" },
   { href: "/wedimages", label: "Weddings" },
   { href: "/team", label: "Team" },
+  { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact" },
 ];
