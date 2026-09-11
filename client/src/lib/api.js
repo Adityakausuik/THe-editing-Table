@@ -24,6 +24,10 @@ function cmsEventKey(rawUrl = "") {
   if (rawUrl.includes("/partners")) return "partners";
   if (rawUrl.includes("/services")) return "services";
   if (rawUrl.includes("/portfolio")) return "portfolio";
+  if (rawUrl.includes("/video-showcase")) return "video-showcase";
+  if (rawUrl.includes("/photo-showcase")) return "photo-showcase";
+  if (rawUrl.includes("/careers")) return "careers";
+  if (rawUrl.includes("/contact")) return "contact";
   if (rawUrl.includes("/wedding-gallery")) return "weddings";
   if (rawUrl.includes("/collaborations")) return "collaborations";
   if (rawUrl.includes("/blog")) return "blogs";
