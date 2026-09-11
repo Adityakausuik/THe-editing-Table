@@ -12,7 +12,6 @@ const DEFAULT_NAV_LINKS = [
   { href: "/founder", label: "Founder & CEO" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
-  { href: "/wedimages", label: "Wedding Gallery" },
   { href: "/team", label: "Our Team" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },

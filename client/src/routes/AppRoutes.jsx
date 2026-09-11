@@ -11,7 +11,6 @@ const AboutPage = lazy(() => import("../pages/AboutPage.jsx"));
 const ServicesPage = lazy(() => import("../pages/ServicesPage.jsx"));
 const ServiceDetailPage = lazy(() => import("../pages/ServiceDetailPage.jsx"));
 const PortfolioPage = lazy(() => import("../pages/PortfolioPage.jsx"));
-const WeddingGalleryPage = lazy(() => import("../pages/WeddingGalleryPage.jsx"));
 const ContactPage = lazy(() => import("../pages/ContactPage.jsx"));
 const BlogListingPage = lazy(() => import("../pages/BlogListingPage.jsx"));
 const BlogDetailPage = lazy(() => import("../pages/BlogDetailPage.jsx"));
@@ -74,8 +73,6 @@ export default function AppRoutes() {
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/servicesdetails/:slug" element={<ServiceDetailPage />} />
               <Route path="/portfolio" element={<PortfolioPage />} />
-              <Route path="/wedimages" element={<WeddingGalleryPage />} />
-              <Route path="/wedding-gallery" element={<WeddingGalleryPage />} />
               <Route path="/contactus" element={<ContactPage />} />
               <Route path="/blog" element={<BlogListingPage />} />
               <Route path="/blog/:slug" element={<BlogDetailPage />} />

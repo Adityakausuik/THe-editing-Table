@@ -21,11 +21,6 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://theeditingtable.com/wedding-gallery</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://theeditingtable.com/brand-collaborations</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -44,11 +39,6 @@
     <loc>https://theeditingtable.com/founder</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://theeditingtable.com/wedimages</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://theeditingtable.com/contactus</loc>
