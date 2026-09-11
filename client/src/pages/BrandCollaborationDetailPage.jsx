@@ -63,7 +63,7 @@ export default function BrandCollaborationDetailPage() {
             {project.category} • {project.brandName}
           </span>
 
-          <h1 className="font-serif text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
+          <h1 className="font-heading text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
             {project.title}
           </h1>
 

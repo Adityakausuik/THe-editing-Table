@@ -455,7 +455,7 @@ export default function ContactSettingsCMS() {
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
             Studio Contact Management
           </span>
-          <h1 className="font-serif text-3xl text-forest">Contact Settings</h1>
+          <h1 className="font-heading text-3xl text-forest">Contact Settings</h1>
         </div>
 
         <button

@@ -89,7 +89,7 @@ export default function AboutPage() {
             <Sparkles className="h-4 w-4 text-site" />
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-site">{about.heroLabel}</span>
           </div>
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
+          <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
             {about.heroTitle}
           </h1>
           <p className="text-lg sm:text-xl text-sage-muted max-w-2xl mx-auto leading-relaxed">{about.heroDescription}</p>

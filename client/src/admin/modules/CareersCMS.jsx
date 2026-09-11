@@ -461,7 +461,7 @@ export default function CareersCMS() {
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
             STUDIO RECRUITMENT
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-forest mt-1">Careers Management</h1>
+          <h1 className="font-heading text-3xl sm:text-4xl text-forest mt-1">Careers Management</h1>
           <p className="text-xs sm:text-sm text-sage-muted mt-1">
             Manage public job vacancies, review incoming candidate portfolios and resumes, and configure page content.
           </p>

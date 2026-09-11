@@ -42,7 +42,7 @@ export default function TeamPage() {
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-site shadow-soft">
             <Users className="h-4 w-4" /> Senior Post-Production Artists
           </div>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal text-forest">
+          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal text-forest">
             The Creative Minds Behind The Craft
           </h1>
           <p className="text-sm sm:text-base text-sage-muted leading-relaxed">

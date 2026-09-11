@@ -215,7 +215,7 @@ export default function HeroCMS() {
               <LayoutPanelTop className="h-4 w-4" aria-hidden="true" />
               Hero &amp; Home CMS
             </span>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-forest sm:text-3xl">
+            <h1 className="mt-2 font-heading text-2xl font-semibold tracking-tight text-forest sm:text-3xl">
               Homepage hero slides
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-sage-muted">

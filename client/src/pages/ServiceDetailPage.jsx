@@ -67,7 +67,7 @@ export default function ServiceDetailPage() {
             </span>
           </div>
 
-          <h1 className="font-serif text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
+          <h1 className="font-heading text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
             {service.title}
           </h1>
 

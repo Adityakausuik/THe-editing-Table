@@ -1,6 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   GLOBAL H1 TYPOGRAPHY - BONA NOVA
+   Applies Bona Nova strictly and universally to all H1 headings across every
+   page, section, and module, preserving weights, sizes, letter spacing, and line heights.
+   ========================================================================== */
+@layer base {
+  h1,
+  .h1,
+  [role="heading"][aria-level="1"] {
+    font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
+  }
+}
+
+h1,
+.h1,
+[role="heading"][aria-level="1"] {
+  font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
+}
 
 :root {
   --site-text-color: rgb(72,125,72);

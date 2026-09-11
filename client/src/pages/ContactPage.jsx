@@ -156,7 +156,7 @@ export default function ContactPage() {
             </span>
           </div>
 
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
+          <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
             {contact.heroTitle}
           </h1>
 

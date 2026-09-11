@@ -249,7 +249,7 @@ export default function HeroSection() {
                   currentSlide.headingLines.map((line, idx) => (
                     <h1
                       key={idx}
-                      className={`font-serif text-3xl sm:text-5xl lg:text-6xl ${
+                      className={`font-heading text-3xl sm:text-5xl lg:text-6xl ${
                         idx >= 2 ? "xl:text-7xl font-normal text-site" : "font-normal text-site"
                       } leading-[1.1] tracking-tight`}
                     >
@@ -257,7 +257,7 @@ export default function HeroSection() {
                     </h1>
                   ))
                 ) : (
-                  <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal text-site leading-[1.1] tracking-tight">
+                  <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-normal text-site leading-[1.1] tracking-tight">
                     {currentSlide.title}
                   </h1>
                 )}

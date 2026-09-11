@@ -79,7 +79,7 @@ export default function SettingsCMS() {
       <div className="flex items-center justify-between border-b border-sage-border pb-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-widest text-site">System Settings</span>
-          <h1 className="font-serif text-3xl text-forest">Website Settings & SEO</h1>
+          <h1 className="font-heading text-3xl text-forest">Website Settings & SEO</h1>
         </div>
 
         <button

@@ -13,7 +13,7 @@ export default function FounderPage() {
             <Sparkles className="h-4 w-4 text-site" />
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">FOUNDER &amp; CEO SPOTLIGHT</span>
           </div>
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
+          <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
             Akshay Chhabra
           </h1>
           <p className="text-lg sm:text-xl text-sage-muted max-w-2xl mx-auto leading-relaxed">

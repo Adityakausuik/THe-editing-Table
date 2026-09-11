@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component {
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
               Application Notice
             </span>
-            <h1 className="font-serif text-4xl sm:text-5xl font-normal">
+            <h1 className="font-heading text-4xl sm:text-5xl font-normal">
               Something Went Unexpectedly Wrong
             </h1>
             <p className="text-sage-muted">

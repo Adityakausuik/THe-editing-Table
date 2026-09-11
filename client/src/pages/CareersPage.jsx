@@ -217,7 +217,7 @@ export default function CareersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-forest leading-[1.08]"
+            className="font-heading text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-forest leading-[1.08]"
           >
             {heroHeading}
           </m.h1>
