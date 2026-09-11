@@ -11,7 +11,6 @@ import ServicesSection from "../components/landing/ServicesSection.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import TrustStrip from "../components/landing/TrustStrip.jsx";
-import WeddingGallerySection from "../components/landing/WeddingGallerySection.jsx";
 import WorkingPartnersSection from "../components/landing/WorkingPartnersSection.jsx";
 import WhyChooseUsSection from "../components/landing/WhyChooseUsSection.jsx";
 
@@ -35,7 +34,6 @@ export default function LandingPage() {
           <ProcessSection />
           <StatsSection />
           <WhyChooseUsSection />
-          <WeddingGallerySection />
           <TestimonialsSection />
           <CTASection />
           <ContactSection />
