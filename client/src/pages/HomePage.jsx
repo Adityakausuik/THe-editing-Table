@@ -18,12 +18,12 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <PhotoShowcaseSection />
+      <VideoShowcaseSection />
       <WorkingPartnersSection />
       <TrustStrip />
       <ServicesSection />
       <PortfolioSection />
-      <VideoShowcaseSection />
+      <PhotoShowcaseSection />
       <BeforeAfterSection />
       <ProcessSection />
       <StatsSection />
