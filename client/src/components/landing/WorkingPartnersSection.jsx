@@ -52,7 +52,7 @@ export default function WorkingPartnersSection() {
               <Building2 className="h-3.5 w-3.5" /> Collaborative Network
             </div>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
               Trusted by Premier Production Houses & Creative Agencies
             </h2>
           </div>
@@ -119,7 +119,7 @@ export default function WorkingPartnersSection() {
                   </div>
 
                   {/* Brand Name */}
-                  <h3 className="font-serif text-2xl font-semibold text-forest group-hover:text-site transition-colors duration-300">
+                  <h3 className="font-heading text-2xl font-semibold text-forest group-hover:text-site transition-colors duration-300">
                     {partnerName}
                   </h3>
                 </div>

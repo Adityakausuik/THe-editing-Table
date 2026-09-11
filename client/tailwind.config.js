@@ -6,7 +6,7 @@ export default {
       fontFamily: {
         heading: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
         bona: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
-        serif: ["Manrope", '"Avenir Next"', '"Segoe UI Variable"', "Inter", "system-ui", "sans-serif"],
+        serif: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
         sans: ["Manrope", '"Avenir Next"', '"Segoe UI Variable"', "Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"]
       },
       colors: {

@@ -75,14 +75,14 @@ export default function FounderPage() {
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-site shrink-0" />
                 <div>
-                  <h4 className="text-xs font-bold text-forest uppercase tracking-wider">Quality Oversight</h4>
+                  <h4 className="text-xs font-bold text-forest uppercase tracking-wider font-sans">Quality Oversight</h4>
                   <p className="text-[11px] text-sage-muted">100% Personal Review</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-site shrink-0" />
                 <div>
-                  <h4 className="text-xs font-bold text-forest uppercase tracking-wider">Global Standards</h4>
+                  <h4 className="text-xs font-bold text-forest uppercase tracking-wider font-sans">Global Standards</h4>
                   <p className="text-[11px] text-sage-muted">Worldwide Delivery</p>
                 </div>
               </div>

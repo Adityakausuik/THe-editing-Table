@@ -435,7 +435,7 @@ export default function CareersPage() {
                         >
                           {Array.isArray(job.responsibilities) && job.responsibilities.length > 0 && (
                             <div className="space-y-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider text-forest">
+                              <h4 className="text-xs font-semibold uppercase tracking-wider text-forest font-sans">
                                 Key Responsibilities
                               </h4>
                               <ul className="space-y-2 text-xs sm:text-sm text-sage-muted">
@@ -451,7 +451,7 @@ export default function CareersPage() {
 
                           {Array.isArray(job.benefits) && job.benefits.length > 0 && (
                             <div className="space-y-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider text-forest">
+                              <h4 className="text-xs font-semibold uppercase tracking-wider text-forest font-sans">
                                 Benefits & Perks
                               </h4>
                               <ul className="space-y-2 text-xs sm:text-sm text-sage-muted">

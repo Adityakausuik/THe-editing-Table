@@ -57,7 +57,7 @@ export default function PortfolioSection() {
               <Film className="h-3.5 w-3.5" /> Featured Showcases
             </div>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
               Selected Editorial & Cinematic Works
             </h2>
           </div>
@@ -119,7 +119,7 @@ export default function PortfolioSection() {
               {/* Card Footer */}
               <div className="p-5 flex items-center justify-between">
                 <div>
-                  <h3 className="font-serif text-xl font-semibold text-forest group-hover:text-site transition-colors">
+                  <h3 className="font-heading text-xl font-semibold text-forest group-hover:text-site transition-colors">
                     {item.title}
                   </h3>
                   <p className="text-xs text-sage-muted">{item.client}</p>
@@ -168,7 +168,7 @@ export default function PortfolioSection() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-site">
                   {selectedVideo.category} Showcase
                 </span>
-                <h3 className="font-serif text-2xl">{selectedVideo.title}</h3>
+                <h3 className="font-heading text-2xl">{selectedVideo.title}</h3>
                 <p className="text-xs text-white/70">{selectedVideo.description}</p>
               </div>
             </div>

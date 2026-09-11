@@ -15,7 +15,7 @@ export default function SectionHeading({ label, title, text, align = "center", l
           {label}
         </span>
       )}
-      <h2 className={`font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-[1.12] tracking-tight ${light ? "text-forest" : "text-forest"}`}>
+      <h2 className={`font-heading text-4xl sm:text-5xl lg:text-6xl font-normal leading-[1.12] tracking-tight ${light ? "text-forest" : "text-forest"}`}>
         {title}
       </h2>
       {text ? (

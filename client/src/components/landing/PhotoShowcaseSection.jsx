@@ -348,7 +348,7 @@ export default function PhotoShowcaseSection() {
           </div>
 
           <h2
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight tracking-tight"
+            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight tracking-tight"
             style={{ color: "var(--site-text-color)" }}
           >
             {settings.heading || "Masterpiece High-End Photo Retouching & Color Suite"}
@@ -493,7 +493,7 @@ export default function PhotoShowcaseSection() {
                       )}
                     </div>
 
-                    <h3 className={`font-serif font-semibold text-white leading-tight ${isCenter ? "text-xl sm:text-2xl" : "text-base"}`}>
+                    <h3 className={`font-heading font-semibold text-white leading-tight ${isCenter ? "text-xl sm:text-2xl" : "text-base"}`}>
                       {photo.propertyName || photo.title}
                     </h3>
 
@@ -584,7 +584,7 @@ export default function PhotoShowcaseSection() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-site">
                   {lightboxImage.category}
                 </span>
-                <h3 className="font-serif text-2xl text-white font-semibold">{lightboxImage.title}</h3>
+                <h3 className="font-heading text-2xl text-white font-semibold">{lightboxImage.title}</h3>
                 <p className="text-xs text-white/80">{lightboxImage.description}</p>
               </div>
             </div>

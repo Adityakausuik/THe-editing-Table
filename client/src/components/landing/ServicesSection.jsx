@@ -53,7 +53,7 @@ export default function ServicesSection() {
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
               Core Capabilities & Post-Production Suite
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
               Handcrafted Post-Production Built for Visual Excellence
             </h2>
           </div>
@@ -86,7 +86,7 @@ export default function ServicesSection() {
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-serif text-2xl font-semibold text-forest group-hover:text-site transition-colors">
+                    <h3 className="font-heading text-2xl font-semibold text-forest group-hover:text-site transition-colors">
                       {service.title}
                     </h3>
                     <p className="text-xs text-sage-muted italic">{service.tagline}</p>

@@ -57,7 +57,7 @@ export default function ServicesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <h2 className="font-serif text-2xl font-semibold text-forest">{service.title}</h2>
+                    <h2 className="font-heading text-2xl font-semibold text-forest">{service.title}</h2>
                     <p className="text-xs text-sage-muted italic">{service.tagline}</p>
                     <p className="text-xs text-sage-muted leading-relaxed">{service.description}</p>
                   </div>

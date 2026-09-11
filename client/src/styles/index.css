@@ -4,15 +4,16 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   GLOBAL H1 TYPOGRAPHY - BONA NOVA
-   Applies Bona Nova strictly and universally to all H1 headings across every
-   page, section, and module, preserving weights, sizes, letter spacing, and line heights.
+   GLOBAL HEADINGS & TITLES TYPOGRAPHY - BONA NOVA
+   Applies Bona Nova strictly and universally to all headings (h1, h2, h3, h4)
+   and editorial titles across every page, section, and module, preserving weights,
+   sizes, letter spacing, and line heights.
    ========================================================================== */
 @layer base {
-  h1,
-  .h1,
-  [role="heading"][aria-level="1"] {
-    font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
+  h1, h2, h3, h4,
+  .h1, .h2, .h3, .h4,
+  [role="heading"] {
+    font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif;
   }
 }
 
@@ -163,8 +164,10 @@ svg.text-terracotta {
 }
 
 /* Editorial Typography & Utilities */
-.font-serif {
-  font-family: "Manrope", "Avenir Next", "Segoe UI Variable", Inter, system-ui, sans-serif;
+.font-serif,
+.font-heading,
+.font-bona {
+  font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
 }
 
 .section-pad {

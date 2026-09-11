@@ -176,7 +176,7 @@ export default function Footer() {
 
           {/* Column 2: Navigation */}
           <div className="space-y-3 w-full lg:border-l lg:border-sage-border/60 lg:pl-6">
-            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site">
+            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
               Navigation
             </h2>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-1">
@@ -195,7 +195,7 @@ export default function Footer() {
 
           {/* Column 3: Services Suite */}
           <div className="space-y-3 w-full lg:border-l lg:border-sage-border/60 lg:pl-6">
-            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site">
+            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
               Services Suite
             </h2>
             <ul className="space-y-2">
@@ -216,7 +216,7 @@ export default function Footer() {
           <div className="space-y-4 w-full lg:border-l lg:border-sage-border/60 lg:pl-6 flex flex-col justify-start">
             {contactSettings.sectionEnabled !== false && (
               <div className="space-y-3">
-                <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site">
+                <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
                   {contactSettings.sectionTitle || "Contact Us"}
                 </h2>
 

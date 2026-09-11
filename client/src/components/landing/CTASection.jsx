@@ -24,7 +24,7 @@ export default function CTASection() {
               Reserve Your Suite
             </span>
 
-            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-[1.12] text-[#F8FBF7]">
+            <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal leading-[1.12] text-[#F8FBF7]">
               Ready to Give Your Wedding Films &amp; Galleries the Finish They Deserve?
             </h2>
 
