@@ -106,7 +106,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-sage-border/60">
               {stats.map((stat) => (
                 <div key={stat.label}>
-                  <p className="font-serif text-3xl text-forest">{stat.value}</p>
+                  <p className="font-heading text-3xl text-forest">{stat.value}</p>
                   <p className="text-xs text-sage-muted uppercase tracking-wider mt-1">{stat.label}</p>
                 </div>
               ))}
@@ -133,7 +133,7 @@ export default function AboutPage() {
                   <div className="h-12 w-12 rounded-2xl bg-sage-light/15 flex items-center justify-center text-site">
                     <Icon className="h-6 w-6" />
                   </div>
-                  <h2 className="font-serif text-2xl text-forest">{value.title}</h2>
+                  <h2 className="font-heading text-2xl text-forest">{value.title}</h2>
                   <p className="text-sm text-sage-muted leading-relaxed">{value.description}</p>
                 </div>
               );
@@ -147,7 +147,7 @@ export default function AboutPage() {
 
       <section className="py-20 text-center">
         <Container className="max-w-2xl space-y-6">
-          <h2 className="font-serif text-4xl sm:text-5xl text-forest font-normal">{about.ctaTitle}</h2>
+          <h2 className="font-heading text-4xl sm:text-5xl text-forest font-normal">{about.ctaTitle}</h2>
           <p className="text-sage-muted">{about.ctaDescription}</p>
           <div className="flex justify-center gap-4 pt-4">
             <Button href={about.primaryCtaLink} variant="primary">{about.primaryCtaText}</Button>

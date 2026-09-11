@@ -98,7 +98,7 @@ export default function ImageZoomModal({ isOpen, onClose, imageSrc, imageName, i
         >
           {/* Member Name & Role */}
           <div className="min-w-0 rounded-2xl border border-white/10 bg-black/60 px-4 py-2.5 text-white backdrop-blur-md sm:px-5">
-            <h3 className="font-serif text-lg sm:text-xl font-semibold leading-none">{imageName}</h3>
+            <h3 className="font-heading text-lg sm:text-xl font-semibold leading-none">{imageName}</h3>
             {imageRole && <p className="text-xs text-site font-medium tracking-wider uppercase mt-1">{imageRole}</p>}
           </div>
 

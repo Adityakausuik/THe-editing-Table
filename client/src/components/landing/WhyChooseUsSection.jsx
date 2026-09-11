@@ -54,7 +54,7 @@ export default function WhyChooseUsSection() {
 
             {/* High-Contrast Floating Feature Box */}
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-sage-border bg-white p-5 shadow-editorial">
-              <p className="font-serif text-xl font-semibold text-forest">Tailored to Your Signature Look</p>
+              <p className="font-heading text-xl font-semibold text-forest">Tailored to Your Signature Look</p>
               <p className="mt-1.5 text-xs text-sage-muted leading-relaxed font-normal">
                 Custom profile cataloguing ensures your color science, film emulation, and skin retouching remain completely consistent across all weddings.
               </p>

@@ -5,7 +5,7 @@ export default function NotFoundPage() {
   return (
     <div className="min-h-svh flex items-center justify-center pt-28 pb-16 text-center">
       <Container className="max-w-xl space-y-6">
-        <span className="font-serif text-8xl font-normal text-site">404</span>
+        <span className="font-heading text-8xl font-normal text-site">404</span>
         <h1 className="font-heading text-4xl sm:text-5xl font-normal text-forest">
           Page Not Found
         </h1>

@@ -92,7 +92,7 @@ export default function ServiceDetailPage() {
       <section className="py-16 bg-sage-secondary/30 border-y border-sage-border/60">
         <Container className="grid gap-12 lg:grid-cols-2">
           <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-6 shadow-soft">
-            <h2 className="font-serif text-3xl text-forest">Key Features</h2>
+            <h2 className="font-heading text-3xl text-forest">Key Features</h2>
             <ul className="space-y-4">
               {features.map((feat) => (
                 <li key={feat} className="flex items-start gap-3 text-forest">
@@ -104,7 +104,7 @@ export default function ServiceDetailPage() {
           </div>
 
           <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-6 shadow-soft">
-            <h2 className="font-serif text-3xl text-forest">Deliverables</h2>
+            <h2 className="font-heading text-3xl text-forest">Deliverables</h2>
             <ul className="space-y-4">
               {deliverables.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-forest">
@@ -120,7 +120,7 @@ export default function ServiceDetailPage() {
       {/* CTA */}
       <section className="py-20 text-center">
         <Container className="max-w-2xl space-y-6">
-          <h2 className="font-serif text-4xl sm:text-5xl text-forest font-normal">
+          <h2 className="font-heading text-4xl sm:text-5xl text-forest font-normal">
             Ready to Book {service.title}?
           </h2>
           <p className="text-sage-muted">

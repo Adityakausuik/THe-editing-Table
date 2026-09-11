@@ -96,12 +96,12 @@ export default function BrandCollaborationDetailPage() {
       <section className="pb-20">
         <Container className="max-w-3xl space-y-8">
           <div className="space-y-4">
-            <h2 className="font-serif text-3xl text-forest">Campaign Overview & Strategy</h2>
+            <h2 className="font-heading text-3xl text-forest">Campaign Overview & Strategy</h2>
             <p className="text-sage-muted leading-relaxed">{project.fullDescription || project.shortDescription}</p>
           </div>
 
           <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-4 shadow-soft">
-            <h3 className="font-serif text-2xl text-forest">Services Delivered</h3>
+            <h3 className="font-heading text-2xl text-forest">Services Delivered</h3>
             <ul className="space-y-3">
               {services.map((srv) => (
                 <li key={srv} className="flex items-center gap-3 text-forest">

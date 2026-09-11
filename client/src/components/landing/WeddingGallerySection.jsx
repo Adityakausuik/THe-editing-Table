@@ -65,7 +65,7 @@ export default function WeddingGallerySection() {
               <Camera className="h-3.5 w-3.5" /> High-Fashion Retouching
             </div>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
               8K Editorial Retouching & Color Mastery
             </h2>
           </div>
@@ -100,7 +100,7 @@ export default function WeddingGallerySection() {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-site">
                         {item.category} • {item.location}
                       </span>
-                      <h3 className="font-serif text-xl font-semibold">{item.title}</h3>
+                      <h3 className="font-heading text-xl font-semibold">{item.title}</h3>
                     </div>
                     <span className="h-9 w-9 rounded-full bg-sage-card/90 text-forest flex items-center justify-center">
                       <Maximize2 className="h-4 w-4" />
@@ -147,7 +147,7 @@ export default function WeddingGallerySection() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-site">
                   {activePhoto.category} • {activePhoto.location}
                 </span>
-                <h3 className="font-serif text-2xl text-forest">{activePhoto.title}</h3>
+                <h3 className="font-heading text-2xl text-forest">{activePhoto.title}</h3>
               </div>
             </div>
           </m.div>

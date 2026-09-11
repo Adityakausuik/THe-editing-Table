@@ -43,7 +43,7 @@ export default function FounderPage() {
 
               <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/20 bg-forest/80 backdrop-blur-md p-4 text-white space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-site">FOUNDER &amp; CEO</span>
-                <h3 className="font-serif text-2xl font-semibold">Akshay Chhabra</h3>
+                <h3 className="font-heading text-2xl font-semibold">Akshay Chhabra</h3>
                 <p className="text-xs text-white/80">The Editing Table Studio • Mohali, Punjab</p>
               </div>
             </div>
@@ -53,7 +53,7 @@ export default function FounderPage() {
           <div className="space-y-6 text-left">
             <div className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-site">LEADERSHIP &amp; VISION</span>
-              <h2 className="font-serif text-3xl sm:text-4xl text-forest font-normal leading-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl text-forest font-normal leading-tight">
                 &ldquo;Every frame matters. Every story deserves its own visual language.&rdquo;
               </h2>
             </div>

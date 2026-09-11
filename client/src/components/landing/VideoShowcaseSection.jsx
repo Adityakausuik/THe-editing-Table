@@ -442,7 +442,7 @@ export default function VideoShowcaseSection() {
           </div>
 
           <h2
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight tracking-tight"
+            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight tracking-tight"
             style={{ color: "var(--site-text-color)" }}
           >
             {settings.heading || DEFAULT_SETTINGS.heading}
@@ -626,7 +626,7 @@ export default function VideoShowcaseSection() {
                       {video.duration > 0 && <span>• {formatDuration(video.duration)}</span>}
                     </div>
 
-                    <h3 className={`font-serif font-semibold text-white leading-tight ${isCenter ? "text-xl sm:text-2xl" : "text-base"}`}>
+                    <h3 className={`font-heading font-semibold text-white leading-tight ${isCenter ? "text-xl sm:text-2xl" : "text-base"}`}>
                       {video.propertyName || video.title}
                     </h3>
 

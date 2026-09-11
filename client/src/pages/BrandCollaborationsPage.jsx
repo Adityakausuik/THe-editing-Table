@@ -47,7 +47,7 @@ export default function BrandCollaborationsPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-site bg-sage-secondary/70 px-2.5 py-0.5 rounded-full border border-[rgb(72,125,72)]/20">
                   {item.brandName} • {item.category}
                 </span>
-                <h3 className="font-serif text-2xl text-forest font-semibold">{item.title}</h3>
+                <h3 className="font-heading text-2xl text-forest font-semibold">{item.title}</h3>
                 <p className="text-xs text-sage-muted leading-relaxed">{item.shortDescription}</p>
               </div>
             </m.div>

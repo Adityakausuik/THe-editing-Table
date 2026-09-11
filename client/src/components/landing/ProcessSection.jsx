@@ -63,10 +63,10 @@ export default function ProcessSection() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgb(72,125,72)]/20 bg-sage-secondary/60 text-site">
                     <StepIcon className="h-6 w-6" />
                   </div>
-                  <span className="font-serif text-3xl font-bold text-site">0{index + 1}</span>
+                  <span className="font-heading text-3xl font-bold text-site">0{index + 1}</span>
                 </div>
 
-                <h3 className="font-serif text-2xl font-normal text-forest">{step.title}</h3>
+                <h3 className="font-heading text-2xl font-normal text-forest">{step.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-sage-muted">{step.description}</p>
               </div>
             </m.article>

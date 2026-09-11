@@ -89,7 +89,7 @@ export default function TeamPage() {
                 )}
 
                 <div className="space-y-1">
-                  <h3 className="font-serif text-2xl text-forest font-semibold group-hover:text-site transition-colors">{name}</h3>
+                  <h3 className="font-heading text-2xl text-forest font-semibold group-hover:text-site transition-colors">{name}</h3>
                   <p className="text-xs text-site font-semibold uppercase tracking-wider">{role}</p>
                   <p className="text-xs text-sage-muted leading-relaxed max-w-xs mx-auto pt-2">{bio}</p>
                 </div>

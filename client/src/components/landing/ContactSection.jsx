@@ -88,7 +88,7 @@ export default function ContactSection() {
             <div className="flex items-start gap-4 rounded-2xl border border-sage-border bg-sage-card p-5 shadow-soft">
               <ShieldCheck className="h-6 w-6 text-site shrink-0 mt-0.5" />
               <div>
-                <p className="font-serif text-lg font-normal text-forest">Strict Confidentiality & NDA</p>
+                <p className="font-heading text-lg font-normal text-forest">Strict Confidentiality & NDA</p>
                 <p className="text-xs text-sage-muted mt-1 leading-relaxed">
                   Your raw assets, high-profile celebrity weddings, and unreleased commercial footage are handled in secure offline environments.
                 </p>
@@ -98,7 +98,7 @@ export default function ContactSection() {
             <div className="flex items-start gap-4 rounded-2xl border border-sage-border bg-sage-card p-5 shadow-soft">
               <Mail className="h-6 w-6 text-site shrink-0 mt-0.5" />
               <div>
-                <p className="font-serif text-lg font-normal text-forest">Direct Producer Communication</p>
+                <p className="font-heading text-lg font-normal text-forest">Direct Producer Communication</p>
                 <p className="text-xs text-sage-muted mt-1 leading-relaxed">
                   You work directly with a dedicated post-production supervisor throughout culling, grading, and final delivery.
                 </p>

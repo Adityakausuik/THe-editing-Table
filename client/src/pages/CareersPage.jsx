@@ -280,7 +280,7 @@ export default function CareersPage() {
                   <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgb(72,125,72)]/10 text-site transition-transform duration-500 group-hover:scale-110 group-hover:bg-[rgb(72,125,72)] group-hover:text-white">
                     <IconComp className="h-6 w-6" />
                   </div>
-                  <h3 className="font-serif text-xl sm:text-2xl text-forest font-medium tracking-tight mb-3">
+                  <h3 className="font-heading text-xl sm:text-2xl text-forest font-medium tracking-tight mb-3">
                     {card.title}
                   </h3>
                   <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
@@ -301,7 +301,7 @@ export default function CareersPage() {
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
                 CURRENT VACANCIES
               </span>
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-forest mt-2">
+              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest mt-2">
                 Open Positions
               </h2>
             </div>
@@ -377,7 +377,7 @@ export default function CareersPage() {
                           )}
                         </div>
 
-                        <h3 className="font-serif text-2xl sm:text-3xl text-forest font-medium">
+                        <h3 className="font-heading text-2xl sm:text-3xl text-forest font-medium">
                           {job.title}
                         </h3>
 
@@ -489,7 +489,7 @@ export default function CareersPage() {
                 <Briefcase className="h-8 w-8" />
               </div>
               <div className="space-y-2">
-                <h3 className="font-serif text-2xl sm:text-3xl text-forest">
+                <h3 className="font-heading text-2xl sm:text-3xl text-forest">
                   We don&apos;t have any open positions right now
                 </h3>
                 <p className="text-sm sm:text-base text-sage-muted">
@@ -507,7 +507,7 @@ export default function CareersPage() {
             5. FINAL CTA SECTION
         ========================================== */}
         <section className="rounded-3xl border border-sage-border bg-sage-card p-10 sm:p-16 text-center shadow-soft backdrop-blur-md max-w-4xl mx-auto space-y-6">
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-forest">
+          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest">
             {ctaHeading}
           </h2>
           <p className="text-base sm:text-lg text-sage-muted max-w-xl mx-auto">
@@ -561,7 +561,7 @@ export default function CareersPage() {
                     <CheckCircle2 className="h-9 w-9" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-serif text-3xl text-forest">
+                    <h3 className="font-heading text-3xl text-forest">
                       Application Received!
                     </h3>
                     <p className="text-sm sm:text-base text-sage-muted max-w-md mx-auto">
@@ -580,7 +580,7 @@ export default function CareersPage() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-site">
                       APPLICATION FORM
                     </span>
-                    <h3 className="font-serif text-2xl sm:text-3xl text-forest mt-1">
+                    <h3 className="font-heading text-2xl sm:text-3xl text-forest mt-1">
                       {selectedJob ? `Apply for ${selectedJob.title}` : "Submit Your Application"}
                     </h3>
                     <p className="text-xs sm:text-sm text-sage-muted mt-1">

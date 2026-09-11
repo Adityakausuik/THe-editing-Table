@@ -57,7 +57,7 @@ function Counter({ value, suffix }) {
   }, [isInView, value]);
 
   return (
-    <m.p ref={ref} className="font-serif text-4xl sm:text-5xl font-normal text-site">
+    <m.p ref={ref} className="font-heading text-4xl sm:text-5xl font-normal text-site">
       {displayValue.toLocaleString()}
       {suffix}
     </m.p>

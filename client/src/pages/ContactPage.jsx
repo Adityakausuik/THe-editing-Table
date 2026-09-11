@@ -183,7 +183,7 @@ export default function ContactPage() {
                   <Mail className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg text-forest">Direct Email</h3>
+                  <h3 className="font-heading text-lg text-forest">Direct Email</h3>
                   <a href={`mailto:${contact.email}`} className="text-sm text-sage-muted hover:text-site transition-colors">
                     {contact.email}
                   </a>
@@ -196,7 +196,7 @@ export default function ContactPage() {
                     <Phone className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-serif text-lg text-forest">Studio Phone</h3>
+                    <h3 className="font-heading text-lg text-forest">Studio Phone</h3>
                     <p className="text-sm text-sage-muted">{contact.phone}</p>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-serif text-lg text-forest">Studio Locations</h3>
+                    <h3 className="font-heading text-lg text-forest">Studio Locations</h3>
                     <p className="text-sm text-sage-muted">{contact.locations}</p>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function ContactPage() {
 
             {contact.faqs && contact.faqs.length > 0 && (
               <div className="rounded-3xl border border-sage-border/80 bg-sage-secondary/40 p-8 space-y-3">
-                <h4 className="font-serif text-xl text-forest">{contact.faqTitle}</h4>
+                <h4 className="font-heading text-xl text-forest">{contact.faqTitle}</h4>
                 {contact.faqs.map((faq) => (
                   <p key={faq.question} className="text-xs text-sage-muted leading-relaxed">
                     <strong>{faq.question}</strong> {faq.answer}
@@ -229,7 +229,7 @@ export default function ContactPage() {
 
           {/* Enquiry Form */}
           <div className="rounded-3xl border border-sage-light/40 bg-sage-card p-8 sm:p-10 shadow-editorial space-y-6">
-            <h2 className="font-serif text-3xl text-forest font-normal">Project Inquiry Form</h2>
+            <h2 className="font-heading text-3xl text-forest font-normal">Project Inquiry Form</h2>
 
             {status === "success" && (
               <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 text-sm">

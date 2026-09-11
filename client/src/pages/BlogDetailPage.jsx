@@ -143,12 +143,12 @@ export default function BlogDetailPage() {
       {relatedPosts.length > 0 && (
         <section className="py-16 bg-sage-secondary/40 border-t border-sage-border/60">
           <Container className="max-w-4xl">
-            <h2 className="font-serif text-3xl text-forest mb-8">Related Articles</h2>
+            <h2 className="font-heading text-3xl text-forest mb-8">Related Articles</h2>
             <div className="grid gap-6 sm:grid-cols-2">
               {relatedPosts.map((rel) => (
                 <div key={rel._id || rel.id} className="rounded-2xl border border-sage-border bg-sage-card p-6 space-y-3">
                   <span className="text-xs font-semibold text-site uppercase">{rel.category}</span>
-                  <h3 className="font-serif text-xl font-normal text-forest">
+                  <h3 className="font-heading text-xl font-normal text-forest">
                     <Link to={`/blog/${rel.slug || rel._id}`}>{rel.title}</Link>
                   </h3>
                   <p className="text-xs text-sage-muted line-clamp-2">{rel.excerpt}</p>

@@ -179,7 +179,7 @@ export default function WriteReviewModal({ isOpen, onClose, onSuccess }) {
             <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h2 className="font-serif text-3xl text-forest">Review Submitted</h2>
+            <h2 className="font-heading text-3xl text-forest">Review Submitted</h2>
             <p className="text-sm text-sage-muted max-w-md mx-auto leading-relaxed">
               Thank you! Your endorsement has been submitted and is currently awaiting admin verification. Once verified, it will be showcased publicly.
             </p>
@@ -195,7 +195,7 @@ export default function WriteReviewModal({ isOpen, onClose, onSuccess }) {
           <>
             <div className="space-y-1">
               <span className="text-[11px] font-semibold uppercase tracking-widest text-site">Client Endorsement</span>
-              <h2 id="modal-title" className="font-serif text-3xl text-forest">Share Your Experience</h2>
+              <h2 id="modal-title" className="font-heading text-3xl text-forest">Share Your Experience</h2>
               <p className="text-xs text-sage-muted">
                 Your feedback helps us maintain our uncompromising standard of cinematic post-production.
               </p>

@@ -231,7 +231,7 @@ function TestimonialCardContent({ testimonial }) {
         </div>
 
         {testimonial.title && (
-          <h3 className="mt-4 font-serif text-xl font-normal text-forest leading-snug">
+          <h3 className="mt-4 font-heading text-xl font-normal text-forest leading-snug">
             {testimonial.title}
           </h3>
         )}
@@ -254,7 +254,7 @@ function TestimonialCardContent({ testimonial }) {
           </div>
         )}
         <div className="min-w-0">
-          <h4 className="font-serif text-lg font-normal text-forest truncate">{authorName}</h4>
+          <h4 className="font-heading text-lg font-normal text-forest truncate">{authorName}</h4>
           {companyName && <p className="text-[11px] text-sage-muted truncate">{companyName}</p>}
           {testimonial.projectType && (
             <span className="text-[10px] font-semibold text-site uppercase tracking-wider">

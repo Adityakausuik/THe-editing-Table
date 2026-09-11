@@ -110,7 +110,7 @@ export default function PortfolioPage() {
 
               <div className="p-5 flex items-center justify-between">
                 <div>
-                  <h3 className="font-serif text-xl font-semibold text-forest group-hover:text-site transition-colors">
+                  <h3 className="font-heading text-xl font-semibold text-forest group-hover:text-site transition-colors">
                     {item.title}
                   </h3>
                   <p className="text-xs text-sage-muted">{item.client}</p>

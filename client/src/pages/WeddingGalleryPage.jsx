@@ -101,7 +101,7 @@ export default function WeddingGalleryPage() {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-site">
                         {item.category} • {item.location}
                       </span>
-                      <h3 className="font-serif text-xl font-semibold">{item.title}</h3>
+                      <h3 className="font-heading text-xl font-semibold">{item.title}</h3>
                     </div>
                     <span className="h-9 w-9 rounded-full bg-sage-card/90 text-forest flex items-center justify-center">
                       <Maximize2 className="h-4 w-4" />

@@ -85,7 +85,7 @@ export default function TeamDetailPage() {
             <p className="text-lg text-sage-muted leading-relaxed">{bio}</p>
 
             <div className="rounded-3xl border border-sage-border bg-sage-card p-6 space-y-4 shadow-soft">
-              <h3 className="font-serif text-xl text-forest flex items-center gap-2">
+              <h3 className="font-heading text-xl text-forest flex items-center gap-2">
                 <Award className="h-5 w-5 text-site" /> Specialized Skills & Software
               </h3>
               <div className="flex flex-wrap gap-2">

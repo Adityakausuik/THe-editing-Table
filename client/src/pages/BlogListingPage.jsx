@@ -66,7 +66,7 @@ export default function BlogListingPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-site bg-sage-secondary/70 px-2.5 py-0.5 rounded-full border border-[rgb(72,125,72)]/20">
                     {post.category} • {post.readTime}
                   </span>
-                  <h2 className="font-serif text-2xl font-semibold text-forest group-hover:text-site transition-colors">
+                  <h2 className="font-heading text-2xl font-semibold text-forest group-hover:text-site transition-colors">
                     {post.title}
                   </h2>
                   <p className="text-xs text-sage-muted leading-relaxed line-clamp-3">{post.excerpt}</p>
