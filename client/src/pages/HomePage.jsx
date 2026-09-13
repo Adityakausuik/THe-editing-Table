@@ -2,7 +2,6 @@ import BeforeAfterSection from "../components/landing/BeforeAfterSection.jsx";
 import ContactSection from "../components/landing/ContactSection.jsx";
 import CTASection from "../components/landing/CTASection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
-import PortfolioSection from "../components/landing/PortfolioSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
 import ServicesSection from "../components/landing/ServicesSection.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
@@ -22,7 +21,6 @@ export default function HomePage() {
       <WorkingPartnersSection />
       <TrustStrip />
       <ServicesSection />
-      <PortfolioSection />
       <PhotoShowcaseSection />
       <BeforeAfterSection />
       <ProcessSection />
