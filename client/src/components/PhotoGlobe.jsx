@@ -10,25 +10,26 @@ import "../styles/photo-globe.css";
 
 /**
  * PhotoGlobe Component
- * Mathematical 3D Spherical Orbit Gallery.
- * Distributes photo cards around an invisible sphere in 3D space.
- * Updates DOM styles directly via requestAnimationFrame for zero-rerender 60 FPS performance.
+ * Mathematical 3D Spherical Orbit Gallery with enhanced velocity,
+ * momentum inertia physics, harmonic floating waves, and cursor parallax.
  */
 export function PhotoGlobe({ photos = [], onSelectPhoto }) {
   const containerRef = useRef(null);
   const cardRefs = useRef([]);
+  const timeRef = useRef(0);
 
   const [isDragging, setIsDragging] = useState(false);
 
-  // Mutable animation and interaction state
+  // Mutable animation and interaction physics state
   const physicsRef = useRef({
     yaw: 0, // horizontal rotation angle around Y axis
     pitch: 0.04, // vertical pitch angle around X axis
     targetPitch: 0.04,
+    yawParallax: 0,
     velocityX: 0,
     velocityY: 0,
-    baseAutoSpeed: 0.0022, // Cinematic slow Earth orbit speed
-    currentAutoSpeed: 0.0022,
+    baseAutoSpeed: 0.0050, // Faster, lively, cinematic orbital velocity
+    currentAutoSpeed: 0.0050,
     isHovered: false,
     isDragging: false,
     hasMoved: false,
@@ -47,7 +48,6 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
     if (count === 0) return [];
 
     // Distribute across 3 orbital rings: Upper (+22°), Equator (0°), Lower (-22°)
-    // This creates an upright, photogenic orbital Earth without pole distortion.
     const rings = [
       { latDeg: 22, count: Math.ceil(count / 3), phase: 0 },
       { latDeg: 0, count: Math.round(count / 3), phase: Math.PI / count },
@@ -101,12 +101,14 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
       const state = physicsRef.current;
       if (!state.isVisible && !force) return;
 
-      const sinYaw = Math.sin(state.yaw);
-      const cosYaw = Math.cos(state.yaw);
+      const effectiveYaw = state.yaw + state.yawParallax;
+      const sinYaw = Math.sin(effectiveYaw);
+      const cosYaw = Math.cos(effectiveYaw);
       const sinPitch = Math.sin(state.pitch);
       const cosPitch = Math.cos(state.pitch);
       const R = state.radius;
       const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+      const time = timeRef.current;
 
       sphereCoordinates.forEach((coord, i) => {
         const el = cardRefs.current[i];
@@ -122,16 +124,20 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
         const y2 = y1 * cosPitch - z1 * sinPitch;
         const z2 = y1 * sinPitch + z1 * cosPitch;
 
-        // Scaled 3D Cartesian coordinates
-        const X = x2 * R;
-        const Y = y2 * (R * 0.86); // Gentle elliptical compression for cinematic depth
-        const Z = z2 * R;
-
         // Normalized depth t: 0 (deepest back) to 1 (front center)
         const t = (z2 + 1) / 2;
 
-        // Dynamic scale: 0.58 (back) to 1.10 (front)
-        const scale = 0.58 + 0.52 * t;
+        // Micro-harmonic floating wave motion
+        const floatY = Math.sin(time + i * 0.58) * 7.5;
+        const floatTilt = Math.cos(time + i * 0.58) * 2.2;
+
+        // Scaled 3D Cartesian coordinates
+        const X = x2 * R;
+        const Y = y2 * (R * 0.86) + floatY * (0.3 + 0.7 * t);
+        const Z = z2 * R;
+
+        // Dynamic scale: 0.54 (back) to 1.14 (front)
+        const scale = 0.54 + 0.60 * t;
 
         // Dynamic opacity
         let opacity = 0.18 + 0.82 * Math.pow(t, 1.4);
@@ -142,9 +148,10 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
         // Strict Z-Index stacking
         const zIndex = Math.round(100 + t * 900);
 
-        // Subtle orbital tangent rotation
-        const rotY = -x2 * 30;
+        // Orbital tangent rotation + micro harmonic tilt
+        const rotY = -x2 * 32;
         const rotX = y2 * 16;
+        const rotZ = floatTilt;
 
         // On mobile, hide back-facing cards to avoid clutter and keep 60 FPS
         if (isMobile && t < 0.28) {
@@ -152,7 +159,7 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
         }
 
         // Direct DOM transform assignment
-        el.style.transform = `translate3d(${X.toFixed(1)}px, ${Y.toFixed(1)}px, ${Z.toFixed(1)}px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+        el.style.transform = `translate3d(${X.toFixed(1)}px, ${Y.toFixed(1)}px, ${Z.toFixed(1)}px) rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg) rotateZ(${rotZ.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
         el.style.opacity = opacity.toFixed(3);
         el.style.filter = blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : "none";
         el.style.zIndex = zIndex;
@@ -212,29 +219,33 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
       const state = physicsRef.current;
 
       if (state.isVisible) {
+        // Increment wave time
+        timeRef.current += 0.024;
+
         if (!state.isDragging) {
           if (state.isReducedMotion) {
             state.currentAutoSpeed = 0;
           } else {
-            // Apply momentum deceleration or auto-rotation
+            // Apply momentum deceleration or auto-rotation with higher inertia retention
             if (Math.abs(state.velocityX) > 0.0001) {
               state.yaw += state.velocityX;
-              state.velocityX *= 0.94; // Momentum friction decay
+              state.velocityX *= 0.965; // Luxurious coasting momentum
             } else {
-              const targetSpeed = state.isHovered ? 0.0006 : state.baseAutoSpeed;
-              state.currentAutoSpeed += (targetSpeed - state.currentAutoSpeed) * 0.06;
+              // Cruise speed: slower on hover, lively on idle
+              const targetSpeed = state.isHovered ? 0.0016 : state.baseAutoSpeed;
+              state.currentAutoSpeed += (targetSpeed - state.currentAutoSpeed) * 0.08;
               state.yaw += state.currentAutoSpeed;
             }
 
             if (Math.abs(state.velocityY) > 0.0001) {
               state.pitch += state.velocityY;
-              state.velocityY *= 0.94;
+              state.velocityY *= 0.965;
             }
           }
 
           // Smoothly restore pitch toward clamped target
-          state.pitch += (state.targetPitch - state.pitch) * 0.06;
-          state.pitch = Math.max(-0.26, Math.min(0.26, state.pitch));
+          state.pitch += (state.targetPitch - state.pitch) * 0.07;
+          state.pitch = Math.max(-0.28, Math.min(0.28, state.pitch));
         }
 
         updateCardStyles();
@@ -276,16 +287,18 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
       const deltaY = ev.clientY - state.lastY;
 
       const dist = Math.hypot(ev.clientX - state.startX, ev.clientY - state.startY);
-      if (dist > 6) {
+      if (dist > 5) {
         state.hasMoved = true;
       }
 
-      state.yaw += deltaX * 0.0042;
-      state.pitch -= deltaY * 0.0028;
+      // Responsive manual drag
+      state.yaw += deltaX * 0.0052;
+      state.pitch -= deltaY * 0.0035;
       state.targetPitch = state.pitch;
 
-      state.velocityX = deltaX * 0.0035;
-      state.velocityY = -deltaY * 0.0022;
+      // Momentum velocity capture
+      state.velocityX = deltaX * 0.0048;
+      state.velocityY = -deltaY * 0.0030;
 
       state.lastX = ev.clientX;
       state.lastY = ev.clientY;
@@ -309,8 +322,10 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
     // Parallax when hovering without dragging
     if (!state.isDragging && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const offsetX = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
       const offsetY = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-      state.targetPitch = 0.04 + Math.max(-0.14, Math.min(0.14, offsetY * 0.12));
+      state.targetPitch = 0.04 + Math.max(-0.20, Math.min(0.20, offsetY * 0.16));
+      state.yawParallax = Math.max(-0.16, Math.min(0.16, offsetX * 0.12));
     }
   };
 
@@ -321,6 +336,7 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
   const handlePointerLeave = () => {
     physicsRef.current.isHovered = false;
     physicsRef.current.targetPitch = 0.04;
+    physicsRef.current.yawParallax = 0;
   };
 
   // Card Selection Handler (distinguishes drag release vs intentional click)
@@ -344,7 +360,7 @@ export function PhotoGlobe({ photos = [], onSelectPhoto }) {
       role="region"
       aria-label="Interactive 3D Photo Globe Gallery"
     >
-      {/* Ambient Spherical Glow */}
+      {/* Ambient Spherical Atmospheric Glow */}
       <div className="photo-globe-ambient" aria-hidden="true" />
 
       {/* Atmospheric Orbital Depth Rings */}
