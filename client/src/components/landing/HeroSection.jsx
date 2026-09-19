@@ -1,5 +1,4 @@
 import { m, useReducedMotion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import logo from "../../assets/the-editing-table-logo.png";
 import Container from "../ui/Container.jsx";
 
@@ -24,13 +23,6 @@ export default function HeroSection() {
           "drop-shadow(0 8px 20px rgba(72, 125, 72, 0.10)) drop-shadow(0 2px 6px rgba(72, 125, 72, 0.05))"
         ]
       };
-
-  const handleScrollDown = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth"
-    });
-  };
 
   return (
     <section
@@ -65,7 +57,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(248,251,247,0.85)_100%)]" />
       </div>
 
-      {/* CENTER HERO CONTENT — LOGO ONLY WITH LUXURY NEGATIVE SPACE */}
+      {/* CENTER HERO CONTENT — LOGO + TAGLINE WITH LUXURY NEGATIVE SPACE */}
       <Container className="relative z-10 flex flex-col items-center justify-center text-center my-auto px-4 sm:px-6">
         <m.div
           initial={{ opacity: 0, scale: 0.96 }}
@@ -89,27 +81,18 @@ export default function HeroSection() {
             decoding="sync"
             fetchPriority="high"
           />
+
+          {/* BRAND TAGLINE — ELEGANT, MINIMAL, EDITORIAL */}
+          <m.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-5 sm:mt-6 text-[10px] sm:text-xs md:text-[13px] font-sans font-medium uppercase tracking-[0.36em] sm:tracking-[0.44em] text-site/70 select-none"
+          >
+            YOU SHOOT. WE EDIT.
+          </m.p>
         </m.div>
       </Container>
-
-      {/* DELICATE MINIMAL SCROLL INDICATOR */}
-      <div className="absolute bottom-6 sm:bottom-8 inset-x-0 z-10 flex flex-col items-center justify-center pointer-events-auto">
-        <button
-          onClick={handleScrollDown}
-          aria-label="Scroll to explore studio work"
-          className="group flex flex-col items-center gap-1.5 text-sage-muted/70 hover:text-site transition-colors duration-300 focus:outline-none"
-        >
-          <span className="text-[10px] uppercase tracking-[0.25em] font-medium transition-opacity duration-300 group-hover:opacity-100">
-            Explore Studio
-          </span>
-          <m.div
-            animate={shouldReduceMotion ? {} : { y: [0, 4, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-          </m.div>
-        </button>
-      </div>
     </section>
   );
 }

@@ -6,7 +6,6 @@ import PhotoShowcaseSection from "../components/landing/PhotoShowcaseSection.jsx
 import ProcessSection from "../components/landing/ProcessSection.jsx";
 import ServicesSection from "../components/landing/ServicesSection.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
-import StudioDoorIntro from "../components/landing/StudioDoorIntro.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import TrustStrip from "../components/landing/TrustStrip.jsx";
 import VideoShowcaseSection from "../components/landing/VideoShowcaseSection.jsx";
@@ -16,7 +15,6 @@ import WorkingPartnersSection from "../components/landing/WorkingPartnersSection
 export default function HomePage() {
   return (
     <>
-      <StudioDoorIntro />
       <HeroSection />
       <VideoShowcaseSection />
       <WorkingPartnersSection />
