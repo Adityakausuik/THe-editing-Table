@@ -26,7 +26,6 @@ const NotFoundPage = lazy(() => import("../pages/NotFoundPage.jsx"));
 const AdminLoginPage = lazy(() => import("../admin/AdminLoginPage.jsx"));
 const AdminLayout = lazy(() => import("../admin/AdminLayout.jsx"));
 const DashboardOverview = lazy(() => import("../admin/modules/DashboardOverview.jsx"));
-const HeroCMS = lazy(() => import("../admin/modules/HeroCMS.jsx"));
 const PartnersCMS = lazy(() => import("../admin/modules/PartnersCMS.jsx"));
 const ServicesCMS = lazy(() => import("../admin/modules/ServicesCMS.jsx"));
 const PortfolioCMS = lazy(() => import("../admin/modules/PortfolioCMS.jsx"));
@@ -90,7 +89,7 @@ export default function AppRoutes() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<DashboardOverview />} />
-              <Route path="hero" element={<HeroCMS />} />
+              <Route path="hero" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="partners" element={<PartnersCMS />} />
               <Route path="services" element={<ServicesCMS />} />
               <Route path="portfolio" element={<PortfolioCMS />} />

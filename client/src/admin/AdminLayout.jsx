@@ -14,7 +14,6 @@ import {
   Settings,
   Shield,
   ShieldCheck,
-  Sparkles,
   Star,
   Users,
   Video,
@@ -29,8 +28,7 @@ const navSections = [
   {
     title: "Overview",
     items: [
-      { label: "Dashboard Overview", path: "/admin/dashboard", icon: LayoutDashboard },
-      { label: "Hero & Home CMS", path: "/admin/hero", icon: Sparkles }
+      { label: "Dashboard Overview", path: "/admin/dashboard", icon: LayoutDashboard }
     ]
   },
   {
