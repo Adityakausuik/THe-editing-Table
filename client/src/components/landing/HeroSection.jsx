@@ -98,7 +98,7 @@ export default function HeroSection() {
             }}
             className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-sans font-bold uppercase text-forest select-none leading-none"
           >
-            YOU SHOOT. WE EDIT.
+            YOU SHOOT WE EDIT
           </m.p>
         </m.div>
       </Container>
