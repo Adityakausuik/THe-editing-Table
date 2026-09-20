@@ -32,6 +32,7 @@ const WeddingGalleryCMS = lazy(() => import("../admin/modules/WeddingGalleryCMS.
 const CollaborationsCMS = lazy(() => import("../admin/modules/CollaborationsCMS.jsx"));
 const BlogCMS = lazy(() => import("../admin/modules/BlogCMS.jsx"));
 const AboutMeCMS = lazy(() => import("../admin/modules/AboutMeCMS.jsx"));
+const TeamCMS = lazy(() => import("../admin/modules/TeamCMS.jsx"));
 const CareersCMS = lazy(() => import("../admin/modules/CareersCMS.jsx"));
 const EnquiriesCMS = lazy(() => import("../admin/modules/EnquiriesCMS.jsx"));
 const ContactSettingsCMS = lazy(() => import("../admin/modules/ContactSettingsCMS.jsx"));
@@ -76,8 +77,8 @@ export default function AppRoutes() {
               <Route path="/blog/:slug" element={<BlogDetailPage />} />
               <Route path="/brand-collaborations" element={<BrandCollaborationsPage />} />
               <Route path="/brand-collaborations/:slug" element={<BrandCollaborationDetailPage />} />
-              <Route path="/team" element={<Navigate to="/about" replace />} />
-              <Route path="/team/:slug" element={<Navigate to="/about" replace />} />
+              <Route path="/team" element={<Navigate to="/about#team" replace />} />
+              <Route path="/team/:slug" element={<Navigate to="/about#team" replace />} />
               <Route path="/founder" element={<Navigate to="/about" replace />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="*" element={<NotFoundPage />} />
@@ -98,7 +99,7 @@ export default function AppRoutes() {
               <Route path="collaborations" element={<CollaborationsCMS />} />
               <Route path="blog" element={<BlogCMS />} />
               <Route path="about-me" element={<AboutMeCMS />} />
-              <Route path="team" element={<Navigate to="/admin/about-me" replace />} />
+              <Route path="team" element={<TeamCMS />} />
               <Route path="careers" element={<CareersCMS />} />
               <Route path="contact-settings" element={<ContactSettingsCMS />} />
               <Route path="enquiries" element={<EnquiriesCMS />} />

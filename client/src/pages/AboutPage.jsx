@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  Users,
   Wand2,
   ZoomIn
 } from "lucide-react";
@@ -19,7 +20,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Container from "../components/ui/Container.jsx";
 import ImageZoomModal from "../components/ui/ImageZoomModal.jsx";
-import { apiFetch, mediaUrl } from "../lib/api.js";
+import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../lib/api.js";
 
 const DEFAULT_ABOUT_DATA = {
   fullName: "Akshay Chhabra",
@@ -109,44 +110,133 @@ const DEFAULT_ABOUT_DATA = {
 const RESPONSIBILITY_ICONS = [Palette, Film, Wand2, ShieldCheck];
 const PILLAR_ICONS = [Target, Compass, Award];
 
+const DEFAULT_TEAM = [
+  {
+    _id: "team-1",
+    fullName: "Akshay Chhabra",
+    designation: "Founder & Creative Director",
+    category: "Creative Direction",
+    shortBio: "Leading post-production direction, creative color science, and strategic studio vision.",
+    profileImage: "/assets/akshay-chhabra-founder.jpg"
+  },
+  {
+    _id: "team-2",
+    fullName: "Elena Rostova",
+    designation: "Lead DaVinci Colorist",
+    category: "Color Science",
+    shortBio: "Specializing in 35mm Kodak stock emulation, skin tone preservation, and Dolby Vision HDR mastering.",
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=85"
+  },
+  {
+    _id: "team-3",
+    fullName: "Marcus Vance",
+    designation: "Head of Photo Retouching",
+    category: "Editorial Retouching",
+    shortBio: "Overseeing high-fashion editorial retouching, frequency separation, and micro dodge & burn.",
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85"
+  },
+  {
+    _id: "team-4",
+    fullName: "Claire Beaumont",
+    designation: "Supervising Sound Editor",
+    category: "Sound Design",
+    shortBio: "Crafting immersive spatial soundscapes, dialogue clarity, and theatrical dynamic range audio finishing.",
+    profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=85"
+  }
+];
+
 export default function AboutPage() {
   const [data, setData] = useState(DEFAULT_ABOUT_DATA);
+  const [teamMembers, setTeamMembers] = useState(DEFAULT_TEAM);
   const [activeZoomImage, setActiveZoomImage] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
-    apiFetch("/api/v1/cms/about-me")
-      .then((res) => {
-        if (isMounted && res?.data) {
-          setData((prev) => ({
-            ...prev,
-            ...res.data,
-            aboutParagraphs:
-              Array.isArray(res.data.aboutParagraphs) && res.data.aboutParagraphs.length > 0
-                ? res.data.aboutParagraphs
-                : prev.aboutParagraphs,
-            skills:
-              Array.isArray(res.data.skills) && res.data.skills.length > 0
-                ? res.data.skills
-                : prev.skills,
-            whatIDo:
-              Array.isArray(res.data.whatIDo) && res.data.whatIDo.length > 0
-                ? res.data.whatIDo
-                : prev.whatIDo,
-            philosophyPillars:
-              Array.isArray(res.data.philosophyPillars) && res.data.philosophyPillars.length > 0
-                ? res.data.philosophyPillars
-                : prev.philosophyPillars
-          }));
-        }
-      })
-      .catch(() => {
-        // Fallback default state remains active
-      });
+
+    const loadAbout = () => {
+      apiFetch("/api/v1/cms/about-me")
+        .then((res) => {
+          if (isMounted && res?.data) {
+            setData((prev) => ({
+              ...prev,
+              ...res.data,
+              aboutParagraphs:
+                Array.isArray(res.data.aboutParagraphs) && res.data.aboutParagraphs.length > 0
+                  ? res.data.aboutParagraphs
+                  : prev.aboutParagraphs,
+              skills:
+                Array.isArray(res.data.skills) && res.data.skills.length > 0
+                  ? res.data.skills
+                  : prev.skills,
+              whatIDo:
+                Array.isArray(res.data.whatIDo) && res.data.whatIDo.length > 0
+                  ? res.data.whatIDo
+                  : prev.whatIDo,
+              philosophyPillars:
+                Array.isArray(res.data.philosophyPillars) && res.data.philosophyPillars.length > 0
+                  ? res.data.philosophyPillars
+                  : prev.philosophyPillars
+            }));
+          }
+        })
+        .catch(() => {
+          // Fallback default state remains active
+        });
+    };
+
+    loadAbout();
+
+    const unsubscribe = subscribeToCmsChanges((detail) => {
+      if (!detail?.key || detail.key === "about-me") {
+        loadAbout();
+      }
+    });
 
     return () => {
       isMounted = false;
+      if (typeof unsubscribe === "function") unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTeam = async () => {
+      try {
+        const res = await apiFetch("/api/v1/cms/team");
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        const activeList = list.filter((item) => item.active !== false);
+        if (isMounted && activeList.length > 0) {
+          setTeamMembers(activeList);
+        }
+      } catch {
+        // Keep DEFAULT_TEAM fallback
+      }
+    };
+
+    loadTeam();
+
+    const unsubscribe = subscribeToCmsChanges((detail) => {
+      if (!detail?.key || detail.key === "team") {
+        loadTeam();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash === "#team") {
+      const el = document.getElementById("team");
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth" });
+        }, 200);
+      }
+    }
   }, []);
 
   const portraitUrl = mediaUrl(data.profileImage || "/assets/akshay-chhabra-founder.jpg");
@@ -486,7 +576,137 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* 7. CREATIVE & PRODUCTION PHILOSOPHY */}
+      {/* 7. STUDIO TEAM & MASTER ARTISTS */}
+      <section id="team" className="py-20 bg-sage-secondary/25 border-y border-sage-border/60">
+        <Container className="max-w-[1280px] mx-auto space-y-12 text-center">
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <m.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/90 px-4 py-1.5 backdrop-blur-md shadow-soft"
+            >
+              <Users className="h-4 w-4 text-site" />
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
+                THE STUDIO ENSEMBLE
+              </span>
+            </m.div>
+
+            <m.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest font-normal"
+            >
+              Master Artists &amp; Craftsmen
+            </m.h2>
+
+            <m.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-sm sm:text-base text-sage-muted max-w-2xl mx-auto leading-relaxed"
+            >
+              A specialized collective of colorists, retouching artists, and audio engineers collaborating under the creative direction of Akshay Chhabra to deliver theatrical-grade master finishing.
+            </m.p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4">
+            {teamMembers.map((member, index) => {
+              const memberName = member.fullName || member.name || "Studio Artist";
+              const memberRole = member.designation || member.role || "Specialist";
+              const memberBio = member.shortBio || member.bio || "";
+              const memberCategory = member.category || "Post-Production";
+              const memberPhoto = mediaUrl(
+                member.profileImage || member.avatar || member.image || "/assets/akshay-chhabra-founder.jpg"
+              );
+
+              return (
+                <m.div
+                  key={member._id || member.slug || index}
+                  initial={{ opacity: 0, y: 25 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="group relative rounded-3xl border border-sage-border bg-sage-card p-6 shadow-soft hover:shadow-editorial transition-all duration-500 flex flex-col items-center text-center overflow-hidden hover:-translate-y-1.5"
+                >
+                  {/* Member Portrait with Zoom Modal Trigger */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Zoom photo of ${memberName}`}
+                    onClick={() =>
+                      setActiveZoomImage({
+                        src: memberPhoto,
+                        name: memberName,
+                        role: memberRole
+                      })
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setActiveZoomImage({
+                          src: memberPhoto,
+                          name: memberName,
+                          role: memberRole
+                        });
+                      }
+                    }}
+                    className="relative w-44 h-44 sm:w-48 sm:h-48 rounded-2xl overflow-hidden mb-5 bg-forest/5 border border-sage-border group-hover:border-[rgb(72,125,72)]/60 transition-all duration-300 shadow-inner cursor-pointer"
+                  >
+                    <img
+                      src={memberPhoto}
+                      alt={memberName}
+                      loading="lazy"
+                      className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+
+                    <div className="absolute inset-0 bg-forest/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-forest shadow-soft">
+                        <ZoomIn className="h-3.5 w-3.5 text-site" />
+                        <span>Inspect</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Category Pill */}
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-site bg-[rgb(72,125,72)]/10 px-3 py-0.5 rounded-full mb-2">
+                    {memberCategory}
+                  </span>
+
+                  {/* Name */}
+                  <h3 className="font-heading text-xl sm:text-2xl text-forest font-normal group-hover:text-site transition-colors leading-snug">
+                    {memberName}
+                  </h3>
+
+                  {/* Role */}
+                  <p className="text-xs font-semibold text-sage-muted tracking-wide mt-1 mb-3">
+                    {memberRole}
+                  </p>
+
+                  <div className="w-8 h-px bg-sage-border group-hover:w-16 group-hover:bg-[rgb(72,125,72)]/60 transition-all duration-300 mb-3" />
+
+                  {/* Bio */}
+                  {memberBio && (
+                    <p className="text-xs text-sage-muted leading-relaxed line-clamp-3">
+                      {memberBio}
+                    </p>
+                  )}
+
+                  <div className="mt-auto pt-4 flex items-center gap-1.5 text-[11px] font-semibold text-site">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Studio Resident</span>
+                  </div>
+                </m.div>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      {/* 8. CREATIVE & PRODUCTION PHILOSOPHY */}
       <section className="py-16 bg-sage-secondary/30 border-y border-sage-border/60">
         <Container className="max-w-[1280px] mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-3xl mx-auto">

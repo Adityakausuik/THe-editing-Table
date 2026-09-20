@@ -526,6 +526,65 @@ const DEFAULT_AUTHENTIC_PARTNERS = [
   }
 ];
 
+const DEFAULT_AUTHENTIC_TEAM = [
+  {
+    fullName: "Akshay Chhabra",
+    slug: "akshay-chhabra",
+    designation: "Founder & Creative Director",
+    category: "Creative Direction",
+    shortBio: "Leading post-production direction, creative color science, and strategic studio vision.",
+    fullBio: "Leading post-production direction, creative color science, and strategic studio vision across premier wedding cinema, commercial films, and high-fashion editorial campaigns.",
+    profileImage: "/assets/akshay-chhabra-founder.jpg",
+    skills: ["DaVinci Resolve Studio", "ACES Color Science", "Creative Direction", "Analog Film Emulation"],
+    experience: "10+ Years",
+    featured: true,
+    active: true,
+    displayOrder: 1
+  },
+  {
+    fullName: "Elena Rostova",
+    slug: "elena-rostova",
+    designation: "Lead DaVinci Colorist",
+    category: "Color Science",
+    shortBio: "Specializing in 35mm Kodak stock emulation, skin tone preservation, and Dolby Vision HDR mastering.",
+    fullBio: "Specializing in 35mm Kodak stock emulation, skin tone preservation, and Dolby Vision HDR mastering for international films and luxury brands.",
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=85",
+    skills: ["DaVinci Resolve", "Dolby Vision HDR", "35mm Print Emulation", "Skin Tone Matching"],
+    experience: "8+ Years",
+    featured: true,
+    active: true,
+    displayOrder: 2
+  },
+  {
+    fullName: "Marcus Vance",
+    slug: "marcus-vance",
+    designation: "Head of Photo Retouching",
+    category: "Editorial Retouching",
+    shortBio: "Overseeing high-fashion editorial retouching, frequency separation, and micro dodge & burn.",
+    fullBio: "Overseeing high-fashion editorial retouching, frequency separation, and micro dodge & burn for global fashion labels and magazine spreads.",
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85",
+    skills: ["Micro Dodge & Burn", "Frequency Separation", "Capture One", "High-End Editorial Retouching"],
+    experience: "7+ Years",
+    featured: true,
+    active: true,
+    displayOrder: 3
+  },
+  {
+    fullName: "Claire Beaumont",
+    slug: "claire-beaumont",
+    designation: "Supervising Sound Editor",
+    category: "Sound Design",
+    shortBio: "Crafting immersive spatial soundscapes, dialogue clarity, and theatrical dynamic range audio finishing.",
+    fullBio: "Crafting immersive spatial soundscapes, dialogue clarity, and theatrical dynamic range audio finishing for cinematic narrative releases.",
+    profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=85",
+    skills: ["Fairlight Studio", "Dolby Atmos", "Audio Restoration", "Theatrical Sound Design"],
+    experience: "6+ Years",
+    featured: true,
+    active: true,
+    displayOrder: 4
+  }
+];
+
 function createCRUDActions(Model, entityName) {
   const config = getEntityConfig(entityName);
 
@@ -546,6 +605,13 @@ function createCRUDActions(Model, entityName) {
           const count = await Model.countDocuments().catch(() => 0);
           if (count === 0) {
             await Model.insertMany(DEFAULT_AUTHENTIC_PARTNERS).catch(() => null);
+          }
+        }
+
+        if (entityName === "TeamMember") {
+          const count = await Model.countDocuments().catch(() => 0);
+          if (count === 0) {
+            await Model.insertMany(DEFAULT_AUTHENTIC_TEAM).catch(() => null);
           }
         }
 
@@ -572,6 +638,13 @@ function createCRUDActions(Model, entityName) {
     getAdmin: async (req, res) => {
       try {
         if (!requireDb(res)) return;
+
+        if (entityName === "TeamMember") {
+          const count = await Model.countDocuments().catch(() => 0);
+          if (count === 0) {
+            await Model.insertMany(DEFAULT_AUTHENTIC_TEAM).catch(() => null);
+          }
+        }
 
         const { search, category } = req.query;
         const query = {};
