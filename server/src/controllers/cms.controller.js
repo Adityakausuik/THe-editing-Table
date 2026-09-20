@@ -935,6 +935,9 @@ export async function getSiteSettings(req, res) {
     if (!settingsMap.publicContent.footer.instagram || settingsMap.publicContent.footer.instagram === "#") {
       settingsMap.publicContent.footer.instagram = "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==";
     }
+    if (!settingsMap.publicContent.footer.linkedin || settingsMap.publicContent.footer.linkedin === "#") {
+      settingsMap.publicContent.footer.linkedin = "https://www.linkedin.com/company/the-editing-table/";
+    }
     return res.json({ success: true, message: "Site settings retrieved successfully", data: settingsMap });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Site settings fetch failed", data: null });
@@ -957,6 +960,9 @@ export async function getAdminSiteSettings(req, res) {
     }
     if (!settingsMap.publicContent.footer.instagram || settingsMap.publicContent.footer.instagram === "#") {
       settingsMap.publicContent.footer.instagram = "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==";
+    }
+    if (!settingsMap.publicContent.footer.linkedin || settingsMap.publicContent.footer.linkedin === "#") {
+      settingsMap.publicContent.footer.linkedin = "https://www.linkedin.com/company/the-editing-table/";
     }
     return res.json({
       success: true,

@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, Mail, Phone, MapPin, Instagram } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, Mail, Phone, MapPin, Instagram, Linkedin } from "lucide-react";
 import { useState } from "react";
 import Container from "../components/ui/Container.jsx";
 import SectionHeading from "../components/ui/SectionHeading.jsx";
@@ -227,6 +227,23 @@ export default function ContactPage() {
                     className="text-sm text-sage-muted hover:text-site transition-colors"
                   >
                     @the.editingtable
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
+                  <Linkedin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg text-forest">LinkedIn</h3>
+                  <a
+                    href="https://www.linkedin.com/company/the-editing-table/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-sage-muted hover:text-site transition-colors"
+                  >
+                    The Editing Table
                   </a>
                 </div>
               </div>

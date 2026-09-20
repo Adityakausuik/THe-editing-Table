@@ -39,7 +39,7 @@ const defaultSettings = [
     value: {
       footer: {
         instagram: "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==",
-        linkedin: ""
+        linkedin: "https://www.linkedin.com/company/the-editing-table/"
       }
     },
     group: "footer",

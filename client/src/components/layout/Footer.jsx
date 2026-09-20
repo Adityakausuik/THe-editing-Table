@@ -125,9 +125,11 @@ export default function Footer() {
   const description = footer.description || DEFAULT_DESCRIPTION;
   const siteName = settings.siteName || "The Editing Table";
   const DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==";
+  const DEFAULT_LINKEDIN_URL = "https://www.linkedin.com/company/the-editing-table/";
   const instagramUrl =
     footer.instagram && footer.instagram !== "#" ? footer.instagram : DEFAULT_INSTAGRAM_URL;
-  const linkedinUrl = footer.linkedin || "#";
+  const linkedinUrl =
+    footer.linkedin && footer.linkedin !== "#" ? footer.linkedin : DEFAULT_LINKEDIN_URL;
 
   // Dynamic Contact Properties
   const contactSettings = contactData?.settings || DEFAULT_CONTACT_SETTINGS;
