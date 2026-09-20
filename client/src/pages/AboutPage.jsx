@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import Container from "../components/ui/Container.jsx";
 import ImageZoomModal from "../components/ui/ImageZoomModal.jsx";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../lib/api.js";
+import { sanitizeStudio } from "../lib/sanitizeStudio.js";
 
 const DEFAULT_ABOUT_DATA = {
   fullName: "Akshay Chhabra",
@@ -157,24 +158,25 @@ export default function AboutPage() {
       apiFetch("/api/v1/cms/about-me")
         .then((res) => {
           if (isMounted && res?.data) {
+            const cleanData = sanitizeStudio(res.data);
             setData((prev) => ({
               ...prev,
-              ...res.data,
+              ...cleanData,
               aboutParagraphs:
-                Array.isArray(res.data.aboutParagraphs) && res.data.aboutParagraphs.length > 0
-                  ? res.data.aboutParagraphs
+                Array.isArray(cleanData.aboutParagraphs) && cleanData.aboutParagraphs.length > 0
+                  ? cleanData.aboutParagraphs
                   : prev.aboutParagraphs,
               skills:
-                Array.isArray(res.data.skills) && res.data.skills.length > 0
-                  ? res.data.skills
+                Array.isArray(cleanData.skills) && cleanData.skills.length > 0
+                  ? cleanData.skills
                   : prev.skills,
               whatIDo:
-                Array.isArray(res.data.whatIDo) && res.data.whatIDo.length > 0
-                  ? res.data.whatIDo
+                Array.isArray(cleanData.whatIDo) && cleanData.whatIDo.length > 0
+                  ? cleanData.whatIDo
                   : prev.whatIDo,
               philosophyPillars:
-                Array.isArray(res.data.philosophyPillars) && res.data.philosophyPillars.length > 0
-                  ? res.data.philosophyPillars
+                Array.isArray(cleanData.philosophyPillars) && cleanData.philosophyPillars.length > 0
+                  ? cleanData.philosophyPillars
                   : prev.philosophyPillars
             }));
           }
@@ -205,7 +207,7 @@ export default function AboutPage() {
       try {
         const res = await apiFetch("/api/v1/cms/team");
         const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
-        const activeList = list.filter((item) => item.active !== false);
+        const activeList = sanitizeStudio(list.filter((item) => item.active !== false));
         if (isMounted && activeList.length > 0) {
           setTeamMembers(activeList);
         }

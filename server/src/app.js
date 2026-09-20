@@ -25,6 +25,7 @@ import { adminContactRouter, publicContactRouter } from "./routes/contact.routes
 import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
+import { sanitizeStudio } from "./utils/sanitizeStudio.js";
 
 const allowedOrigins = new Set([
   env.CLIENT_ORIGIN,
@@ -83,6 +84,9 @@ export function createApp() {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
+
+    const originalJson = res.json.bind(res);
+    res.json = (body) => originalJson(sanitizeStudio(body));
     next();
   });
 

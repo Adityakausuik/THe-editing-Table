@@ -1,6 +1,7 @@
 /* global BroadcastChannel, CustomEvent, FormData, Headers, fetch, sessionStorage */
 
 import fallbackMedia from "../assets/the-editing-table-logo.png";
+import { sanitizeStudio } from "./sanitizeStudio.js";
 
 const configuredApiRoot = import.meta.env.VITE_API_URL;
 if (import.meta.env.PROD && !configuredApiRoot) {
@@ -95,7 +96,8 @@ export async function apiFetch(path, options = {}) {
     throw error;
   }
 
-  const result = payload || { success: true, message: "Operation completed successfully", data: null };
+  const rawResult = payload || { success: true, message: "Operation completed successfully", data: null };
+  const result = sanitizeStudio(rawResult);
   if (method !== "GET" && method !== "HEAD") {
     const key = cmsEventKey(path);
     if (key) notifyCmsChanged(key);

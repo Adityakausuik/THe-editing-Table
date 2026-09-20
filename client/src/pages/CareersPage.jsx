@@ -22,6 +22,7 @@ import Button from "../components/ui/Button.jsx";
 import Container from "../components/ui/Container.jsx";
 import SectionHeading from "../components/ui/SectionHeading.jsx";
 import { apiFetch } from "../lib/api.js";
+import { sanitizeStudio } from "../lib/sanitizeStudio.js";
 
 const ICON_MAP = {
   Users,
@@ -69,8 +70,8 @@ export default function CareersPage() {
           apiFetch("/api/v1/careers/jobs"),
           apiFetch("/api/v1/careers/content")
         ]);
-        setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
-        setContent(contentRes.data || null);
+        setJobs(Array.isArray(jobsRes.data) ? sanitizeStudio(jobsRes.data) : []);
+        setContent(contentRes.data ? sanitizeStudio(contentRes.data) : null);
       } catch (err) {
         console.error("Failed to fetch careers data:", err);
         setError("Unable to load current career opportunities. Please try again later.");
