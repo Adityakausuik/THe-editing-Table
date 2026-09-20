@@ -463,10 +463,6 @@ export default function VideoShowcaseSection() {
               )}
             </p>
           )}
-
-          <p className="mx-auto max-w-3xl text-xs font-semibold uppercase leading-6 tracking-[0.12em] text-site sm:text-sm">
-            Wedding Films <span aria-hidden="true">•</span> Reels <span aria-hidden="true">•</span> Brand Videos <span aria-hidden="true">•</span> Color Grading <span aria-hidden="true">•</span> Photo Editing <span aria-hidden="true">•</span> Post-Production
-          </p>
         </div>
 
         {/* 5-Card Vertical Video Showcase Layout */}
