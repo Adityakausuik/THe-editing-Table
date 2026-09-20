@@ -433,6 +433,99 @@ const DEFAULT_AUTHENTIC_SERVICES = [
   }
 ];
 
+const DEFAULT_AUTHENTIC_PARTNERS = [
+  {
+    name: "Atelier Vance Cinema",
+    category: "Luxury Wedding Films",
+    locationTag: "🇺🇸 🇫🇷 New York • Paris",
+    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=85",
+    website: "https://ateliervance.com",
+    order: 1,
+    active: true
+  },
+  {
+    name: "Maison de L'Amour",
+    category: "Editorial Film Studio",
+    locationTag: "🇬🇧 🇮🇹 London • Amalfi",
+    image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
+    website: "https://maisondelamour.com",
+    order: 2,
+    active: true
+  },
+  {
+    name: "Aura Creative House",
+    category: "Commercial & Fashion Post",
+    locationTag: "🇺🇸 🇯🇵 Los Angeles • Tokyo",
+    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85",
+    website: "https://auracreative.com",
+    order: 3,
+    active: true
+  },
+  {
+    name: "Vogue Lumière Studio",
+    category: "High-Fashion & Runway Cinema",
+    locationTag: "🇮🇹 Milan • Lake Como",
+    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 4,
+    active: true
+  },
+  {
+    name: "Al-Mirage Creative",
+    category: "Royal Wedding Films & Commercials",
+    locationTag: "🇦🇪 Dubai • Abu Dhabi",
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 5,
+    active: true
+  },
+  {
+    name: "Heritage & Crown Productions",
+    category: "Grand Heritage Wedding Cinema",
+    locationTag: "🇮🇳 Mumbai • Udaipur",
+    image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 6,
+    active: true
+  },
+  {
+    name: "St. Moritz Motion Arts",
+    category: "Alpine & Destination Films",
+    locationTag: "🇨🇭 Zurich • St. Moritz",
+    image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 7,
+    active: true
+  },
+  {
+    name: "Riviera Cinema Collective",
+    category: "Festival & Editorial Post",
+    locationTag: "🇫🇷 🇲🇨 Cannes • Monaco",
+    image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 8,
+    active: true
+  },
+  {
+    name: "Pacific Harbor Studios",
+    category: "Commercial & Narrative Color",
+    locationTag: "🇦🇺 Sydney • Melbourne",
+    image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
+    logo: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
+    website: "/portfolio",
+    order: 9,
+    active: true
+  }
+];
+
 function createCRUDActions(Model, entityName) {
   const config = getEntityConfig(entityName);
 
@@ -446,6 +539,13 @@ function createCRUDActions(Model, entityName) {
           const count = await Model.countDocuments().catch(() => 0);
           if (count === 0) {
             await Model.insertMany(DEFAULT_AUTHENTIC_SERVICES).catch(() => null);
+          }
+        }
+
+        if (entityName === "Partner") {
+          const count = await Model.countDocuments().catch(() => 0);
+          if (count === 0) {
+            await Model.insertMany(DEFAULT_AUTHENTIC_PARTNERS).catch(() => null);
           }
         }
 
