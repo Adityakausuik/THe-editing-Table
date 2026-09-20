@@ -16,9 +16,6 @@ const BlogListingPage = lazy(() => import("../pages/BlogListingPage.jsx"));
 const BlogDetailPage = lazy(() => import("../pages/BlogDetailPage.jsx"));
 const BrandCollaborationsPage = lazy(() => import("../pages/BrandCollaborationsPage.jsx"));
 const BrandCollaborationDetailPage = lazy(() => import("../pages/BrandCollaborationDetailPage.jsx"));
-const FounderPage = lazy(() => import("../pages/FounderPage.jsx"));
-const TeamPage = lazy(() => import("../pages/TeamPage.jsx"));
-const TeamDetailPage = lazy(() => import("../pages/TeamDetailPage.jsx"));
 const CareersPage = lazy(() => import("../pages/CareersPage.jsx"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage.jsx"));
 
@@ -34,7 +31,7 @@ const PhotoShowcaseCMS = lazy(() => import("../admin/modules/PhotoShowcaseCMS.js
 const WeddingGalleryCMS = lazy(() => import("../admin/modules/WeddingGalleryCMS.jsx"));
 const CollaborationsCMS = lazy(() => import("../admin/modules/CollaborationsCMS.jsx"));
 const BlogCMS = lazy(() => import("../admin/modules/BlogCMS.jsx"));
-const TeamCMS = lazy(() => import("../admin/modules/TeamCMS.jsx"));
+const AboutMeCMS = lazy(() => import("../admin/modules/AboutMeCMS.jsx"));
 const CareersCMS = lazy(() => import("../admin/modules/CareersCMS.jsx"));
 const EnquiriesCMS = lazy(() => import("../admin/modules/EnquiriesCMS.jsx"));
 const ContactSettingsCMS = lazy(() => import("../admin/modules/ContactSettingsCMS.jsx"));
@@ -68,7 +65,9 @@ export default function AppRoutes() {
             {/* Public Layout & Routes */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<HomePage />} />
-              <Route path="/aboutus" element={<AboutPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/aboutus" element={<Navigate to="/about" replace />} />
+              <Route path="/about-me" element={<Navigate to="/about" replace />} />
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/servicesdetails/:slug" element={<ServiceDetailPage />} />
               <Route path="/portfolio" element={<PortfolioPage />} />
@@ -77,9 +76,9 @@ export default function AppRoutes() {
               <Route path="/blog/:slug" element={<BlogDetailPage />} />
               <Route path="/brand-collaborations" element={<BrandCollaborationsPage />} />
               <Route path="/brand-collaborations/:slug" element={<BrandCollaborationDetailPage />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/team/:slug" element={<TeamDetailPage />} />
-              <Route path="/founder" element={<FounderPage />} />
+              <Route path="/team" element={<Navigate to="/about" replace />} />
+              <Route path="/team/:slug" element={<Navigate to="/about" replace />} />
+              <Route path="/founder" element={<Navigate to="/about" replace />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
@@ -98,7 +97,8 @@ export default function AppRoutes() {
               <Route path="wedding-gallery" element={<WeddingGalleryCMS />} />
               <Route path="collaborations" element={<CollaborationsCMS />} />
               <Route path="blog" element={<BlogCMS />} />
-              <Route path="team" element={<TeamCMS />} />
+              <Route path="about-me" element={<AboutMeCMS />} />
+              <Route path="team" element={<Navigate to="/admin/about-me" replace />} />
               <Route path="careers" element={<CareersCMS />} />
               <Route path="contact-settings" element={<ContactSettingsCMS />} />
               <Route path="enquiries" element={<EnquiriesCMS />} />

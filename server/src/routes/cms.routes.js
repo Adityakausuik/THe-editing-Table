@@ -21,6 +21,11 @@ import {
   createUser,
   deleteUser
 } from "../controllers/cms.controller.js";
+import {
+  getPublicAboutMe,
+  getAdminAboutMe,
+  updateAboutMe
+} from "../controllers/aboutMe.controller.js";
 
 const router = Router();
 
@@ -53,6 +58,12 @@ registerModuleRoutes("collaborations", collaborationsCMS);
 registerModuleRoutes("blog", blogCMS);
 registerModuleRoutes("team", teamCMS);
 registerModuleRoutes("partners", partnersCMS);
+
+// About Me Content Endpoints
+router.get("/about-me", getPublicAboutMe);
+router.get("/about-me/admin", authenticate, requireMinimumRole("editor"), getAdminAboutMe);
+router.put("/about-me", authenticate, requireMinimumRole("editor"), updateAboutMe);
+router.post("/about-me", authenticate, requireMinimumRole("editor"), updateAboutMe);
 
 // Overview Dashboard Stats
 router.get("/stats", authenticate, getDashboardStats);

@@ -15,7 +15,7 @@ import {
   Shield,
   ShieldCheck,
   Star,
-  Users,
+  UserCheck,
   Video,
   X
 } from "lucide-react";
@@ -42,7 +42,7 @@ const navSections = [
       { label: "Wedding Gallery", path: "/admin/wedding-gallery", icon: Image },
       { label: "Brand Collaborations", path: "/admin/collaborations", icon: Briefcase },
       { label: "Blog Journal", path: "/admin/blog", icon: FileText },
-      { label: "Team Members", path: "/admin/team", icon: Users },
+      { label: "About Me Profile", path: "/admin/about-me", icon: UserCheck },
       { label: "Careers & Jobs", path: "/admin/careers", icon: Briefcase }
     ]
   },

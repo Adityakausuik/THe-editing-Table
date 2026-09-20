@@ -31,6 +31,7 @@ function cmsEventKey(rawUrl = "") {
   if (rawUrl.includes("/wedding-gallery")) return "weddings";
   if (rawUrl.includes("/collaborations")) return "collaborations";
   if (rawUrl.includes("/blog")) return "blogs";
+  if (rawUrl.includes("/about-me")) return "about-me";
   if (rawUrl.includes("/team")) return "team";
   if (rawUrl.includes("/settings")) return "settings";
   if (rawUrl.includes("/reviews")) return "reviews";

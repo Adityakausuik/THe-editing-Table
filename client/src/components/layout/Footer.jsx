@@ -8,11 +8,9 @@ import BrandLogo from "../ui/BrandLogo.jsx";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/aboutus", label: "About Us" },
-  { href: "/founder", label: "Founder & CEO" },
+  { href: "/about", label: "About Me" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
-  { href: "/team", label: "Our Team" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact Us" }
@@ -110,7 +108,19 @@ export default function Footer() {
   const footer = publicContent.footer || {};
 
   const cmsNav = publicContent.navigation;
-  const siteLinks = Array.isArray(cmsNav) && cmsNav.length > 0 ? cmsNav : DEFAULT_NAV_LINKS;
+  const rawLinks = Array.isArray(cmsNav) && cmsNav.length > 0 ? cmsNav : DEFAULT_NAV_LINKS;
+  const siteLinks = rawLinks
+    .filter((link) => link.href !== "/founder" && link.href !== "/team")
+    .map((link) => {
+      if (link.href === "/aboutus" || link.href === "/about-me") {
+        return {
+          ...link,
+          href: "/about",
+          label: link.label === "About" || link.label === "About Us" ? "About Me" : link.label
+        };
+      }
+      return link;
+    });
   const displayServices = services.length > 0 ? services : DEFAULT_SERVICES;
   const description = footer.description || DEFAULT_DESCRIPTION;
   const siteName = settings.siteName || "The Editing Table";

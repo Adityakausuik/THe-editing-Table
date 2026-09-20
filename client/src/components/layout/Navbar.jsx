@@ -8,11 +8,9 @@ import Container from "../ui/Container.jsx";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/aboutus", label: "About" },
-  { href: "/founder", label: "Founder" },
+  { href: "/about", label: "About Me" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
-  { href: "/team", label: "Team" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact" },
@@ -24,9 +22,21 @@ export default function Navbar() {
   const location = useLocation();
   const { settings } = useSiteSettings();
   const cmsNav = settings.publicContent?.navigation;
-  const siteLinks = Array.isArray(cmsNav) && cmsNav.length > 0
+  const rawLinks = Array.isArray(cmsNav) && cmsNav.length > 0
     ? cmsNav
     : DEFAULT_NAV_LINKS;
+  const siteLinks = rawLinks
+    .filter((link) => link.href !== "/founder" && link.href !== "/team")
+    .map((link) => {
+      if (link.href === "/aboutus" || link.href === "/about-me") {
+        return {
+          ...link,
+          href: "/about",
+          label: link.label === "About" || link.label === "About Us" ? "About Me" : link.label
+        };
+      }
+      return link;
+    });
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 15);
