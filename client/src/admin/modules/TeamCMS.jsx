@@ -202,7 +202,7 @@ export default function TeamCMS() {
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/90 px-3 py-1 mb-1 shadow-soft">
             <Users className="h-3.5 w-3.5 text-site" />
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
-              Studio Artists &amp; Team
+              Artists &amp; Team
             </span>
           </div>
           <h1 className="font-heading text-3xl text-forest font-normal">Team Members</h1>

@@ -17,7 +17,7 @@ const jobSchema = new mongoose.Schema(
     location: {
       type: String,
       trim: true,
-      default: "Mohali, Punjab • Studio / Hybrid"
+      default: "Mohali, Punjab • Onsite / Hybrid"
     },
     employmentType: {
       type: String,

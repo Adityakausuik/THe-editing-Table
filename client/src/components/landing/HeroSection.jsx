@@ -31,11 +31,11 @@ export default function HeroSection() {
       aria-label="The Editing Table Hero"
       className="relative min-h-[100svh] w-full flex flex-col items-center justify-center overflow-hidden bg-sage-bg select-none outline-none pt-16 sm:pt-20 pb-8 sm:pb-12"
     >
-      {/* AMBIENT BACKGROUND GLOW — Apple / VisionOS Inspired Studio Aura */}
+      {/* AMBIENT BACKGROUND GLOW — Apple / VisionOS Inspired Aura */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 bg-gradient-to-b from-[#F8FBF7] via-[#F5F8F3] to-[#F8FBF7]" />
 
-        {/* Central soft atmospheric studio orb — dynamically scaled for all desktop & mobile resolutions */}
+        {/* Central soft atmospheric orb — dynamically scaled for all desktop & mobile resolutions */}
         <m.div
           animate={
             shouldReduceMotion
@@ -54,7 +54,7 @@ export default function HeroSection() {
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[clamp(420px,50vw,920px)] w-[clamp(420px,50vw,920px)] rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.22)_0%,rgba(200,216,190,0.08)_45%,transparent_70%)] blur-3xl pointer-events-none"
         />
 
-        {/* Fine luxury studio vignette */}
+        {/* Fine luxury vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(248,251,247,0.85)_100%)]" />
       </div>
 

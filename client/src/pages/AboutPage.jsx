@@ -36,7 +36,7 @@ const DEFAULT_ABOUT_DATA = {
   aboutParagraphs: [
     "Founded by Akshay Chhabra, The Editing Table was established with a singular conviction: every filmmaker, photographer, and creative brand deserves post-production that elevates their visual storytelling to cinematic perfection.",
     "Over the past decade, Akshay has overseen hundreds of luxury wedding films, high-fashion editorial campaigns, and commercial master deliveries across India, the UK, Europe, and North America.",
-    "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the studio's workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
+    "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
   ],
   visionHeading: "A Vision for Global Cinematic Post-Production",
   visionText:
@@ -46,7 +46,7 @@ const DEFAULT_ABOUT_DATA = {
   experienceText:
     "With over ten years spearheading post-production pipelines, Akshay combines the technical precision of color science with an innate sensibility for pacing, tone, and editorial rhythm.",
   skills: [
-    "DaVinci Resolve Studio",
+    "DaVinci Resolve",
     "ACES Color Science",
     "Analog 35mm Film Emulation",
     "Micro Dodge & Burn",
@@ -75,15 +75,15 @@ const DEFAULT_ABOUT_DATA = {
         "Micro-level skin texture preservation, frequency separation, and color grading for high-end campaigns and editorial spreads."
     },
     {
-      title: "Studio Quality Gate & Delivery",
+      title: "Quality Gate & Delivery",
       tag: "Mastering",
       description:
         "Personal frame-by-frame QC on every delivery, guaranteeing DCI-P3 / Rec.709 calibration and broadcast compliance."
     }
   ],
-  companyRoleHeading: "The Editing Table — Dedicated Studio Infrastructure",
+  companyRoleHeading: "The Editing Table — Dedicated Infrastructure",
   companyRoleText:
-    "As Founder and Creative Director, Akshay leads the studio's dedicated post-production team in Mohali, Punjab. Every client engagement pairs boutique personal consultation with studio-scale processing speed and security.",
+    "As Founder and Creative Director, Akshay leads the dedicated post-production team in Mohali, Punjab. Every client engagement pairs bespoke personal consultation with high-throughput processing speed and security.",
   turnaroundHours: "48-72 Hours",
   clientRetentionRate: "99.8%",
   globalDelivery: "Worldwide • Calibrated Cloud Workflows",
@@ -102,7 +102,7 @@ const DEFAULT_ABOUT_DATA = {
     {
       title: "Bespoke Partnership",
       description:
-        "We operate as an extension of your studio team. Your signature style is strictly documented and preserved across all future seasons."
+        "We operate as an extension of your team. Your signature style is strictly documented and preserved across all future seasons."
     }
   ]
 };
@@ -116,7 +116,7 @@ const DEFAULT_TEAM = [
     fullName: "Akshay Chhabra",
     designation: "Founder & Creative Director",
     category: "Creative Direction",
-    shortBio: "Leading post-production direction, creative color science, and strategic studio vision.",
+    shortBio: "Leading post-production direction, creative color science, and strategic creative vision.",
     profileImage: "/assets/akshay-chhabra-founder.jpg"
   },
   {
@@ -398,7 +398,7 @@ export default function AboutPage() {
       <section className="py-16 bg-sage-secondary/30 border-y border-sage-border/60">
         <Container className="max-w-4xl text-center space-y-6">
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
-            STUDIO VISION
+            CREATIVE VISION
           </span>
           <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest font-normal leading-tight">
             {data.visionHeading}
@@ -500,13 +500,13 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* 6. THE EDITING TABLE STUDIO & INFRASTRUCTURE */}
+      {/* 6. THE EDITING TABLE INFRASTRUCTURE */}
       <section>
         <Container className="max-w-[1280px] mx-auto grid gap-10 lg:grid-cols-[1.2fr_1fr] items-center">
           <div className="space-y-6 text-left">
             <div className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-site">
-                STUDIO INFRASTRUCTURE
+                GLOBAL INFRASTRUCTURE
               </span>
               <h2 className="font-heading text-3xl sm:text-4xl text-forest font-normal leading-tight">
                 {data.companyRoleHeading}
@@ -576,7 +576,7 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* 7. STUDIO TEAM & MASTER ARTISTS */}
+      {/* 7. OUR TEAM & MASTER ARTISTS */}
       <section id="team" className="py-20 bg-sage-secondary/25 border-y border-sage-border/60">
         <Container className="max-w-[1280px] mx-auto space-y-12 text-center">
           <div className="space-y-4 max-w-3xl mx-auto">
@@ -589,7 +589,7 @@ export default function AboutPage() {
             >
               <Users className="h-4 w-4 text-site" />
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
-                THE STUDIO ENSEMBLE
+                THE CREATIVE ENSEMBLE
               </span>
             </m.div>
 
@@ -616,7 +616,7 @@ export default function AboutPage() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4">
             {teamMembers.map((member, index) => {
-              const memberName = member.fullName || member.name || "Studio Artist";
+              const memberName = member.fullName || member.name || "Artist";
               const memberRole = member.designation || member.role || "Specialist";
               const memberBio = member.shortBio || member.bio || "";
               const memberCategory = member.category || "Post-Production";
@@ -697,7 +697,7 @@ export default function AboutPage() {
 
                   <div className="mt-auto pt-4 flex items-center gap-1.5 text-[11px] font-semibold text-site">
                     <CheckCircle2 className="h-3 w-3" />
-                    <span>Studio Resident</span>
+                    <span>Resident Artist</span>
                   </div>
                 </m.div>
               );

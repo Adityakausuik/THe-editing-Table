@@ -372,7 +372,7 @@ export default function PortfolioCMS() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
-                      Client Studio Name
+                      Client / Brand Name
                     </label>
                     <input
                       type="text"

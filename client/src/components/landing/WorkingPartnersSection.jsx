@@ -17,7 +17,7 @@ const DEFAULT_PARTNERS = [
     _id: "p2",
     name: "Maison de L'Amour",
     locationTag: "🇬🇧 🇮🇹 London • Amalfi",
-    category: "Editorial Film Studio",
+    category: "Editorial Film House",
     image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
     website: "https://maisondelamour.com"
   },
@@ -31,7 +31,7 @@ const DEFAULT_PARTNERS = [
   },
   {
     _id: "p4",
-    name: "Vogue Lumière Studio",
+    name: "Vogue Lumière House",
     locationTag: "🇮🇹 Milan • Lake Como",
     category: "High-Fashion & Runway Cinema",
     image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
@@ -71,7 +71,7 @@ const DEFAULT_PARTNERS = [
   },
   {
     _id: "p9",
-    name: "Pacific Harbor Studios",
+    name: "Pacific Harbor Films",
     locationTag: "🇦🇺 Sydney • Melbourne",
     category: "Commercial & Narrative Color",
     image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
@@ -109,14 +109,14 @@ export default function WorkingPartnersSection() {
           </div>
 
           <p className="text-xs sm:text-sm text-sage-muted max-w-md leading-relaxed">
-            We partner with leading global studios, destination wedding filmmakers, and creative directors to deliver high-end post-production excellence across borders.
+            We partner with leading global filmmakers, destination wedding directors, and creative agencies to deliver high-end post-production excellence across borders.
           </p>
         </div>
 
         {/* Global Partners Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 pt-12">
           {displayPartners.map((partner, index) => {
-            const partnerName = partner.name || partner.companyName || "Partner Studio";
+            const partnerName = partner.name || partner.companyName || "Working Partner";
             const locationTag = partner.locationTag || partner.tag || partner.location || "Global";
             const category = partner.category || "Production House";
             const partnerImage = partner.image || partner.logo || partner.logoUrl || partner.imageUrl || partner.thumbnail || "";

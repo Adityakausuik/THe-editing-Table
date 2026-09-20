@@ -91,7 +91,7 @@ const DEFAULT_PHOTOS = [
 const DEFAULT_SETTINGS = {
   heading: "Masterpiece High-End Photo Retouching & Color Suite",
   subheading:
-    "Bespoke wedding photography retouching, high-end editorial photo refinement, and luxury portfolio color science crafted for studios worldwide.",
+    "Bespoke wedding photography retouching, high-end editorial photo refinement, and luxury portfolio color science crafted for filmmakers and creators worldwide.",
   showSection: true,
   showSubheading: true,
   alignment: "center",

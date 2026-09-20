@@ -159,7 +159,7 @@ export default function ReviewsCMS() {
     const replyObj = {
       message: replyMessage,
       repliedAt: new Date(),
-      repliedBy: "Studio Admin"
+      repliedBy: "Admin"
     };
 
     setReviews((prev) =>

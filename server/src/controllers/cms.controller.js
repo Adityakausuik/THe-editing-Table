@@ -411,7 +411,7 @@ const DEFAULT_AUTHENTIC_SERVICES = [
     description: "Creative editing of wedding photographs and films to preserve emotions and tell the complete story beautifully.",
     turnaround: "5-7 Days",
     icon: "Film",
-    features: ["Full Story Culling", "Consistent Studio Color Grade", "Highlight Film & Teaser Edit", "Audio Synchronization"],
+    features: ["Full Story Culling", "Consistent Color Grade", "Highlight Film & Teaser Edit", "Audio Synchronization"],
     deliverables: ["Full Gallery Lightroom Catalog", "Master Cinematic Wedding Film & Teaser"],
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
     isPublished: true,
@@ -446,7 +446,7 @@ const DEFAULT_AUTHENTIC_PARTNERS = [
   },
   {
     name: "Maison de L'Amour",
-    category: "Editorial Film Studio",
+    category: "Editorial Film House",
     locationTag: "🇬🇧 🇮🇹 London • Amalfi",
     image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
     logo: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
@@ -465,7 +465,7 @@ const DEFAULT_AUTHENTIC_PARTNERS = [
     active: true
   },
   {
-    name: "Vogue Lumière Studio",
+    name: "Vogue Lumière House",
     category: "High-Fashion & Runway Cinema",
     locationTag: "🇮🇹 Milan • Lake Como",
     image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
@@ -515,7 +515,7 @@ const DEFAULT_AUTHENTIC_PARTNERS = [
     active: true
   },
   {
-    name: "Pacific Harbor Studios",
+    name: "Pacific Harbor Films",
     category: "Commercial & Narrative Color",
     locationTag: "🇦🇺 Sydney • Melbourne",
     image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
@@ -532,10 +532,10 @@ const DEFAULT_AUTHENTIC_TEAM = [
     slug: "akshay-chhabra",
     designation: "Founder & Creative Director",
     category: "Creative Direction",
-    shortBio: "Leading post-production direction, creative color science, and strategic studio vision.",
-    fullBio: "Leading post-production direction, creative color science, and strategic studio vision across premier wedding cinema, commercial films, and high-fashion editorial campaigns.",
+    shortBio: "Leading post-production direction, creative color science, and strategic creative vision.",
+    fullBio: "Leading post-production direction, creative color science, and strategic creative vision across premier wedding cinema, commercial films, and high-fashion editorial campaigns.",
     profileImage: "/assets/akshay-chhabra-founder.jpg",
-    skills: ["DaVinci Resolve Studio", "ACES Color Science", "Creative Direction", "Analog Film Emulation"],
+    skills: ["DaVinci Resolve", "ACES Color Science", "Creative Direction", "Analog Film Emulation"],
     experience: "10+ Years",
     featured: true,
     active: true,
@@ -577,7 +577,7 @@ const DEFAULT_AUTHENTIC_TEAM = [
     shortBio: "Crafting immersive spatial soundscapes, dialogue clarity, and theatrical dynamic range audio finishing.",
     fullBio: "Crafting immersive spatial soundscapes, dialogue clarity, and theatrical dynamic range audio finishing for cinematic narrative releases.",
     profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=85",
-    skills: ["Fairlight Studio", "Dolby Atmos", "Audio Restoration", "Theatrical Sound Design"],
+    skills: ["Fairlight Audio", "Dolby Atmos", "Audio Restoration", "Theatrical Sound Design"],
     experience: "6+ Years",
     featured: true,
     active: true,

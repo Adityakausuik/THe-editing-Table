@@ -14,7 +14,7 @@ const DEFAULT_BENEFITS = [
   { icon: "Globe2", title: "Global 4K Deliverables" }
 ];
 
-const DEFAULT_STUDIO_IMAGE =
+const DEFAULT_WORKFLOW_IMAGE =
   "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=85";
 
 export default function WhyChooseUsSection() {
@@ -26,8 +26,8 @@ export default function WhyChooseUsSection() {
     : DEFAULT_BENEFITS;
   const icons = { Palette, Clock3, LockKeyhole, MessageCircle, Users, ShieldCheck, CheckCircle2, Globe2 };
 
-  const rawStudioImg = publicContent.studioImage;
-  const studioImageSrc = rawStudioImg ? mediaUrl(rawStudioImg) : DEFAULT_STUDIO_IMAGE;
+  const rawWorkflowImg = publicContent.workflowImage || publicContent.studioImage;
+  const workflowImageSrc = rawWorkflowImg ? mediaUrl(rawWorkflowImg) : DEFAULT_WORKFLOW_IMAGE;
 
   return (
     <section id="why-us" data-theme="about" className="section-pad">
@@ -41,11 +41,11 @@ export default function WhyChooseUsSection() {
         >
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sage-secondary flex items-center justify-center">
             <img
-              src={studioImageSrc}
-              alt="Editing studio workflow"
+              src={workflowImageSrc}
+              alt="Post-production workflow"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = DEFAULT_STUDIO_IMAGE;
+                e.currentTarget.src = DEFAULT_WORKFLOW_IMAGE;
               }}
               className="h-full w-full object-cover"
             />
@@ -65,7 +65,7 @@ export default function WhyChooseUsSection() {
         <div className="space-y-6">
           <SectionHeading
             align="left"
-            label="Studio Standards"
+            label="Quality Standards"
             title="Why High-End Filmmakers Trust The Editing Table"
             text="A luxury post-production partner designed to maintain the highest editorial standards without compromising your creative vision."
           />

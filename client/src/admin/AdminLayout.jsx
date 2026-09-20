@@ -44,12 +44,12 @@ const navSections = [
       { label: "Brand Collaborations", path: "/admin/collaborations", icon: Briefcase },
       { label: "Blog Journal", path: "/admin/blog", icon: FileText },
       { label: "About Me Profile", path: "/admin/about-me", icon: UserCheck },
-      { label: "Studio Team", path: "/admin/team", icon: Users },
+      { label: "Team Members", path: "/admin/team", icon: Users },
       { label: "Careers & Jobs", path: "/admin/careers", icon: Briefcase }
     ]
   },
   {
-    title: "Studio Management",
+    title: "Platform Management",
     items: [
       { label: "Contact Settings", path: "/admin/contact-settings", icon: Phone },
       { label: "Contact Enquiries", path: "/admin/enquiries", icon: Mail },

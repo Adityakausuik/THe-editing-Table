@@ -27,11 +27,11 @@ const careersContentSchema = new mongoose.Schema(
       },
       description: {
         type: String,
-        default: "Join our passionate team of visionary colorists, editors, retouching artists, and creative technologists crafting timeless visual stories for premier studios worldwide."
+        default: "Join our passionate team of visionary colorists, editors, retouching artists, and creative technologists crafting timeless visual stories for premier filmmakers and creators worldwide."
       },
       badge: {
         type: String,
-        default: "JOIN OUR CREATIVE STUDIO"
+        default: "JOIN OUR CREATIVE TEAM"
       }
     },
     whyJoinUs: {
@@ -64,7 +64,7 @@ const careersContentSchema = new mongoose.Schema(
         {
           id: "card-4",
           title: "Flexible & Supportive Culture",
-          description: "Healthy work-life balance, studio flexibility, and dedicated post-production suites designed for artistic focus.",
+          description: "Healthy work-life balance, flexible schedules, and dedicated post-production suites designed for artistic focus.",
           icon: "Heart",
           active: true,
           order: 3
@@ -72,7 +72,7 @@ const careersContentSchema = new mongoose.Schema(
         {
           id: "card-5",
           title: "Be Part of a Growing Team",
-          description: "Shape the trajectory of our rapidly expanding studio as we pioneer bespoke editorial post-production worldwide.",
+          description: "Shape the trajectory of our rapidly expanding team as we pioneer bespoke editorial post-production worldwide.",
           icon: "TrendingUp",
           active: true,
           order: 4

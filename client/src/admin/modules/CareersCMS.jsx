@@ -58,7 +58,7 @@ export default function CareersCMS() {
   const [jobForm, setJobForm] = useState({
     title: "",
     department: "Post-Production",
-    location: "Mohali, Punjab • Studio / Hybrid",
+    location: "Mohali, Punjab • Onsite / Hybrid",
     employmentType: "Full Time",
     experience: "2+ Years",
     salary: "Competitive / Based on Portfolio",
@@ -188,7 +188,7 @@ export default function CareersCMS() {
       setJobForm({
         title: job.title || "",
         department: job.department || "Post-Production",
-        location: job.location || "Mohali, Punjab • Studio / Hybrid",
+        location: job.location || "Mohali, Punjab • Onsite / Hybrid",
         employmentType: job.employmentType || "Full Time",
         experience: job.experience || "2+ Years",
         salary: job.salary || "Competitive",
@@ -205,7 +205,7 @@ export default function CareersCMS() {
       setJobForm({
         title: "",
         department: "Post-Production",
-        location: "Mohali, Punjab • Studio / Hybrid",
+        location: "Mohali, Punjab • Onsite / Hybrid",
         employmentType: "Full Time",
         experience: "2+ Years",
         salary: "Competitive / Based on Portfolio",
@@ -459,7 +459,7 @@ export default function CareersCMS() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-sage-border pb-5">
         <div>
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
-            STUDIO RECRUITMENT
+            TEAM RECRUITMENT
           </span>
           <h1 className="font-heading text-3xl sm:text-4xl text-forest mt-1">Careers Management</h1>
           <p className="text-xs sm:text-sm text-sage-muted mt-1">
@@ -1177,7 +1177,7 @@ export default function CareersCMS() {
                     type="text"
                     value={jobForm.location}
                     onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
-                    placeholder="e.g. Mohali, Punjab • Studio / Hybrid"
+                    placeholder="e.g. Mohali, Punjab • Onsite / Hybrid"
                     className="field-luxury text-xs"
                   />
                 </div>

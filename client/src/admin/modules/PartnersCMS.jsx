@@ -229,7 +229,7 @@ export default function PartnersCMS() {
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-sage-muted z-10 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search partner studios..."
+          placeholder="Search partners..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ paddingLeft: "2.75rem" }}
@@ -310,7 +310,7 @@ export default function PartnersCMS() {
 
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-site bg-sage-secondary/70 px-2 py-0.5 rounded-full border border-[rgb(72,125,72)]/20">
-                  {partner.category || "Studio Partner"}
+                  {partner.category || "Creative Partner"}
                 </span>
                 <h3 className="font-serif text-xl text-forest font-semibold mt-1">
                   {partner.name || partner.companyName}
@@ -329,7 +329,7 @@ export default function PartnersCMS() {
           <div className="relative max-w-xl w-full max-h-[92vh] rounded-3xl border border-sage-light/40 bg-sage-card shadow-deep flex flex-col overflow-hidden my-auto">
             <div className="flex items-center justify-between p-5 sm:p-6 border-b border-sage-border/60 bg-sage-card shrink-0">
               <h2 className="font-serif text-2xl text-forest">
-                {editingItem ? "Edit Partner Studio" : "Add Partner Studio"}
+                {editingItem ? "Edit Partner" : "Add Partner"}
               </h2>
               <button
                 type="button"
@@ -346,14 +346,14 @@ export default function PartnersCMS() {
                   folder="partners"
                   value={formData.logo}
                   onChange={(url) => setFormData({ ...formData, logo: url })}
-                  label="Partner Studio Logo"
+                  label="Partner Logo"
                   description="Drag and drop company logo image here"
                 />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
-                      Studio Name *
+                      Partner Name *
                     </label>
                     <input
                       type="text"
@@ -402,7 +402,7 @@ export default function PartnersCMS() {
                   disabled={saving}
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[rgb(72,125,72)] text-white text-xs font-semibold hover:bg-[#7C9B69] transition shadow-sage cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : "Save Partner Studio"}
+                  {saving ? "Saving..." : "Save Partner"}
                 </button>
               </div>
             </form>

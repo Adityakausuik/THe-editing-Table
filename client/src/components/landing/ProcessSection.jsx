@@ -40,7 +40,7 @@ export default function ProcessSection() {
       <Container>
         <SectionHeading
           label="Seamless Workflow"
-          title="How We Collaborate With Your Studio"
+          title="How We Collaborate With Your Team"
           text="A frictionless post-production pipeline built so you can focus on shooting while we handle post."
         />
 

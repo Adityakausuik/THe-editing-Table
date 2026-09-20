@@ -24,7 +24,7 @@ const DEFAULT_SERVICES = [
 ];
 
 const DEFAULT_DESCRIPTION =
-  "The Editing Table is a professional pre-production and post-production studio focused on turning raw visuals into compelling stories.";
+  "The Editing Table is a premier post-production house focused on turning raw visuals into compelling stories.";
 
 const DEFAULT_PHONES = [
   { _id: "p1", countryCode: "IN", phone: "+91 XXXXX XXXXX", displayPhone: "+91 XXXXX XXXXX" },

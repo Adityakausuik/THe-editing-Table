@@ -34,10 +34,10 @@ export default function CTASection() {
 
             <div className="pt-4 flex flex-col justify-center gap-4 sm:flex-row">
               <Button href="#contact" variant="primary">
-                Reserve Studio Suite
+                Reserve Your Suite
               </Button>
               <Button href="#contact" variant="secondary" className="border-[#C8D8BE]/40 text-[#F8FBF7] hover:bg-[#F8FBF7] hover:text-site">
-                Schedule Studio Call
+                Schedule a Call
               </Button>
             </div>
           </div>

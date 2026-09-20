@@ -31,7 +31,7 @@ const DEFAULT_STATE = {
   aboutParagraphs: [
     "Founded by Akshay Chhabra, The Editing Table was established with a singular conviction: every filmmaker, photographer, and creative brand deserves post-production that elevates their visual storytelling to cinematic perfection.",
     "Over the past decade, Akshay has overseen hundreds of luxury wedding films, high-fashion editorial campaigns, and commercial master deliveries across India, the UK, Europe, and North America.",
-    "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the studio's workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
+    "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the production workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
   ],
   visionHeading: "A Vision for Global Cinematic Post-Production",
   visionText:
@@ -41,7 +41,7 @@ const DEFAULT_STATE = {
   experienceText:
     "With over ten years spearheading post-production pipelines, Akshay combines the technical precision of color science with an innate sensibility for pacing, tone, and editorial rhythm.",
   skills: [
-    "DaVinci Resolve Studio",
+    "DaVinci Resolve",
     "ACES Color Science",
     "Analog 35mm Film Emulation",
     "Micro Dodge & Burn",
@@ -70,15 +70,15 @@ const DEFAULT_STATE = {
         "Micro-level skin texture preservation, frequency separation, and color grading for high-end campaigns and editorial spreads."
     },
     {
-      title: "Studio Quality Gate & Delivery",
+      title: "Quality Gate & Delivery",
       tag: "Mastering",
       description:
         "Personal frame-by-frame QC on every delivery, guaranteeing DCI-P3 / Rec.709 calibration and broadcast compliance."
     }
   ],
-  companyRoleHeading: "The Editing Table — Dedicated Studio Infrastructure",
+  companyRoleHeading: "The Editing Table — Dedicated Infrastructure",
   companyRoleText:
-    "As Founder and Creative Director, Akshay leads the studio's dedicated post-production team in Mohali, Punjab. Every client engagement pairs boutique personal consultation with studio-scale processing speed and security.",
+    "As Founder and Creative Director, Akshay leads the dedicated post-production team in Mohali, Punjab. Every client engagement pairs bespoke personal consultation with high-throughput processing speed and security.",
   turnaroundHours: "48-72 Hours",
   clientRetentionRate: "99.8%",
   globalDelivery: "Worldwide • Calibrated Cloud Workflows",
@@ -97,7 +97,7 @@ const DEFAULT_STATE = {
     {
       title: "Bespoke Partnership",
       description:
-        "We operate as an extension of your studio team. Your signature style is strictly documented and preserved across all future seasons."
+        "We operate as an extension of your team. Your signature style is strictly documented and preserved across all future seasons."
     }
   ]
 };
@@ -283,7 +283,7 @@ export default function AboutMeCMS() {
     { id: "story", label: "Story & Vision", icon: Sparkles },
     { id: "skills", label: "Experience & Skills", icon: Zap },
     { id: "responsibilities", label: "What I Do", icon: Briefcase },
-    { id: "studio", label: "Studio & Philosophy", icon: CheckCircle2 }
+    { id: "philosophy", label: "Company & Philosophy", icon: CheckCircle2 }
   ];
 
   return (
@@ -296,7 +296,7 @@ export default function AboutMeCMS() {
           </span>
           <h1 className="font-heading text-3xl font-normal text-forest">About Me Profile CMS</h1>
           <p className="text-xs text-sage-muted mt-1">
-            Manage personal storytelling, leadership vision, skills, responsibilities, and studio philosophy for Akshay Chhabra.
+            Manage personal storytelling, leadership vision, skills, responsibilities, and creative philosophy for Akshay Chhabra.
           </p>
         </div>
 
@@ -760,40 +760,40 @@ export default function AboutMeCMS() {
           </div>
         )}
 
-        {/* Tab 5: Studio & Philosophy */}
-        {activeTab === "studio" && (
+        {/* Tab 5: Company & Philosophy */}
+        {activeTab === "philosophy" && (
           <div className="space-y-6 rounded-3xl border border-sage-border bg-sage-card p-6 shadow-soft">
             <div>
               <h2 className="font-heading text-xl text-forest font-semibold">The Editing Table &amp; Philosophy</h2>
               <p className="text-xs text-sage-muted mt-0.5">
-                Connect the founder&apos;s personal role with studio capabilities and guiding principles.
+                Connect the founder&apos;s personal role with production capabilities and guiding principles.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-site mb-1">
-                  Studio Role Heading
+                  Company Role Heading
                 </label>
                 <input
                   type="text"
                   value={formData.companyRoleHeading}
                   onChange={(e) => handleFieldChange("companyRoleHeading", e.target.value)}
                   className="w-full rounded-xl border border-sage-border bg-white px-3.5 py-2 text-sm text-forest focus:border-[rgb(72,125,72)] focus:outline-none"
-                  placeholder="e.g. The Editing Table — Dedicated Studio Infrastructure"
+                  placeholder="e.g. The Editing Table — Dedicated Infrastructure"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-site mb-1">
-                  Studio Role Description
+                  Company Role Description
                 </label>
                 <textarea
                   rows={3}
                   value={formData.companyRoleText}
                   onChange={(e) => handleFieldChange("companyRoleText", e.target.value)}
                   className="w-full rounded-xl border border-sage-border bg-white p-3 text-sm text-forest focus:border-[rgb(72,125,72)] focus:outline-none"
-                  placeholder="Studio description and founder's role..."
+                  placeholder="Company description and founder's role..."
                 />
               </div>
 

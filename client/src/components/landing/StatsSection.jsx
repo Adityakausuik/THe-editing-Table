@@ -5,7 +5,7 @@ import Container from "../ui/Container.jsx";
 
 const DEFAULT_STATS = [
   { label: "Films Mastered", value: 500, suffix: "+" },
-  { label: "Global Studios", value: 45, suffix: "+" },
+  { label: "Global Clients", value: 45, suffix: "+" },
   { label: "Awards Won", value: 18, suffix: "" },
   { label: "Client Satisfaction", value: 99, suffix: "%" },
   { label: "Turnaround Days", value: 5, suffix: "-7" }

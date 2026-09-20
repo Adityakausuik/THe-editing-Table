@@ -10,12 +10,12 @@ const DEFAULT_CONTACT = {
   heroLabel: "Get In Touch",
   heroTitle: "Start Your Project With Us",
   heroDescription:
-    "We collaborate with luxury wedding photographers, studios, and editorial filmmakers around the globe. Tell us about your vision.",
+    "We collaborate with luxury wedding photographers, filmmakers, and creative brands around the globe. Tell us about your vision.",
   sectionLabel: "Direct Contact",
-  sectionTitle: "Reach Out to Our Studio",
+  sectionTitle: "Reach Out to Us",
   email: "hello@theeditingtable.com",
   phone: "+91 XXXXX XXXXX",
-  locations: "Mohali, Punjab • Panchkula • Global Digital Studio",
+  locations: "Mohali, Punjab • Panchkula • Global Remote",
   faqTitle: "Frequently Asked Questions",
   faqs: [
     {
@@ -137,7 +137,7 @@ export default function ContactPage() {
       }
     } catch (error) {
       setStatus("error");
-      setResponseMsg(error.message || "Unable to connect to the studio server. Please try again.");
+      setResponseMsg(error.message || "Unable to connect to the server. Please try again.");
       if (error.payload?.data && typeof error.payload.data === "object") {
         setValidationErrors(error.payload.data);
       }
@@ -169,7 +169,7 @@ export default function ContactPage() {
       {/* Main Form & Info Section */}
       <section className="py-24">
         <Container className="grid gap-12 lg:grid-cols-[1fr_1.3fr]">
-          {/* Studio Contact Information */}
+          {/* Contact Information */}
           <div className="space-y-8">
             <SectionHeading
               label={contact.sectionLabel}
@@ -196,7 +196,7 @@ export default function ContactPage() {
                     <Phone className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg text-forest">Studio Phone</h3>
+                    <h3 className="font-heading text-lg text-forest">Phone</h3>
                     <p className="text-sm text-sage-muted">{contact.phone}</p>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg text-forest">Studio Locations</h3>
+                    <h3 className="font-heading text-lg text-forest">Locations</h3>
                     <p className="text-sm text-sage-muted">{contact.locations}</p>
                   </div>
                 </div>

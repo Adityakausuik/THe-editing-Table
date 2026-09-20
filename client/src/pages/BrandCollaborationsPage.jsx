@@ -18,7 +18,7 @@ export default function BrandCollaborationsPage() {
             Brand Collaborations & Campaigns
           </h1>
           <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
-            Collaborating with global luxury brands, fashion houses, and editorial studios.
+            Collaborating with global luxury brands, fashion houses, and editorial productions.
           </p>
         </div>
 

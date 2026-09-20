@@ -23,14 +23,14 @@ const defaultSettings = [
   },
   {
     key: "metaTitle",
-    value: "The Editing Table | High-End Post Production Studio",
+    value: "The Editing Table | High-End Post-Production",
     group: "seo",
     description: "Default SEO title"
   },
   {
     key: "metaDescription",
     value:
-      "Bespoke color grading, photo retouching, and film editing for wedding filmmakers and commercial studios worldwide.",
+      "Bespoke color grading, photo retouching, and film editing for wedding filmmakers and commercial creators worldwide.",
     group: "seo",
     description: "Default SEO description"
   },
@@ -103,19 +103,19 @@ async function upsertCareers() {
       {
         title: "Senior Colorist & DaVinci Resolve Artist",
         department: "Post-Production",
-        location: "Mohali, Punjab • Studio / Hybrid",
+        location: "Mohali, Punjab • Onsite / Hybrid",
         employmentType: "Full Time",
         experience: "3+ Years",
         salary: "Competitive / Based on Portfolio",
         description: "We are seeking a master colorist with an extraordinary eye for tone, texture, and analog film emulation. You will lead color grading on high-fashion commercial projects, luxury international weddings, and cinematic short films.",
         responsibilities: [
-          "Lead color grading sessions on DaVinci Resolve Studio utilizing calibrated ACES and DaVinci YRGB Color Managed pipelines.",
-          "Develop custom film print emulation (FPE) looks and proprietary studio LUTs.",
+          "Lead color grading sessions on DaVinci Resolve utilizing calibrated ACES and DaVinci YRGB Color Managed pipelines.",
+          "Develop custom film print emulation (FPE) looks and proprietary creative LUTs.",
           "Collaborate directly with directors of photography, filmmakers, and senior editors to establish project color palettes.",
           "Conduct final quality control on SDR and HDR deliverables across REC.709 and DCI-P3 color spaces."
         ],
         requiredSkills: [
-          "DaVinci Resolve Studio",
+          "DaVinci Resolve",
           "ACES & Color Management",
           "Film Emulation",
           "Shot Matching",
@@ -128,7 +128,7 @@ async function upsertCareers() {
         ],
         benefits: [
           "Dedicated calibrated reference suite (Apple XDR / Flanders Scientific).",
-          "Collaborative, artist-first studio environment with high creative freedom.",
+          "Collaborative, artist-first work environment with high creative freedom.",
           "Health benefits, performance bonuses, and annual equipment stipend.",
           "Flexible hybrid working options."
         ],
@@ -139,7 +139,7 @@ async function upsertCareers() {
       {
         title: "Editorial Video Editor (Cinematic & Fashion)",
         department: "Editorial Suite",
-        location: "Mohali, Punjab • Studio / Hybrid",
+        location: "Mohali, Punjab • Onsite / Hybrid",
         employmentType: "Full Time",
         experience: "2+ Years",
         salary: "Competitive",
@@ -174,7 +174,7 @@ async function upsertCareers() {
       {
         title: "High-Fashion & Wedding Photo Retoucher",
         department: "Retouching Suite",
-        location: "Mohali, Punjab • Studio / Hybrid",
+        location: "Mohali, Punjab • Onsite / Hybrid",
         employmentType: "Full Time",
         experience: "2+ Years",
         salary: "Competitive",
@@ -199,7 +199,7 @@ async function upsertCareers() {
         benefits: [
           "Dual EIZO color-accurate monitoring setup.",
           "Continuous skill workshops and industry masterclasses.",
-          "Supportive, low-stress studio atmosphere.",
+          "Supportive, low-stress team atmosphere.",
           "Paid time off and health coverage."
         ],
         deadline: "Open until filled",

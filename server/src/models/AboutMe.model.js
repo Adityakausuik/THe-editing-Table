@@ -77,7 +77,7 @@ const aboutMeSchema = new mongoose.Schema(
       default: [
         "Founded by Akshay Chhabra, The Editing Table was established with a singular conviction: every filmmaker, photographer, and creative brand deserves post-production that elevates their visual storytelling to cinematic perfection.",
         "Over the past decade, Akshay has overseen hundreds of luxury wedding films, high-fashion editorial campaigns, and commercial master deliveries across India, the UK, Europe, and North America.",
-        "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the studio's workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
+        "Working at the intersection of raw human emotion and technical color science, Akshay personally directs the production workflow to preserve each client's signature aesthetic while applying calibrated 35mm analog emulation and precision color grading."
       ]
     },
     visionHeading: {
@@ -110,7 +110,7 @@ const aboutMeSchema = new mongoose.Schema(
     skills: {
       type: [String],
       default: [
-        "DaVinci Resolve Studio",
+        "DaVinci Resolve",
         "ACES Color Management",
         "35mm / 65mm Film Stock Emulation",
         "Dolby Vision HDR Mastering",
@@ -142,7 +142,7 @@ const aboutMeSchema = new mongoose.Schema(
           tag: "RETOUCHING"
         },
         {
-          title: "Studio Oversight & Quality Assurance",
+          title: "Creative Oversight & Quality Assurance",
           description:
             "Enforcing a rigorous 100% personal quality review gate on every deliverable before client presentation to ensure flawless execution.",
           tag: "QUALITY GATE"
@@ -152,7 +152,7 @@ const aboutMeSchema = new mongoose.Schema(
     companyRoleHeading: {
       type: String,
       trim: true,
-      default: "The Editing Table — Full-Service Studio Capabilities"
+      default: "The Editing Table — Full-Service Creative Capabilities"
     },
     companyRoleText: {
       type: String,

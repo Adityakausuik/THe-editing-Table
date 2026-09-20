@@ -82,7 +82,7 @@ export default function ServiceDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-site" />
-              <span className="text-sm font-semibold text-forest">100% Studio Matched</span>
+              <span className="text-sm font-semibold text-forest">100% Calibrated & Matched</span>
             </div>
           </div>
         </Container>

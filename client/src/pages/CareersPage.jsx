@@ -185,8 +185,8 @@ export default function CareersPage() {
   const heroHeading = content?.hero?.heading || "Build Your Career With Us";
   const heroDesc =
     content?.hero?.description ||
-    "Join our passionate team of visionary colorists, editors, retouching artists, and creative technologists crafting timeless visual stories for premier studios worldwide.";
-  const heroBadge = content?.hero?.badge || "JOIN OUR CREATIVE STUDIO";
+    "Join our passionate team of visionary colorists, editors, retouching artists, and creative technologists crafting timeless visual stories for premier filmmakers and creators worldwide.";
+  const heroBadge = content?.hero?.badge || "JOIN OUR CREATIVE TEAM";
 
   const whyJoinUsCards = (content?.whyJoinUs || []).filter((c) => c.active !== false);
 
@@ -566,7 +566,7 @@ export default function CareersPage() {
                     </h3>
                     <p className="text-sm sm:text-base text-sage-muted max-w-md mx-auto">
                       Thank you for applying for{" "}
-                      <span className="font-semibold text-forest">{formData.positionTitle}</span>. Our studio leads will review your portfolio and get in touch with you shortly.
+                      <span className="font-semibold text-forest">{formData.positionTitle}</span>. Our creative leads will review your portfolio and get in touch with you shortly.
                     </p>
                   </div>
                   <Button variant="primary" onClick={closeApplyModal}>

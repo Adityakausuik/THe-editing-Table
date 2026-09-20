@@ -84,7 +84,7 @@ const DEFAULT_EMAILS = [
   {
     _id: "demo-e1",
     email: "hello@theeditingtable.com",
-    label: "Primary Studio Email",
+    label: "Primary Email",
     primary: true,
     order: 1,
     status: "active"
@@ -94,7 +94,7 @@ const DEFAULT_EMAILS = [
 const DEFAULT_OFFICES = [
   {
     _id: "demo-o1",
-    officeName: "Mohali Studio",
+    officeName: "Mohali Office",
     companyName: "NHK INFOTECH",
     addressLine1: "A-28, Industrial Area, Sector 73",
     addressLine2: "Mohali, Punjab 160055",

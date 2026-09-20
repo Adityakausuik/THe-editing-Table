@@ -198,7 +198,7 @@ export async function createJob(req, res, next) {
     const job = await Job.create({
       title: title.trim(),
       department: department.trim(),
-      location: (location || "Mohali, Punjab • Studio / Hybrid").trim(),
+      location: (location || "Mohali, Punjab • Onsite / Hybrid").trim(),
       employmentType: employmentType || "Full Time",
       experience: (experience || "2+ Years").trim(),
       salary: (salary || "Competitive").trim(),

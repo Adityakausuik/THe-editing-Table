@@ -123,7 +123,7 @@ export default function ContactSection() {
               />
             </Field>
 
-            <Field label="Studio Email" error={errors.email?.message}>
+            <Field label="Email Address" error={errors.email?.message}>
               <input
                 {...register("email", {
                   required: "Email is required",

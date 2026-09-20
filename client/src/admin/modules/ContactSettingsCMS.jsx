@@ -300,7 +300,7 @@ export default function ContactSettingsCMS() {
     setEditingItem(item);
     if (item) {
       setOfficeForm({
-        officeName: item.officeName || "Mohali Studio",
+        officeName: item.officeName || "Mohali Office",
         companyName: item.companyName || "NHK INFOTECH",
         addressLine1: item.addressLine1 || "",
         addressLine2: item.addressLine2 || "",
@@ -453,7 +453,7 @@ export default function ContactSettingsCMS() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-sage-border pb-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
-            Studio Contact Management
+            Contact Management
           </span>
           <h1 className="font-heading text-3xl text-forest">Contact Settings</h1>
         </div>
@@ -764,7 +764,7 @@ export default function ContactSettingsCMS() {
       {activeTab === "emails" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl text-forest">Manage Studio Emails</h2>
+            <h2 className="font-serif text-2xl text-forest">Manage Contact Emails</h2>
             <button
               type="button"
               onClick={() => openEmailModal()}
@@ -1137,7 +1137,7 @@ export default function ContactSettingsCMS() {
                   type="text"
                   value={emailForm.label}
                   onChange={(e) => setEmailForm({ ...emailForm, label: e.target.value })}
-                  placeholder="Primary Studio Email"
+                  placeholder="Primary Email"
                   className="field-luxury text-sm"
                 />
               </div>
@@ -1151,7 +1151,7 @@ export default function ContactSettingsCMS() {
                   className="h-4 w-4 accent-[rgb(72,125,72)] rounded"
                 />
                 <label htmlFor="primaryEmailCheck" className="text-xs font-semibold text-forest cursor-pointer">
-                  Set as Primary Studio Email
+                  Set as Primary Email
                 </label>
               </div>
 

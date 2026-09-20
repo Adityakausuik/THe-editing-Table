@@ -10,9 +10,9 @@ const DEFAULT_REVIEWS = [
   {
     _id: "rev-1",
     name: "Elena Vance",
-    company: "Atelier Vance Studios • Paris",
+    company: "Atelier Vance Cinema • Paris",
     title: "Masterful Color & Incomparable Pacing",
-    message: "The Editing Table has completely transformed our studio pipeline. Their DaVinci Resolve color grades match our 35mm film stock vision seamlessly.",
+    message: "The Editing Table has completely transformed our production pipeline. Their DaVinci Resolve color grades match our 35mm film stock vision seamlessly.",
     rating: 5,
     projectType: "Wedding Film",
     verified: true
@@ -32,7 +32,7 @@ const DEFAULT_REVIEWS = [
     name: "Sophia Rossi",
     company: "Rossi Editorial • London & Milan",
     title: "Haute Couture Retouching & Efficiency",
-    message: "Turnaround times are guaranteed and communication with our lead colorist is direct and instantaneous. Highly recommended for luxury studios.",
+    message: "Turnaround times are guaranteed and communication with our lead colorist is direct and instantaneous. Highly recommended for luxury productions.",
     rating: 5,
     projectType: "Photo Retouching",
     verified: true
@@ -90,7 +90,7 @@ export default function TestimonialsSection() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <SectionHeading
             label="Client Endorsements"
-            title="What Elite Studios Say About Our Suites"
+            title="What Elite Creators Say About Our Suites"
             text="Trusted by premier wedding photographers, luxury film houses, and international creative agencies."
           />
 

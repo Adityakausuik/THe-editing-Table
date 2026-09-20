@@ -110,7 +110,7 @@ export default function AdminLoginPage() {
               <ShieldCheck className="h-3.5 w-3.5" /> Secure CMS Master Suite
             </div>
             <h1 className="font-heading text-3xl font-normal text-forest">
-              {stage === "password" && "Studio Control Login"}
+              {stage === "password" && "Admin Control Login"}
               {stage === "verify" && "Security Verification"}
               {stage === "setup" && "Protect Your Account"}
               {stage === "recovery" && "Save Recovery Codes"}

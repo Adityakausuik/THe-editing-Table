@@ -264,7 +264,7 @@ export default function WriteReviewModal({ isOpen, onClose, onSuccess }) {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="field-luxury text-sm"
-                    placeholder="claire@studio.com"
+                    placeholder="claire@example.com"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function WriteReviewModal({ isOpen, onClose, onSuccess }) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
-                    Company / Studio (Optional)
+                    Company / Brand (Optional)
                   </label>
                   <input
                     type="text"
