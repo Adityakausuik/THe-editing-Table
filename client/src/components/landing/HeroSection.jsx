@@ -94,9 +94,10 @@ export default function HeroSection() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             style={{
               fontSize: "clamp(1.15rem, 2.2vw, 2.25rem)",
-              letterSpacing: "clamp(0.18em, 0.45vw, 0.35em)"
+              letterSpacing: "clamp(0.18em, 0.45vw, 0.35em)",
+              fontFamily: '"Bona Nova", Georgia, serif'
             }}
-            className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-sans font-bold uppercase text-forest select-none leading-none"
+            className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-heading font-bona font-bold uppercase text-forest select-none leading-none"
           >
             YOU SHOOT WE EDIT
           </m.p>
