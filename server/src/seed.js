@@ -33,6 +33,17 @@ const defaultSettings = [
       "Bespoke color grading, photo retouching, and film editing for wedding filmmakers and commercial studios worldwide.",
     group: "seo",
     description: "Default SEO description"
+  },
+  {
+    key: "publicContent",
+    value: {
+      footer: {
+        instagram: "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==",
+        linkedin: ""
+      }
+    },
+    group: "footer",
+    description: "Default public website content and social links"
   }
 ];
 

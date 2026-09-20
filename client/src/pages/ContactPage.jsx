@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, Mail, Phone, MapPin } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, Mail, Phone, MapPin, Instagram } from "lucide-react";
 import { useState } from "react";
 import Container from "../components/ui/Container.jsx";
 import SectionHeading from "../components/ui/SectionHeading.jsx";
@@ -213,6 +213,23 @@ export default function ContactPage() {
                   </div>
                 </div>
               )}
+
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
+                  <Instagram className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg text-forest">Instagram</h3>
+                  <a
+                    href="https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw=="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-sage-muted hover:text-site transition-colors"
+                  >
+                    @the.editingtable
+                  </a>
+                </div>
+              </div>
             </div>
 
             {contact.faqs && contact.faqs.length > 0 && (

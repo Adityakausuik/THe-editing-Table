@@ -926,6 +926,15 @@ export async function getSiteSettings(req, res) {
     settings.forEach((s) => {
       settingsMap[s.key] = s.value;
     });
+    if (!settingsMap.publicContent || typeof settingsMap.publicContent !== "object") {
+      settingsMap.publicContent = {};
+    }
+    if (!settingsMap.publicContent.footer || typeof settingsMap.publicContent.footer !== "object") {
+      settingsMap.publicContent.footer = {};
+    }
+    if (!settingsMap.publicContent.footer.instagram || settingsMap.publicContent.footer.instagram === "#") {
+      settingsMap.publicContent.footer.instagram = "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==";
+    }
     return res.json({ success: true, message: "Site settings retrieved successfully", data: settingsMap });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Site settings fetch failed", data: null });
@@ -940,6 +949,15 @@ export async function getAdminSiteSettings(req, res) {
     settings.forEach((setting) => {
       settingsMap[setting.key] = setting.value;
     });
+    if (!settingsMap.publicContent || typeof settingsMap.publicContent !== "object") {
+      settingsMap.publicContent = {};
+    }
+    if (!settingsMap.publicContent.footer || typeof settingsMap.publicContent.footer !== "object") {
+      settingsMap.publicContent.footer = {};
+    }
+    if (!settingsMap.publicContent.footer.instagram || settingsMap.publicContent.footer.instagram === "#") {
+      settingsMap.publicContent.footer.instagram = "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==";
+    }
     return res.json({
       success: true,
       message: "Admin site settings retrieved successfully",
