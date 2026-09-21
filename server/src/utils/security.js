@@ -125,3 +125,30 @@ export async function findRecoveryCodeIndex(code, hashes = []) {
   }
   return -1;
 }
+
+export function generateNumericOtp(digits = 6) {
+  const min = Math.pow(10, digits - 1);
+  const max = Math.pow(10, digits) - 1;
+  return crypto.randomInt(min, max + 1).toString();
+}
+
+export function hashOtp(otp, salt = "") {
+  return crypto.createHash("sha256").update(`${otp}:${salt}`).digest("hex");
+}
+
+export function maskEmail(email) {
+  const str = String(email || "").trim().toLowerCase();
+  const atIndex = str.indexOf("@");
+  if (atIndex <= 1) return str;
+  const username = str.slice(0, atIndex);
+  const domain = str.slice(atIndex);
+  if (username.length === 2) {
+    return `${username[0]}*${domain}`;
+  }
+  if (username.length === 3) {
+    return `${username[0]}*${username[2]}${domain}`;
+  }
+  const stars = "*".repeat(Math.max(1, Math.min(username.length - 3, 5)));
+  const maskedUser = `${username.slice(0, 2)}${stars}${username.slice(-1)}`;
+  return `${maskedUser}${domain}`;
+}

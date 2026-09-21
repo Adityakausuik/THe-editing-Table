@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
     twoFactor: {
       enabled: { type: Boolean, default: false },
       required: { type: Boolean, default: false },
-      method: { type: String, enum: ["totp", ""], default: "" },
+      method: { type: String, enum: ["email", "totp", ""], default: "" },
       secretEncrypted: { type: String, select: false, default: "" },
       pendingSecretEncrypted: { type: String, select: false, default: "" },
       recoveryCodeHashes: { type: [String], select: false, default: [] },

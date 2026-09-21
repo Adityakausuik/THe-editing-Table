@@ -30,6 +30,8 @@ import {
   beginTwoFactorSetup,
   login,
   resetDefaultAdmin,
+  resendEmailOtp,
+  verifyEmailOtp,
   verifyLoginTwoFactor,
   verifyTwoFactorSetup
 } from "./controllers/auth.controller.js";
@@ -198,6 +200,42 @@ export function createApp() {
   ];
   directVerifyPaths.forEach((path) => {
     app.post(path, verifyLoginTwoFactor);
+  });
+
+  const directOtpVerifyPaths = [
+    "/api/v1/auth/2fa/otp/verify",
+    "/api/auth/2fa/otp/verify",
+    "/v1/auth/2fa/otp/verify",
+    "/auth/2fa/otp/verify",
+    "/api/v1/auth/2fa/verify-otp",
+    "/api/auth/2fa/verify-otp",
+    "/v1/auth/2fa/verify-otp",
+    "/auth/2fa/verify-otp",
+    "/api/v1/auth/otp/verify",
+    "/api/auth/otp/verify",
+    "/v1/auth/otp/verify",
+    "/auth/otp/verify"
+  ];
+  directOtpVerifyPaths.forEach((path) => {
+    app.post(path, verifyEmailOtp);
+  });
+
+  const directOtpResendPaths = [
+    "/api/v1/auth/2fa/otp/resend",
+    "/api/auth/2fa/otp/resend",
+    "/v1/auth/2fa/otp/resend",
+    "/auth/2fa/otp/resend",
+    "/api/v1/auth/2fa/resend-otp",
+    "/api/auth/2fa/resend-otp",
+    "/v1/auth/2fa/resend-otp",
+    "/auth/2fa/resend-otp",
+    "/api/v1/auth/otp/resend",
+    "/api/auth/otp/resend",
+    "/v1/auth/otp/resend",
+    "/auth/otp/resend"
+  ];
+  directOtpResendPaths.forEach((path) => {
+    app.post(path, resendEmailOtp);
   });
 
   const directSetupBeginPaths = [

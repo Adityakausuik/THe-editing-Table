@@ -5,7 +5,7 @@ const securityPolicySchema = new mongoose.Schema(
     key: { type: String, default: "global", unique: true, immutable: true },
     requireAdmin2FA: { type: Boolean, default: true },
     requireUser2FA: { type: Boolean, default: false },
-    allowedMethods: { type: [String], enum: ["totp"], default: ["totp"] },
+    allowedMethods: { type: [String], enum: ["email", "totp"], default: ["email", "totp"] },
     trustedDeviceDays: { type: Number, min: 0, max: 365, default: 30 },
     maxFailedAttempts: { type: Number, min: 3, max: 20, default: 5 },
     lockMinutes: { type: Number, min: 1, max: 1440, default: 15 },

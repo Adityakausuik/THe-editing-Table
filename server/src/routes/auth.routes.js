@@ -7,6 +7,8 @@ import {
   login,
   logout,
   resetDefaultAdmin,
+  resendEmailOtp,
+  verifyEmailOtp,
   verifyLoginTwoFactor,
   verifyTwoFactorSetup
 } from "../controllers/auth.controller.js";
@@ -43,6 +45,12 @@ router.get("/reset-admin", resetLimiter, resetDefaultAdmin);
 router.post("/reset", resetLimiter, resetDefaultAdmin);
 router.get("/reset", resetLimiter, resetDefaultAdmin);
 router.post("/2fa/verify", verificationLimiter, verifyLoginTwoFactor);
+router.post("/2fa/otp/verify", verificationLimiter, verifyEmailOtp);
+router.post("/2fa/otp/resend", verificationLimiter, resendEmailOtp);
+router.post("/2fa/verify-otp", verificationLimiter, verifyEmailOtp);
+router.post("/2fa/resend-otp", verificationLimiter, resendEmailOtp);
+router.post("/otp/verify", verificationLimiter, verifyEmailOtp);
+router.post("/otp/resend", verificationLimiter, resendEmailOtp);
 router.post("/2fa/setup/begin", verificationLimiter, beginTwoFactorSetup);
 router.post("/2fa/setup/verify", verificationLimiter, verifyTwoFactorSetup);
 router.post("/logout", authenticate, logout);

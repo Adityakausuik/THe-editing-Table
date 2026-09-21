@@ -51,6 +51,8 @@ const data = parsed.data;
 
 export const env = {
   ...data,
+  SMTP_PASS: (data.SMTP_PASS || data.GMAIL_APP_PASSWORD || "").replace(/\s+/g, ""),
+  GMAIL_APP_PASSWORD: (data.GMAIL_APP_PASSWORD || data.SMTP_PASS || "").replace(/\s+/g, ""),
   TWO_FACTOR_ENCRYPTION_KEY: data.TWO_FACTOR_ENCRYPTION_KEY || data.JWT_SECRET,
   CLIENT_URL: data.CLIENT_URL || data.CLIENT_ORIGIN || "http://localhost:5173",
   CLIENT_ORIGIN: data.CLIENT_ORIGIN || data.CLIENT_URL || "http://localhost:5173"

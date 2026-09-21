@@ -9,7 +9,7 @@
     "db:seed": "node src/seed.js",
     "db:create": "node src/seed.js",
     "healthcheck": "node src/healthcheck.js",
-    "test:security": "node --test src/utils/security.test.js",
+    "test:security": "node --test src/utils/security.test.js src/utils/otp.test.js",
     "test:security-flow": "node src/security-flow.test.js",
     "test:security-admin": "node src/security-admin-flow.test.js",
     "lint": "eslint ."

@@ -4,18 +4,22 @@ import User from "../models/User.model.js";
 import Session from "../models/Session.model.js";
 import TrustedDevice from "../models/TrustedDevice.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
+import EmailOtp from "../models/EmailOtp.model.js";
 import { signAccessToken, signPreAuthToken, verifyPreAuthToken } from "../lib/jwt.js";
 import { env } from "../config/env.js";
 import { connectDatabase } from "../config/db.js";
 import { csrfTokenForSession } from "../middleware/auth.js";
+import { sendOtpEmail } from "../services/email.service.js";
 import {
   buildTotpUri,
   decryptSecret,
   encryptSecret,
   findRecoveryCodeIndex,
+  generateNumericOtp,
   generateRecoveryCodes,
   generateTotpSecret,
   hashRecoveryCodes,
+  maskEmail,
   randomToken,
   sha256,
   timingSafeEqualText,
@@ -317,10 +321,54 @@ export async function login(req, res) {
 
     const mandatory = requiresTwoFactor(user, policy);
     if ((user.twoFactor?.enabled || mandatory) && (!isAdminUser || policy.requireAdmin2FA)) {
+      // If user specifically has active TOTP authenticator configured, allow TOTP
+      if (user.twoFactor?.enabled && user.twoFactor?.method === "totp") {
+        await setPreAuthChallenge(res, user);
+        await writeSecurityAudit({ req, user, action: "PASSWORD_VERIFIED", result: "info", metadata: { next: "two_factor_required" } });
+        return res.status(202).json({ success: true, message: "Additional security verification required", data: { status: "two_factor_required", user: safeUser(user) } });
+      }
+
+      // Default & Primary flow: Email OTP 2FA
+      const configuredGmail = (env.SMTP_USER || "").trim().toLowerCase();
+      const userEmail = (user.email || "").trim().toLowerCase();
+      const targetEmail = configuredGmail && configuredGmail.includes("@") ? configuredGmail : userEmail;
+
+      const otp = generateNumericOtp(6);
+      await EmailOtp.createOtp({
+        userId: user._id,
+        email: targetEmail,
+        otp,
+        ttlMinutes: 5,
+        cooldownSeconds: 60
+      });
+
+      const sendResult = await sendOtpEmail({
+        to: targetEmail,
+        otp,
+        name: user.name || "Administrator"
+      });
+
+      if (!sendResult.success) {
+        console.warn(`[2FA] Warning: Failed to send OTP email: ${sendResult.error}`);
+      }
+
+      if (env.NODE_ENV !== "production") {
+        console.log(`[DEV 2FA OTP] Code for ${targetEmail}: ${otp}`);
+      }
+
       await setPreAuthChallenge(res, user);
-      const status = user.twoFactor?.enabled ? "two_factor_required" : "two_factor_setup_required";
-      await writeSecurityAudit({ req, user, action: "PASSWORD_VERIFIED", result: "info", metadata: { next: status } });
-      return res.status(202).json({ success: true, message: "Additional security verification required", data: { status, user: safeUser(user) } });
+      await writeSecurityAudit({ req, user, action: "PASSWORD_VERIFIED", result: "info", metadata: { next: "two_factor_otp_required", targetEmail } });
+
+      return res.status(202).json({
+        success: true,
+        message: `Two-factor verification code sent to ${maskEmail(targetEmail)}`,
+        data: {
+          status: "two_factor_otp_required",
+          email: maskEmail(targetEmail),
+          cooldownSeconds: 60,
+          user: safeUser(user)
+        }
+      });
     }
 
     const { csrfToken } = await issueSession(req, res, user, policy);
@@ -452,6 +500,176 @@ export async function verifyLoginTwoFactor(req, res) {
   }
 }
 
+export async function verifyEmailOtp(req, res) {
+  try {
+    const user = await getPreAuthUser(req);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Security verification expired or invalid. Please sign in again.",
+        data: null
+      });
+    }
+
+    const policy = await SecurityPolicy.getGlobal();
+    if (isLocked(user)) {
+      return res.status(423).json({
+        success: false,
+        message: "Account temporarily locked. Try again later.",
+        data: null
+      });
+    }
+
+    const code = String(req.body?.code || "").trim();
+    if (!code || !/^\d{6}$/.test(code)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 6-digit verification code.",
+        data: null
+      });
+    }
+
+    const verification = await EmailOtp.verifyOtp(user._id, code);
+
+    if (!verification.valid) {
+      if (verification.reason === "expired") {
+        return res.status(400).json({
+          success: false,
+          message: "Verification code has expired. Please click 'Resend Code'.",
+          data: { expired: true }
+        });
+      }
+      if (verification.reason === "max_attempts_exceeded") {
+        await registerFailure(req, user, policy, "OTP_MAX_ATTEMPTS_EXCEEDED");
+        return res.status(423).json({
+          success: false,
+          message: "Maximum verification attempts exceeded. Please request a new code.",
+          data: { locked: true }
+        });
+      }
+
+      await registerFailure(req, user, policy, "INVALID_OTP");
+      const remaining = verification.attemptsRemaining ?? 3;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid verification code. ${remaining} ${remaining === 1 ? "attempt" : "attempts"} remaining.`,
+        data: { attemptsRemaining: remaining }
+      });
+    }
+
+    // Success! Complete 2FA activation / verification
+    user.twoFactor.enabled = true;
+    user.twoFactor.method = "email";
+    user.twoFactor.failedAttempts = 0;
+    user.twoFactor.lockUntil = undefined;
+    user.twoFactor.lastAuthenticatedAt = new Date();
+    user.preAuthNonceHash = "";
+    await user.save();
+
+    if (req.body?.trustDevice) {
+      await addTrustedDevice(req, res, user, policy, req.body?.deviceName || "Admin Browser");
+    }
+
+    const { csrfToken } = await issueSession(req, res, user, policy, { twoFactorVerified: true });
+    await writeSecurityAudit({ req, user, action: "EMAIL_OTP_VERIFIED" });
+    await writeSecurityAudit({ req, user, action: "LOGIN_SUCCESS" });
+
+    return res.json({
+      success: true,
+      message: "Security verification successful",
+      data: {
+        status: "authenticated",
+        user: safeUser(user),
+        csrfToken
+      }
+    });
+  } catch (error) {
+    console.error("[2FA] Verify OTP error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Security verification failed. Please try again.",
+      data: null
+    });
+  }
+}
+
+export async function resendEmailOtp(req, res) {
+  try {
+    const user = await getPreAuthUser(req);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Security verification expired. Please sign in again.",
+        data: null
+      });
+    }
+
+    if (isLocked(user)) {
+      return res.status(423).json({
+        success: false,
+        message: "Account temporarily locked. Try again later.",
+        data: null
+      });
+    }
+
+    // Check cooldown against active unconsumed OTP
+    const latestOtp = await EmailOtp.findOne({ user: user._id, consumedAt: null }).sort({ createdAt: -1 });
+    if (latestOtp && latestOtp.resendAvailableAt > new Date()) {
+      const waitSeconds = Math.ceil((latestOtp.resendAvailableAt.getTime() - Date.now()) / 1000);
+      return res.status(429).json({
+        success: false,
+        message: `Please wait ${waitSeconds}s before requesting a new code.`,
+        data: { cooldownSeconds: waitSeconds }
+      });
+    }
+
+    const configuredGmail = (env.SMTP_USER || "").trim().toLowerCase();
+    const userEmail = (user.email || "").trim().toLowerCase();
+    const targetEmail = configuredGmail && configuredGmail.includes("@") ? configuredGmail : userEmail;
+
+    const otp = generateNumericOtp(6);
+    await EmailOtp.createOtp({
+      userId: user._id,
+      email: targetEmail,
+      otp,
+      ttlMinutes: 5,
+      cooldownSeconds: 60
+    });
+
+    const sendResult = await sendOtpEmail({
+      to: targetEmail,
+      otp,
+      name: user.name || "Administrator"
+    });
+
+    if (!sendResult.success) {
+      console.warn(`[2FA] Resend failed for ${targetEmail}: ${sendResult.error}`);
+    }
+
+    if (env.NODE_ENV !== "production") {
+      console.log(`[DEV 2FA OTP] Resent code for ${targetEmail}: ${otp}`);
+    }
+
+    await writeSecurityAudit({ req, user, action: "EMAIL_OTP_RESENT", metadata: { targetEmail } });
+
+    return res.json({
+      success: true,
+      message: `A fresh verification code has been sent to ${maskEmail(targetEmail)}`,
+      data: {
+        cooldownSeconds: 60,
+        email: maskEmail(targetEmail)
+      }
+    });
+  } catch (error) {
+    console.error("[2FA] Resend OTP error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to resend verification code.",
+      data: null
+    });
+  }
+}
+
 export async function logout(req, res) {
   if (req.authSession) {
     req.authSession.revokedAt = new Date();
@@ -540,6 +758,7 @@ export async function resetDefaultAdmin(req, res) {
         };
         user.forceSecuritySetup = false;
         await user.save();
+        await EmailOtp.deleteMany({ user: user._id });
       }
     }
 
