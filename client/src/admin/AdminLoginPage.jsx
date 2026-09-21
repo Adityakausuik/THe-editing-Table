@@ -30,21 +30,62 @@ export default function AdminLoginPage() {
     navigate("/admin/dashboard");
   };
 
+  const performReset = async () => {
+    const endpoints = [
+      "/api/v1/auth/reset-admin",
+      "/api/auth/reset-admin",
+      "/v1/auth/reset-admin",
+      "/auth/reset-admin",
+      "/reset-admin",
+      "/api/v1/auth/reset"
+    ];
+    let lastError = null;
+    for (const ep of endpoints) {
+      try {
+        const res = await apiFetch(ep, { method: "POST" });
+        if (res?.success) return res;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error("Failed to reset admin access.");
+  };
+
+  const performLogin = async (credentials) => {
+    const endpoints = [
+      "/api/v1/auth/login",
+      "/api/auth/login",
+      "/v1/auth/login",
+      "/auth/login"
+    ];
+    let lastError = null;
+    for (const ep of endpoints) {
+      try {
+        const res = await apiFetch(ep, { method: "POST", body: JSON.stringify(credentials) });
+        if (res?.data) return res;
+      } catch (err) {
+        if (err.status === 404) {
+          lastError = err;
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError || new Error("Login endpoint unreachable.");
+  };
+
   const handleReset = async () => {
     setResetting(true);
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      const res = await apiFetch("/api/v1/auth/reset-admin", { method: "POST" });
+      const res = await performReset();
       const defaultEmail = res.data?.email || "admin@theeditingtable.com";
       const defaultPass = res.data?.password || "AdminPassword123!";
       setEmail(defaultEmail);
       setPassword(defaultPass);
       setSuccessMsg("Superadmin credentials synced & unlocked. Progressing to 2FA...");
-      const loginRes = await apiFetch("/api/v1/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email: defaultEmail, password: defaultPass })
-      });
+      const loginRes = await performLogin({ email: defaultEmail, password: defaultPass });
       if (loginRes.data?.status === "authenticated") finishLogin(loginRes);
       else if (loginRes.data?.status === "two_factor_required") setStage("verify");
       else if (loginRes.data?.status === "two_factor_setup_required") {
@@ -65,18 +106,12 @@ export default function AdminLoginPage() {
     try {
       let response;
       try {
-        response = await apiFetch("/api/v1/auth/login", {
-          method: "POST",
-          body: JSON.stringify({ email: email.trim(), password })
-        });
+        response = await performLogin({ email: email.trim(), password });
       } catch (loginErr) {
         if (email.trim().toLowerCase() === "admin@theeditingtable.com" || email.includes("admin")) {
-          const syncRes = await apiFetch("/api/v1/auth/reset-admin", { method: "POST" }).catch(() => null);
+          const syncRes = await performReset().catch(() => null);
           if (syncRes?.success) {
-            response = await apiFetch("/api/v1/auth/login", {
-              method: "POST",
-              body: JSON.stringify({ email: email.trim(), password: password || "AdminPassword123!" })
-            });
+            response = await performLogin({ email: email.trim(), password: password || "AdminPassword123!" });
           } else {
             throw loginErr;
           }

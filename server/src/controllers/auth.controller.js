@@ -6,6 +6,7 @@ import TrustedDevice from "../models/TrustedDevice.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import { signAccessToken, signPreAuthToken, verifyPreAuthToken } from "../lib/jwt.js";
 import { env } from "../config/env.js";
+import { connectDatabase } from "../config/db.js";
 import { csrfTokenForSession } from "../middleware/auth.js";
 import {
   buildTotpUri,
@@ -21,6 +22,13 @@ import {
   verifyTotp
 } from "../utils/security.js";
 import { writeSecurityAudit } from "../utils/audit.js";
+
+async function ensureDbConnected() {
+  if (mongoose.connection.readyState !== 1) {
+    await connectDatabase().catch(() => {});
+  }
+  return mongoose.connection.readyState === 1;
+}
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
@@ -168,7 +176,8 @@ export async function login(req, res) {
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Email and password are required", data: null });
     }
-    if (!isDbConnected()) {
+    const dbOk = await ensureDbConnected();
+    if (!dbOk) {
       return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
     }
 
@@ -488,7 +497,8 @@ export async function initializeAdmin(req, res) {
 
 export async function resetDefaultAdmin(req, res) {
   try {
-    if (!isDbConnected()) return res.status(503).json({ success: false, message: "Database unavailable.", data: null });
+    const dbOk = await ensureDbConnected();
+    if (!dbOk) return res.status(503).json({ success: false, message: "Database unavailable.", data: null });
     const adminEmails = Array.from(new Set([
       "admin@theeditingtable.com",
       "admin@example.com",

@@ -26,6 +26,13 @@ import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
+import {
+  beginTwoFactorSetup,
+  login,
+  resetDefaultAdmin,
+  verifyLoginTwoFactor,
+  verifyTwoFactorSetup
+} from "./controllers/auth.controller.js";
 
 const explicitOrigins = new Set([
   env.CLIENT_ORIGIN,
@@ -84,6 +91,18 @@ export function createApp() {
 
   // Normalize request URLs so both /api/... and stripped /... route properly in serverless
   app.use((req, res, next) => {
+    const rawPath = req.headers["x-vercel-original-path"] ||
+      req.headers["x-matched-path"] ||
+      req.headers["x-forwarded-uri"] ||
+      req.url || "";
+
+    if (rawPath && !rawPath.includes("index.js")) {
+      const cleanPath = rawPath.split("?")[0];
+      if (cleanPath.startsWith("/api/")) {
+        req.url = cleanPath;
+      }
+    }
+
     if (
       !req.url.startsWith("/api/") &&
       req.url !== "/api" &&
@@ -142,6 +161,64 @@ export function createApp() {
   if (env.NODE_ENV !== "test") {
     app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
   }
+
+  // Direct top-level bindings to guarantee 100% resolution on Vercel Serverless
+  const directResetPaths = [
+    "/api/v1/auth/reset-admin",
+    "/api/auth/reset-admin",
+    "/v1/auth/reset-admin",
+    "/auth/reset-admin",
+    "/reset-admin",
+    "/api/v1/auth/reset",
+    "/api/auth/reset",
+    "/v1/auth/reset",
+    "/auth/reset",
+    "/reset"
+  ];
+  directResetPaths.forEach((path) => {
+    app.all(path, resetDefaultAdmin);
+  });
+
+  const directLoginPaths = [
+    "/api/v1/auth/login",
+    "/api/auth/login",
+    "/v1/auth/login",
+    "/auth/login",
+    "/login"
+  ];
+  directLoginPaths.forEach((path) => {
+    app.post(path, login);
+  });
+
+  const directVerifyPaths = [
+    "/api/v1/auth/2fa/verify",
+    "/api/auth/2fa/verify",
+    "/v1/auth/2fa/verify",
+    "/auth/2fa/verify"
+  ];
+  directVerifyPaths.forEach((path) => {
+    app.post(path, verifyLoginTwoFactor);
+  });
+
+  const directSetupBeginPaths = [
+    "/api/v1/auth/2fa/setup/begin",
+    "/api/auth/2fa/setup/begin",
+    "/v1/auth/2fa/setup/begin",
+    "/auth/2fa/setup/begin"
+  ];
+  directSetupBeginPaths.forEach((path) => {
+    app.post(path, beginTwoFactorSetup);
+  });
+
+  const directSetupVerifyPaths = [
+    "/api/v1/auth/2fa/setup/verify",
+    "/api/auth/2fa/setup/verify",
+    "/v1/auth/2fa/setup/verify",
+    "/auth/2fa/setup/verify"
+  ];
+  directSetupVerifyPaths.forEach((path) => {
+    app.post(path, verifyTwoFactorSetup);
+  });
 
   app.use("/health", healthRoutes);
   app.use(`${API_PREFIX}/health`, healthRoutes);
