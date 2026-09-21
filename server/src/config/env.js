@@ -21,8 +21,8 @@ const envSchema = z.object({
   SMTP_HOST: z.string().default("smtp.gmail.com"),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().default("btvcziekfcdrtguj"),
-  GMAIL_APP_PASSWORD: z.string().default("btvcziekfcdrtguj")
+  SMTP_PASS: z.string().default("dkssudrqduuletjp"),
+  GMAIL_APP_PASSWORD: z.string().default("dkssudrqduuletjp")
 }).superRefine((value, context) => {
   if (value.NODE_ENV === "production" && value.JWT_SECRET === "development-only-change-this-secret") {
     context.addIssue({

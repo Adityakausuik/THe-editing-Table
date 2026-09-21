@@ -7,7 +7,7 @@ export function getEmailTransporter() {
   if (transporter) return transporter;
 
   const user = env.SMTP_USER || env.ADMIN_EMAIL || "admin@theeditingtable.com";
-  const pass = env.SMTP_PASS || env.GMAIL_APP_PASSWORD || "btvcziekfcdrtguj";
+  const pass = env.SMTP_PASS || env.GMAIL_APP_PASSWORD || "dkssudrqduuletjp";
 
   transporter = nodemailer.createTransport({
     service: "gmail",

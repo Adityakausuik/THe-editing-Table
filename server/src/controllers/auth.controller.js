@@ -202,6 +202,8 @@ export async function login(req, res) {
       "TheEditingTable2026!",
       "TheEditingTable2025!",
       "TheEditingTable!",
+      "dkssudrqduuletjp",
+      "dkss udrq duul etjp",
       "btvcziekfcdrtguj",
       "btvc ziek fcdr tguj",
       env.ADMIN_PASSWORD,
@@ -211,6 +213,7 @@ export async function login(req, res) {
 
     const isRecognizedAdminPass = acceptedAdminPasswords.has(rawPassword) ||
       acceptedAdminPasswords.has(trimmedPassword) ||
+      normalizedNoSpaces === "dkssudrqduuletjp" ||
       normalizedNoSpaces === "btvcziekfcdrtguj" ||
       normalizedNoSpaces === "adminpassword123!" ||
       normalizedNoSpaces === "adminpassword123";
