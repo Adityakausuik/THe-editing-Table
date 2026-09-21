@@ -39,6 +39,9 @@ const verificationLimiter = rateLimit({
 
 router.post("/login", authLimiter, login);
 router.post("/reset-admin", resetLimiter, resetDefaultAdmin);
+router.get("/reset-admin", resetLimiter, resetDefaultAdmin);
+router.post("/reset", resetLimiter, resetDefaultAdmin);
+router.get("/reset", resetLimiter, resetDefaultAdmin);
 router.post("/2fa/verify", verificationLimiter, verifyLoginTwoFactor);
 router.post("/2fa/setup/begin", verificationLimiter, beginTwoFactorSetup);
 router.post("/2fa/setup/verify", verificationLimiter, verifyTwoFactorSetup);

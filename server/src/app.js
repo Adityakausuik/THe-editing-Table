@@ -146,6 +146,9 @@ export function createApp() {
   app.use("/health", healthRoutes);
   app.use(`${API_PREFIX}/health`, healthRoutes);
   app.use(`${API_PREFIX}/v1/auth`, authRoutes);
+  app.use(`${API_PREFIX}/auth`, authRoutes);
+  app.use("/v1/auth", authRoutes);
+  app.use("/auth", authRoutes);
   app.use(`${API_PREFIX}/v1/security`, securityRoutes);
   app.use(`${API_PREFIX}/v1/upload`, uploadRoutes);
   app.use(`${API_PREFIX}/v1/cms/hero-slides`, heroSlideRoutes);
