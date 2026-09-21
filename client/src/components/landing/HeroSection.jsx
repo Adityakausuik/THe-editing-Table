@@ -99,7 +99,13 @@ export default function HeroSection() {
             }}
             className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-heading font-bona font-bold uppercase text-forest select-none leading-none"
           >
-            YOU SHOOT WE EDIT
+            YOU SHOOT,{" "}
+            <span
+              className="text-[rgba(72,125,72,0.52)]"
+              style={{ color: "rgba(72, 125, 72, 0.52)" }}
+            >
+              WE EDIT
+            </span>
           </m.p>
         </m.div>
       </Container>
