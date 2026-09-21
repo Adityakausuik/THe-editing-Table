@@ -1,5 +1,6 @@
 import User from "../models/User.model.js";
 import SiteSetting from "../models/SiteSetting.model.js";
+import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import { env } from "./env.js";
 
 let hasBootstrapped = false;
@@ -74,6 +75,19 @@ export async function bootstrapDatabase() {
         user.failedPasswordAttempts = 0;
         needsSave = true;
       }
+      // Guarantee 2FA is disabled on the admin account
+      if (user.twoFactor?.enabled || user.twoFactor?.required || user.forceSecuritySetup) {
+        user.twoFactor = {
+          enabled: false,
+          required: false,
+          method: "",
+          secretEncrypted: "",
+          pendingSecretEncrypted: "",
+          recoveryCodeHashes: []
+        };
+        user.forceSecuritySetup = false;
+        needsSave = true;
+      }
       if (env.ADMIN_PASSWORD) {
         const matches = await user.comparePassword(env.ADMIN_PASSWORD);
         if (!matches) {
@@ -88,6 +102,18 @@ export async function bootstrapDatabase() {
         await user.save();
       }
     }
+
+    // Ensure 2FA is globally disabled in security policy
+    await SecurityPolicy.updateOne(
+      { key: "global" },
+      {
+        $set: {
+          requireAdmin2FA: false,
+          requireUser2FA: false
+        }
+      },
+      { upsert: true }
+    );
 
     // Ensure baseline settings exist
     for (const setting of defaultSettings) {

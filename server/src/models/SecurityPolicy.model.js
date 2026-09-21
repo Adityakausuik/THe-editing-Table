@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const securityPolicySchema = new mongoose.Schema(
   {
     key: { type: String, default: "global", unique: true, immutable: true },
-    requireAdmin2FA: { type: Boolean, default: true },
+    requireAdmin2FA: { type: Boolean, default: false },
     requireUser2FA: { type: Boolean, default: false },
     allowedMethods: { type: [String], enum: ["totp"], default: ["totp"] },
     trustedDeviceDays: { type: Number, min: 0, max: 365, default: 30 },

@@ -1,5 +1,5 @@
 /* global navigator, sessionStorage */
-import { AlertCircle, Check, Copy, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck, Smartphone } from "lucide-react";
+import { AlertCircle, Check, Copy, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "../components/ui/BrandLogo.jsx";
@@ -148,7 +148,7 @@ export default function AdminLoginPage() {
                   </button>
                 </span>
               </label>
-              <SubmitButton loading={loading}>Verify Password</SubmitButton>
+              <SubmitButton loading={loading}>Sign In to Dashboard</SubmitButton>
             </form>
           )}
 
@@ -194,7 +194,7 @@ export default function AdminLoginPage() {
           )}
 
           <div className="pt-4 border-t border-sage-border/60 text-center text-[11px] text-sage-muted">
-            <Smartphone className="inline h-3.5 w-3.5 mr-1" /> Password → security verification → dashboard
+            <ShieldCheck className="inline h-3.5 w-3.5 mr-1 text-[rgb(72,125,72)]" /> Direct administrator access
           </div>
         </div>
       </Container>
