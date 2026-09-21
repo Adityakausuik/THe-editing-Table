@@ -91,6 +91,39 @@ export function createApp() {
   app.use(cookieParser());
   app.use(rejectUnsafeInput);
 
+  // ─── Debug route (temporary) to diagnose Vercel URL handling ───
+  app.all("/api/debug", (req, res) => {
+    return res.json({
+      success: true,
+      debug: {
+        url: req.url,
+        originalUrl: req.originalUrl,
+        baseUrl: req.baseUrl,
+        path: req.path,
+        method: req.method,
+        vercelHeaders: {
+          "x-vercel-original-path": req.headers["x-vercel-original-path"] || null,
+          "x-matched-path": req.headers["x-matched-path"] || null,
+          "x-forwarded-uri": req.headers["x-forwarded-uri"] || null,
+          "x-vercel-id": req.headers["x-vercel-id"] || null
+        },
+        nodeEnv: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      }
+    });
+  });
+  app.all("/debug", (req, res) => {
+    return res.json({
+      success: true,
+      debug: {
+        url: req.url,
+        originalUrl: req.originalUrl,
+        method: req.method,
+        note: "hit /debug (no /api prefix)"
+      }
+    });
+  });
+
   // Normalize request URLs so both /api/... and stripped /... route properly in serverless
   app.use((req, res, next) => {
     const rawPath = req.headers["x-vercel-original-path"] ||
