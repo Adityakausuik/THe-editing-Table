@@ -91,10 +91,11 @@ export function createApp() {
   app.use(cookieParser());
   app.use(rejectUnsafeInput);
 
-  // ─── Debug route (temporary) to diagnose Vercel URL handling ───
-  app.all("/api/debug", (req, res) => {
+  // ─── Debug route (temporary, BEFORE URL normalizer) ───
+  app.all(["/api/debug", "/debug"], (req, res) => {
     return res.json({
       success: true,
+      message: "Pre-normalizer debug (raw Vercel values)",
       debug: {
         url: req.url,
         originalUrl: req.originalUrl,
@@ -105,6 +106,7 @@ export function createApp() {
           "x-vercel-original-path": req.headers["x-vercel-original-path"] || null,
           "x-matched-path": req.headers["x-matched-path"] || null,
           "x-forwarded-uri": req.headers["x-forwarded-uri"] || null,
+          "x-original-url": req.headers["x-original-url"] || null,
           "x-vercel-id": req.headers["x-vercel-id"] || null
         },
         nodeEnv: process.env.NODE_ENV,
@@ -112,32 +114,36 @@ export function createApp() {
       }
     });
   });
-  app.all("/debug", (req, res) => {
-    return res.json({
-      success: true,
-      debug: {
-        url: req.url,
-        originalUrl: req.originalUrl,
-        method: req.method,
-        note: "hit /debug (no /api prefix)"
-      }
-    });
-  });
 
   // Normalize request URLs so both /api/... and stripped /... route properly in serverless
   app.use((req, res, next) => {
-    const rawPath = req.headers["x-vercel-original-path"] ||
-      req.headers["x-matched-path"] ||
-      req.headers["x-forwarded-uri"] ||
-      req.url || "";
+    // On Vercel serverless, req.url may be "/api/index.js" (the rewrite destination)
+    // instead of the actual client-requested path. We need to recover the real path.
+    const candidates = [
+      req.headers["x-vercel-original-path"],
+      req.headers["x-forwarded-uri"],
+      req.headers["x-original-url"],
+      // x-matched-path may be the rewrite dest, but check it last
+      req.originalUrl,
+      req.url
+    ].filter(Boolean);
 
-    if (rawPath && !rawPath.includes("index.js")) {
-      const cleanPath = rawPath.split("?")[0];
-      if (cleanPath.startsWith("/api/")) {
-        req.url = cleanPath;
-      }
+    // Find the best candidate: prefer one that looks like a real API path, not an internal rewrite
+    let resolvedUrl = req.url;
+    for (const candidate of candidates) {
+      const clean = candidate.split("?")[0];
+      // Skip internal rewrite destinations
+      if (clean.includes("index.js") || clean.includes("index.html")) continue;
+      resolvedUrl = clean;
+      break;
     }
 
+    // Apply the resolved URL
+    if (resolvedUrl !== req.url) {
+      req.url = resolvedUrl;
+    }
+
+    // Ensure the URL has the /api prefix for our Express routes
     if (
       !req.url.startsWith("/api/") &&
       req.url !== "/api" &&
@@ -147,6 +153,20 @@ export function createApp() {
       req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
     }
     next();
+  });
+
+  // ─── Debug route (temporary, AFTER URL normalizer) ───
+  app.all("/api/debug-resolved", (req, res) => {
+    return res.json({
+      success: true,
+      message: "Post-normalizer debug (after URL transformation)",
+      debug: {
+        url: req.url,
+        originalUrl: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString()
+      }
+    });
   });
 
   // Auto-connect to database in serverless runtime environments

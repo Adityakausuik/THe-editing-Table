@@ -2,7 +2,13 @@ export function notFoundHandler(req, res) {
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
-    data: null
+    data: null,
+    _debug: {
+      url: req.url,
+      originalUrl: req.originalUrl,
+      xMatchedPath: req.headers["x-matched-path"] || null,
+      xVercelOriginalPath: req.headers["x-vercel-original-path"] || null
+    }
   });
 }
 
