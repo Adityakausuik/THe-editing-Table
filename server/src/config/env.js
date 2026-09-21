@@ -17,7 +17,12 @@ const envSchema = z.object({
   TWO_FACTOR_ENCRYPTION_KEY: z.string().min(32).optional(),
   ADMIN_EMAIL: z.string().email().default("admin@theeditingtable.com"),
   ADMIN_PASSWORD: z.string().min(12).optional(),
-  ADMIN_SETUP_TOKEN: z.string().min(24).optional()
+  ADMIN_SETUP_TOKEN: z.string().min(24).optional(),
+  SMTP_HOST: z.string().default("smtp.gmail.com"),
+  SMTP_PORT: z.coerce.number().default(465),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().default("btvcziekfcdrtguj"),
+  GMAIL_APP_PASSWORD: z.string().default("btvcziekfcdrtguj")
 }).superRefine((value, context) => {
   if (value.NODE_ENV === "production" && value.JWT_SECRET === "development-only-change-this-secret") {
     context.addIssue({

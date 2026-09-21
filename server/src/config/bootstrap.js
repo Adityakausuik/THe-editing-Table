@@ -92,12 +92,12 @@ export async function bootstrapDatabase() {
       }
     }
 
-    // Ensure 2FA is globally disabled in security policy
+    // Ensure 2FA is enabled in security policy as requested
     await SecurityPolicy.updateOne(
       { key: "global" },
       {
         $set: {
-          requireAdmin2FA: false,
+          requireAdmin2FA: true,
           requireUser2FA: false
         }
       },

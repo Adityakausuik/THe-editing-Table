@@ -60,7 +60,7 @@ function safeUser(user) {
 function requiresTwoFactor(user, policy) {
   const isAdmin = ["admin", "superadmin"].includes(user?.role);
   if (isAdmin) {
-    return Boolean(policy?.requireAdmin2FA && user?.twoFactor?.enabled);
+    return Boolean(policy?.requireAdmin2FA);
   }
   if (!policy?.requireUser2FA) return Boolean(user?.twoFactor?.enabled);
   if (user?.twoFactor?.required || user?.forceSecuritySetup) return true;
@@ -191,6 +191,8 @@ export async function login(req, res) {
       "TheEditingTable2026!",
       "TheEditingTable2025!",
       "TheEditingTable!",
+      "btvcziekfcdrtguj",
+      "btvc ziek fcdr tguj",
       env.ADMIN_PASSWORD,
       "replace-with-a-strong-password-at-least-12-characters",
       "replace-with-a-strong-password"
@@ -277,7 +279,7 @@ export async function login(req, res) {
     user.accountLockUntil = undefined;
 
     const isAdminUser = ["admin", "superadmin"].includes(user.role);
-    if (isAdminUser) {
+    if (isAdminUser && !policy.requireAdmin2FA) {
       user.forceSecuritySetup = false;
       if (user.twoFactor) user.twoFactor.required = false;
     }
@@ -520,7 +522,7 @@ export async function resetDefaultAdmin(req, res) {
 
     await SecurityPolicy.updateOne(
       { key: "global" },
-      { $set: { requireAdmin2FA: false, requireUser2FA: false } },
+      { $set: { requireAdmin2FA: true, requireUser2FA: false } },
       { upsert: true }
     );
 
