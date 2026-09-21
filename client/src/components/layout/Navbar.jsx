@@ -8,13 +8,24 @@ import Container from "../ui/Container.jsx";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About Me" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
+  { href: "/about", label: "About Me" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact" },
 ];
+
+const NAV_ORDER = {
+  "/": 1,
+  "/services": 2,
+  "/portfolio": 3,
+  "/about": 4,
+  "/careers": 5,
+  "/blog": 6,
+  "/contactus": 7,
+  "/contact": 7
+};
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -36,6 +47,11 @@ export default function Navbar() {
         };
       }
       return link;
+    })
+    .sort((a, b) => {
+      const orderA = NAV_ORDER[a.href] ?? 99;
+      const orderB = NAV_ORDER[b.href] ?? 99;
+      return orderA - orderB;
     });
 
   useEffect(() => {

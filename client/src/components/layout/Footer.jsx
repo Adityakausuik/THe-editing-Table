@@ -8,9 +8,9 @@ import BrandLogo from "../ui/BrandLogo.jsx";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About Me" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
+  { href: "/about", label: "About Me" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact Us" }
