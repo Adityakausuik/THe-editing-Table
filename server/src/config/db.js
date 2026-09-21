@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { env } from "./env.js";
+import { bootstrapDatabase } from "./bootstrap.js";
 
 // Disable command buffering globally so queries fail-fast when DB is offline instead of hanging for 10s
 mongoose.set("bufferCommands", false);
@@ -8,6 +9,9 @@ let cachedConnection = null;
 
 export async function connectDatabase() {
   if (mongoose.connection.readyState === 1) {
+    if (env.NODE_ENV !== "test") {
+      bootstrapDatabase().catch(() => {});
+    }
     return mongoose.connection;
   }
 
@@ -22,8 +26,9 @@ export async function connectDatabase() {
         connectTimeoutMS: 5000,
         bufferCommands: false
       })
-      .then((m) => {
+      .then(async (m) => {
         console.log("MongoDB connected successfully.");
+        await bootstrapDatabase().catch((err) => console.error("Bootstrap error:", err.message));
         return m.connection;
       })
       .catch((error) => {
