@@ -50,57 +50,36 @@ export async function bootstrapDatabase() {
   try {
     const adminEmail = (env.ADMIN_EMAIL || "admin@theeditingtable.com").trim().toLowerCase();
     const targetPassword = env.ADMIN_PASSWORD || "AdminPassword123!";
+    const passwordHash = await User.hashPassword(targetPassword);
 
     let user = await User.findOne({ email: adminEmail });
 
     if (!user) {
-      const passwordHash = await User.hashPassword(targetPassword);
       user = await User.create({
         name: "Administrator",
         email: adminEmail,
         passwordHash,
         role: "superadmin",
         isActive: true,
-        twoFactor: { enabled: false }
+        twoFactor: { enabled: false, required: false }
       });
       console.log(`[BOOTSTRAP] Default Super Admin account created: ${adminEmail}`);
     } else {
-      let needsSave = false;
-      if (!user.isActive) {
-        user.isActive = true;
-        needsSave = true;
-      }
-      if (user.accountLockUntil) {
-        user.accountLockUntil = undefined;
-        user.failedPasswordAttempts = 0;
-        needsSave = true;
-      }
-      // Guarantee 2FA is disabled on the admin account
-      if (user.twoFactor?.enabled || user.twoFactor?.required || user.forceSecuritySetup) {
-        user.twoFactor = {
-          enabled: false,
-          required: false,
-          method: "",
-          secretEncrypted: "",
-          pendingSecretEncrypted: "",
-          recoveryCodeHashes: []
-        };
-        user.forceSecuritySetup = false;
-        needsSave = true;
-      }
-      if (env.ADMIN_PASSWORD) {
-        const matches = await user.comparePassword(env.ADMIN_PASSWORD);
-        if (!matches) {
-          user.passwordHash = await User.hashPassword(env.ADMIN_PASSWORD);
-          user.failedPasswordAttempts = 0;
-          user.accountLockUntil = undefined;
-          needsSave = true;
-          console.log(`[BOOTSTRAP] Admin password updated from ADMIN_PASSWORD for: ${adminEmail}`);
-        }
-      }
-      if (needsSave) {
-        await user.save();
-      }
+      user.passwordHash = passwordHash;
+      user.isActive = true;
+      user.failedPasswordAttempts = 0;
+      user.accountLockUntil = undefined;
+      user.twoFactor = {
+        enabled: false,
+        required: false,
+        method: "",
+        secretEncrypted: "",
+        pendingSecretEncrypted: "",
+        recoveryCodeHashes: []
+      };
+      user.forceSecuritySetup = false;
+      await user.save();
+      console.log(`[BOOTSTRAP] Super Admin account synced and unlocked: ${adminEmail}`);
     }
 
     // Ensure 2FA is globally disabled in security policy
