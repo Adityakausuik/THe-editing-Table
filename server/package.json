@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "build": "node -e \"console.log('Server build complete.')\"",
     "start": "node src/index.js",
     "db:seed": "node src/seed.js",
     "db:create": "node src/seed.js",
