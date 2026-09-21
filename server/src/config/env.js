@@ -27,11 +27,10 @@ const envSchema = z.object({
     });
   }
   if (value.NODE_ENV === "production" && !value.TWO_FACTOR_ENCRYPTION_KEY) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["TWO_FACTOR_ENCRYPTION_KEY"],
-      message: "TWO_FACTOR_ENCRYPTION_KEY is required in production."
-    });
+    console.warn("[CONFIG] TWO_FACTOR_ENCRYPTION_KEY is omitted in production; falling back to JWT_SECRET.");
+  }
+  if (value.NODE_ENV === "production" && (value.MONGODB_URI.includes("127.0.0.1") || value.MONGODB_URI.includes("localhost"))) {
+    console.warn("[CONFIG] MONGODB_URI is pointing to localhost in production. Ensure remote MongoDB connection string is set in Vercel.");
   }
 });
 
@@ -47,6 +46,7 @@ const data = parsed.data;
 
 export const env = {
   ...data,
+  TWO_FACTOR_ENCRYPTION_KEY: data.TWO_FACTOR_ENCRYPTION_KEY || data.JWT_SECRET,
   CLIENT_URL: data.CLIENT_URL || data.CLIENT_ORIGIN || "http://localhost:5173",
   CLIENT_ORIGIN: data.CLIENT_ORIGIN || data.CLIENT_URL || "http://localhost:5173"
 };

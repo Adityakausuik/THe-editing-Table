@@ -81,7 +81,6 @@ export default function AppRoutes() {
               <Route path="/team/:slug" element={<Navigate to="/about#team" replace />} />
               <Route path="/founder" element={<Navigate to="/about" replace />} />
               <Route path="/careers" element={<CareersPage />} />
-              <Route path="*" element={<NotFoundPage />} />
             </Route>
 
             {/* Admin CMS Routes */}
@@ -111,6 +110,11 @@ export default function AppRoutes() {
               <Route path="security" element={<SecurityProfile />} />
               <Route path="security/two-factor" element={<TwoFactorAdmin />} />
               <Route path="security/policy" element={<SecurityPolicyCMS />} />
+            </Route>
+
+            {/* Catch-all 404 Route */}
+            <Route element={<PublicLayout />}>
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </Suspense>

@@ -27,11 +27,25 @@ import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
 
-const allowedOrigins = new Set([
+const explicitOrigins = new Set([
   env.CLIENT_ORIGIN,
   env.CLIENT_URL,
   ...(env.NODE_ENV === "production" ? [] : ["http://127.0.0.1:5173", "http://localhost:5173"])
 ].filter(Boolean));
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (explicitOrigins.has(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === "theeditingtable.com" || hostname.endsWith(".theeditingtable.com")) return true;
+    if (hostname.endsWith(".vercel.app")) return true;
+    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
 
 export function createApp() {
   ensureUploadDirectories();
@@ -44,7 +58,7 @@ export function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin || allowedOrigins.has(origin)) {
+        if (isAllowedOrigin(origin)) {
           callback(null, true);
           return;
         }
@@ -67,6 +81,19 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true, limit: "50mb" }));
   app.use(cookieParser());
   app.use(rejectUnsafeInput);
+
+  // Normalize request URLs so both /api/... and stripped /... route properly in serverless
+  app.use((req, res, next) => {
+    if (
+      !req.url.startsWith("/api/") &&
+      req.url !== "/api" &&
+      !req.url.startsWith("/uploads") &&
+      !req.url.startsWith("/health")
+    ) {
+      req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
+    }
+    next();
+  });
 
   // Auto-connect to database in serverless runtime environments
   app.use(async (req, res, next) => {

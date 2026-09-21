@@ -4,11 +4,30 @@ import fallbackMedia from "../assets/the-editing-table-logo.png";
 import { sanitizeStudio } from "./sanitizeStudio.js";
 
 const configuredApiRoot = import.meta.env.VITE_API_URL;
-if (import.meta.env.PROD && !configuredApiRoot) {
-  throw new Error("VITE_API_URL must be configured for production builds.");
-}
-export const API_ROOT = (configuredApiRoot || "http://127.0.0.1:5000/api").replace(/\/$/, "");
-const API_ORIGIN = new URL(API_ROOT).origin;
+
+export const API_ROOT = (() => {
+  if (configuredApiRoot && configuredApiRoot.trim()) {
+    return configuredApiRoot.trim().replace(/\/+$/, "");
+  }
+  if (import.meta.env.PROD) {
+    return "/api";
+  }
+  return "http://127.0.0.1:5000/api";
+})();
+
+export const API_ORIGIN = (() => {
+  if (/^https?:\/\//i.test(API_ROOT)) {
+    try {
+      return new URL(API_ROOT).origin;
+    } catch {
+      // fallback
+    }
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "";
+})();
 const cmsChannel = typeof BroadcastChannel === "function" ? new BroadcastChannel("editing-table-cms") : null;
 export const AUTH_SESSION_EXPIRED_EVENT = "auth:session-expired";
 export const FALLBACK_MEDIA_URL = fallbackMedia;
