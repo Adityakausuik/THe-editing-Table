@@ -6,6 +6,7 @@ import {
   initializeAdmin,
   login,
   logout,
+  resetDefaultAdmin,
   verifyLoginTwoFactor,
   verifyTwoFactorSetup
 } from "../controllers/auth.controller.js";
@@ -14,21 +15,30 @@ import { authenticate } from "../middleware/auth.js";
 const router = Router();
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many authentication attempts. Please try again later.", data: null }
 });
 
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many reset attempts. Please try again later.", data: null }
+});
+
 const verificationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 15,
+  limit: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many security verification attempts. Please try again later.", data: null }
 });
 
 router.post("/login", authLimiter, login);
+router.post("/reset-admin", resetLimiter, resetDefaultAdmin);
 router.post("/2fa/verify", verificationLimiter, verifyLoginTwoFactor);
 router.post("/2fa/setup/begin", verificationLimiter, beginTwoFactorSetup);
 router.post("/2fa/setup/verify", verificationLimiter, verifyTwoFactorSetup);

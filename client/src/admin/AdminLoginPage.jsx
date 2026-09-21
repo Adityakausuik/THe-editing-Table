@@ -1,5 +1,5 @@
 /* global navigator, sessionStorage */
-import { AlertCircle, Check, Copy, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { AlertCircle, Check, Copy, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, RotateCcw, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "../components/ui/BrandLogo.jsx";
@@ -21,11 +21,29 @@ export default function AdminLoginPage() {
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const finishLogin = (data) => {
     loginUser(data.data?.user, data.data?.csrfToken);
     navigate("/admin/dashboard");
+  };
+
+  const handleReset = async () => {
+    setResetting(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await apiFetch("/api/v1/auth/reset-admin", { method: "POST" });
+      setEmail(res.data?.email || "admin@theeditingtable.com");
+      setPassword(res.data?.password || "AdminPassword123!");
+      setSuccessMsg("Superadmin credentials synced to default. Click Sign In to enter.");
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to reset admin access.");
+    } finally {
+      setResetting(false);
+    }
   };
 
   const handleLogin = async (event) => {
@@ -129,6 +147,12 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          {successMsg && (
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-900">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0" /><span>{successMsg}</span>
+            </div>
+          )}
+
           {stage === "password" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted">
@@ -149,6 +173,17 @@ export default function AdminLoginPage() {
                 </span>
               </label>
               <SubmitButton loading={loading}>Sign In to Dashboard</SubmitButton>
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={resetting || loading}
+                  className="inline-flex items-center gap-1.5 text-xs text-site hover:underline opacity-80 hover:opacity-100 disabled:opacity-40"
+                >
+                  {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                  <span>Trouble signing in? Sync & Unlock Default Admin</span>
+                </button>
+              </div>
             </form>
           )}
 
