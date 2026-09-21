@@ -86,7 +86,14 @@ export function createApp() {
     res.setHeader("Expires", "0");
 
     const originalJson = res.json.bind(res);
-    res.json = (body) => originalJson(sanitizeStudio(body));
+    res.json = (body) => {
+      try {
+        const plain = JSON.parse(JSON.stringify(body));
+        return originalJson(sanitizeStudio(plain));
+      } catch {
+        return originalJson(sanitizeStudio(body));
+      }
+    };
     next();
   });
 

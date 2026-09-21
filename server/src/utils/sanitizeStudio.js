@@ -1,4 +1,8 @@
 export function sanitizeStudio(data) {
+  if (data === null || data === undefined) return data;
+  if (typeof data === "object" && typeof data.toJSON === "function") {
+    data = data.toJSON();
+  }
   if (typeof data === "string") {
     if (/^(https?:\/\/|\/|data:|blob:|mailto:)/i.test(data)) return data;
     if (/@/.test(data) && !/\s/.test(data)) return data;

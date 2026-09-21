@@ -133,22 +133,23 @@ export default function Footer() {
 
   // Dynamic Contact Properties
   const contactSettings = contactData?.settings || DEFAULT_CONTACT_SETTINGS;
-  const displayPhones =
-    Array.isArray(contactData?.phones) && contactData.phones.length > 0
-      ? contactData.phones
-      : DEFAULT_PHONES;
-  const displayEmails =
-    Array.isArray(contactData?.emails) && contactData.emails.length > 0
-      ? contactData.emails
-      : DEFAULT_EMAILS;
-  const displayOffices =
-    Array.isArray(contactData?.offices) && contactData.offices.length > 0
-      ? contactData.offices
-      : DEFAULT_OFFICES;
-  const displayHours =
-    Array.isArray(contactData?.workingHours) && contactData.workingHours.length > 0
-      ? contactData.workingHours
-      : DEFAULT_HOURS;
+  const rawPhones = Array.isArray(contactData?.phones) ? contactData.phones : [];
+  const validPhones = rawPhones.filter((p) => p && Boolean(p.displayPhone || p.phone));
+  const displayPhones = validPhones.length > 0 ? validPhones : DEFAULT_PHONES;
+
+  const rawEmails = Array.isArray(contactData?.emails) ? contactData.emails : [];
+  const validEmails = rawEmails.filter((e) => e && Boolean(e.email));
+  const displayEmails = validEmails.length > 0 ? validEmails : DEFAULT_EMAILS;
+
+  const rawOffices = Array.isArray(contactData?.offices) ? contactData.offices : [];
+  const validOffices = rawOffices.filter((o) => o && Boolean(o.companyName || o.addressLine1 || o.officeName));
+  const displayOffices = validOffices.length > 0 ? validOffices : DEFAULT_OFFICES;
+
+  const rawHours = Array.isArray(contactData?.workingHours) ? contactData.workingHours : [];
+  const validHours = rawHours.filter(
+    (h) => h && Boolean(h.dayFrom || h.dayTo || h.openingTime || h.closingTime || h.closed || h.customText)
+  );
+  const displayHours = validHours.length > 0 ? validHours : DEFAULT_HOURS;
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -243,17 +244,19 @@ export default function Footer() {
                           {contactSettings.phoneHeading || "Phone"}
                         </span>
                         <div className="space-y-[6px]">
-                          {displayPhones.map((p) => {
+                          {displayPhones.map((p, idx) => {
                             const flag = getFlagEmoji(p.countryCode);
-                            const cleanTel = (p.phone || "").replace(/[^+\d]/g, "");
+                            const phoneText = p.displayPhone || p.phone;
+                            if (!phoneText) return null;
+                            const cleanTel = (p.phone || phoneText).replace(/[^+\d]/g, "");
                             return (
                               <a
-                                key={p._id || p.phone}
+                                key={p._id || p.phone || idx}
                                 href={`tel:${cleanTel}`}
                                 className="flex items-center gap-1.5 font-semibold text-forest hover:text-site transition-colors text-[clamp(13px,0.95vw,16px)]"
                               >
                                 {flag && <span>{flag}</span>}
-                                <span>{p.displayPhone || p.phone}</span>
+                                <span>{phoneText}</span>
                               </a>
                             );
                           })}
@@ -270,15 +273,18 @@ export default function Footer() {
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
                           {contactSettings.emailHeading || "Email"}
                         </span>
-                        {displayEmails.map((e) => (
-                          <a
-                            key={e._id || e.email}
-                            href={`mailto:${e.email}`}
-                            className="font-semibold text-forest hover:text-site transition-colors [overflow-wrap:anywhere] break-words block text-[clamp(13px,0.95vw,16px)]"
-                          >
-                            {e.email}
-                          </a>
-                        ))}
+                        {displayEmails.map((e, idx) => {
+                          if (!e.email) return null;
+                          return (
+                            <a
+                              key={e._id || e.email || idx}
+                              href={`mailto:${e.email}`}
+                              className="font-semibold text-forest hover:text-site transition-colors [overflow-wrap:anywhere] break-words block text-[clamp(13px,0.95vw,16px)]"
+                            >
+                              {e.email}
+                            </a>
+                          );
+                        })}
                       </div>
                     </li>
                   )}
@@ -291,16 +297,19 @@ export default function Footer() {
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
                           {contactSettings.officeHeading || "Office"}
                         </span>
-                        {displayOffices.map((off) => (
-                          <address
-                            key={off._id || off.companyName}
-                            className="not-italic leading-relaxed text-[clamp(13px,0.95vw,16px)] [overflow-wrap:anywhere] break-words"
-                          >
-                            {off.companyName && <>{off.companyName},<br /></>}
-                            {off.addressLine1 && <>{off.addressLine1},<br /></>}
-                            {off.addressLine2 && <>{off.addressLine2}</>}
-                          </address>
-                        ))}
+                        {displayOffices.map((off, idx) => {
+                          if (!off.companyName && !off.addressLine1 && !off.officeName) return null;
+                          return (
+                            <address
+                              key={off._id || off.companyName || idx}
+                              className="not-italic leading-relaxed text-[clamp(13px,0.95vw,16px)] [overflow-wrap:anywhere] break-words"
+                            >
+                              {off.companyName && <>{off.companyName},<br /></>}
+                              {off.addressLine1 && <>{off.addressLine1},<br /></>}
+                              {off.addressLine2 && <>{off.addressLine2}</>}
+                            </address>
+                          );
+                        })}
                       </div>
                     </li>
                   )}
@@ -313,16 +322,27 @@ export default function Footer() {
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
                           {contactSettings.workingHoursHeading || "Working Hours"}
                         </span>
-                        {displayHours.map((h) => (
-                          <div key={h._id || h.dayFrom}>
-                            <span className="font-semibold text-forest block text-[clamp(13px,0.95vw,16px)]">
-                              {h.dayFrom} – {h.dayTo}
-                            </span>
-                            <span className="text-[clamp(12px,0.9vw,15px)] text-sage-muted">
-                              {h.closed ? "Closed" : `${h.openingTime} – ${h.closingTime}`}
-                            </span>
-                          </div>
-                        ))}
+                        {displayHours.map((h, idx) => {
+                          const dayText = [h.dayFrom, h.dayTo].filter(Boolean).join(" – ");
+                          const timeText = h.closed
+                            ? "Closed"
+                            : [h.openingTime, h.closingTime].filter(Boolean).join(" – ") || h.customText || "";
+                          if (!dayText && !timeText) return null;
+                          return (
+                            <div key={h._id || h.dayFrom || idx}>
+                              {dayText && (
+                                <span className="font-semibold text-forest block text-[clamp(13px,0.95vw,16px)]">
+                                  {dayText}
+                                </span>
+                              )}
+                              {timeText && (
+                                <span className="text-[clamp(12px,0.9vw,15px)] text-sage-muted">
+                                  {timeText}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </li>
                   )}
