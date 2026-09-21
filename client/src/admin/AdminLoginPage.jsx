@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
   const { loginUser } = useAdmin();
   const [email, setEmail] = useState("admin@theeditingtable.com");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("AdminPassword123!");
   const [showPassword, setShowPassword] = useState(false);
   const [stage, setStage] = useState("password");
   const [code, setCode] = useState("");
@@ -229,7 +229,7 @@ export default function AdminLoginPage() {
           )}
 
           <div className="pt-4 border-t border-sage-border/60 text-center text-[11px] text-sage-muted">
-            <ShieldCheck className="inline h-3.5 w-3.5 mr-1 text-[rgb(72,125,72)]" /> Direct administrator access
+            <ShieldCheck className="inline h-3.5 w-3.5 mr-1 text-[rgb(72,125,72)]" /> Two-Factor Authentication (2FA) Protected
           </div>
         </div>
       </Container>
