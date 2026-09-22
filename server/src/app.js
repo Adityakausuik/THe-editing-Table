@@ -353,6 +353,12 @@ export function createApp() {
   app.use(`${API_PREFIX}/v1/careers`, careersRoutes);
   app.use(`${API_PREFIX}/careers`, careersRoutes);
 
+  // ─── Diagnostic: log unmatched requests (temporary) ───
+  app.use((req, res, next) => {
+    console.error(`[404-DEBUG] Unmatched: ${req.method} url="${req.url}" originalUrl="${req.originalUrl}"`);
+    next();
+  });
+
   app.use(notFoundHandler);
   app.use(errorHandler);
 
