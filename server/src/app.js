@@ -39,6 +39,7 @@ import {
 const explicitOrigins = new Set([
   env.CLIENT_ORIGIN,
   env.CLIENT_URL,
+  "https://t-he-editing-table-client.vercel.app",
   ...(env.NODE_ENV === "production" ? [] : ["http://127.0.0.1:5173", "http://localhost:5173"])
 ].filter(Boolean));
 
