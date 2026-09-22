@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --configLoader native",
+    "dev": "vite --host --force",
     "build": "vite build --configLoader native && node ../scripts/copy-dist.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "lint": "eslint ."

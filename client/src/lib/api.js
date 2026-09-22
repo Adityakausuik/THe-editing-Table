@@ -14,7 +14,7 @@ export const API_ROOT = (() => {
     }
     return "/api";
   }
-  return configured || "http://127.0.0.1:5000/api";
+  return configured || "/api";
 })();
 
 export const API_ORIGIN = (() => {

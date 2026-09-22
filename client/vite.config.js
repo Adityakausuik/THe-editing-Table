@@ -5,22 +5,15 @@ import { fileURLToPath } from "node:url";
 const clientRoot = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
-  root: clientRoot,
-  cacheDir: "node_modules/.vite",
   plugins: [react()],
   optimizeDeps: {
-    esbuildOptions: {
-      absWorkingDir: clientRoot
-    }
+    noDiscovery: true,
+    include: []
   },
   server: {
-    host: "127.0.0.1",
+    host: true,
     port: 5173,
     strictPort: true,
-    fs: {
-      strict: true,
-      allow: [clientRoot]
-    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:5000",
