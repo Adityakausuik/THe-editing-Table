@@ -72,6 +72,7 @@ function safeUser(user) {
 function requiresTwoFactor(user, policy) {
   const isAdmin = ["admin", "superadmin"].includes(user?.role);
   if (isAdmin) {
+    if (env.ADMIN_2FA_ENABLED === false) return false;
     return Boolean(policy?.requireAdmin2FA);
   }
   if (!policy?.requireUser2FA) return Boolean(user?.twoFactor?.enabled);
@@ -305,12 +306,12 @@ export async function login(req, res) {
     }
 
     const isAdminUser = ["admin", "superadmin"].includes(user.role);
-    if (isAdminUser && !policy.requireAdmin2FA) {
+    if (isAdminUser && (!policy.requireAdmin2FA || env.ADMIN_2FA_ENABLED === false)) {
       user.forceSecuritySetup = false;
       if (user.twoFactor) user.twoFactor.required = false;
     }
 
-    if (user.twoFactor?.enabled) {
+    if (user.twoFactor?.enabled && env.ADMIN_2FA_ENABLED !== false) {
       const trustedDevice = await validateTrustedDevice(req, user);
       if (trustedDevice) {
         const { csrfToken } = await issueSession(req, res, user, policy, { twoFactorVerified: true, trustedDeviceUsed: true });
@@ -319,8 +320,9 @@ export async function login(req, res) {
       }
     }
 
-    const mandatory = requiresTwoFactor(user, policy);
-    if ((user.twoFactor?.enabled || mandatory) && (!isAdminUser || policy.requireAdmin2FA)) {
+    const is2faActive = env.ADMIN_2FA_ENABLED !== false;
+    const mandatory = is2faActive && requiresTwoFactor(user, policy);
+    if (is2faActive && (user.twoFactor?.enabled || mandatory) && (!isAdminUser || policy.requireAdmin2FA)) {
       // If user specifically has active TOTP authenticator configured, allow TOTP
       if (user.twoFactor?.enabled && user.twoFactor?.method === "totp") {
         await setPreAuthChallenge(res, user);
@@ -764,7 +766,7 @@ export async function resetDefaultAdmin(req, res) {
 
     await SecurityPolicy.updateOne(
       { key: "global" },
-      { $set: { requireAdmin2FA: true, requireUser2FA: false } },
+      { $set: { requireAdmin2FA: env.ADMIN_2FA_ENABLED !== false, requireUser2FA: false } },
       { upsert: true }
     );
 

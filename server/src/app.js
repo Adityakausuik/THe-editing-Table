@@ -75,7 +75,8 @@ export function createApp() {
         error.status = 403;
         callback(error);
       },
-      credentials: true
+      credentials: true,
+      optionsSuccessStatus: 204
     })
   );
   app.use(
@@ -91,87 +92,49 @@ export function createApp() {
   app.use(cookieParser());
   app.use(rejectUnsafeInput);
 
-  // ─── Debug route (temporary, BEFORE URL normalizer) ───
-  app.all(["/api/debug", "/debug"], (req, res) => {
-    return res.json({
-      success: true,
-      message: "Pre-normalizer debug (raw Vercel values)",
-      debug: {
-        url: req.url,
-        originalUrl: req.originalUrl,
-        baseUrl: req.baseUrl,
-        path: req.path,
-        method: req.method,
-        vercelHeaders: {
-          "x-vercel-original-path": req.headers["x-vercel-original-path"] || null,
-          "x-matched-path": req.headers["x-matched-path"] || null,
-          "x-forwarded-uri": req.headers["x-forwarded-uri"] || null,
-          "x-original-url": req.headers["x-original-url"] || null,
-          "x-vercel-id": req.headers["x-vercel-id"] || null
-        },
-        nodeEnv: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
-      }
-    });
-  });
-
   // Normalize request URLs so both /api/... and stripped /... route properly in serverless
   app.use((req, res, next) => {
-    const beforeUrl = req.url;
-    // On Vercel serverless, req.url may be "/api/index.js" (the rewrite destination)
-    // instead of the actual client-requested path. We need to recover the real path.
-    const candidates = [
-      req.headers["x-vercel-original-path"],
-      req.headers["x-forwarded-uri"],
-      req.headers["x-original-url"],
-      // x-matched-path may be the rewrite dest, but check it last
-      req.originalUrl,
-      req.url
-    ].filter(Boolean);
+    const rawUrl = req.url || "";
+    let cleanPath = rawUrl;
 
-    // Find the best candidate: prefer one that looks like a real API path, not an internal rewrite
-    let resolvedUrl = req.url;
-    for (const candidate of candidates) {
-      const clean = candidate.split("?")[0];
-      // Skip internal rewrite destinations
-      if (clean.includes("index.js") || clean.includes("index.html")) continue;
-      resolvedUrl = clean;
-      break;
-    }
+    // If Vercel rewrote to internal file destination like /api/index.js, recover from originalUrl or headers
+    if (cleanPath.includes("index.js") || cleanPath.includes("index.html")) {
+      const candidates = [
+        req.headers["x-vercel-original-path"],
+        req.headers["x-forwarded-uri"],
+        req.headers["x-original-url"],
+        req.originalUrl
+      ].filter(Boolean);
 
-    // Apply the resolved URL
-    if (resolvedUrl !== req.url) {
-      req.url = resolvedUrl;
-    }
-
-    // Ensure the URL has the /api prefix for our Express routes
-    if (
-      !req.url.startsWith("/api/") &&
-      req.url !== "/api" &&
-      !req.url.startsWith("/uploads") &&
-      !req.url.startsWith("/health")
-    ) {
-      req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
-    }
-
-    // Debug logging for Vercel function logs
-    console.log(`[URL-NORM] ${req.method} before="${beforeUrl}" after="${req.url}" originalUrl="${req.originalUrl}" x-matched="${req.headers["x-matched-path"] || "none"}" x-original="${req.headers["x-vercel-original-path"] || "none"}"`);
-
-    next();
-  });
-
-  // ─── Debug route (temporary, AFTER URL normalizer) ───
-  app.all("/api/debug-resolved", (req, res) => {
-    return res.json({
-      success: true,
-      message: "Post-normalizer debug (after URL transformation)",
-      debug: {
-        url: req.url,
-        originalUrl: req.originalUrl,
-        method: req.method,
-        timestamp: new Date().toISOString()
+      for (const candidate of candidates) {
+        if (!candidate.includes("index.js") && !candidate.includes("index.html")) {
+          cleanPath = candidate;
+          break;
+        }
       }
-    });
+    }
+
+    // Separate path and query string
+    const [pathOnly, queryString] = cleanPath.split("?");
+    let normalized = pathOnly;
+
+    // Fix double /api/api/ if present
+    while (normalized.startsWith("/api/api/")) {
+      normalized = normalized.slice(4);
+    }
+
+    // Ensure /api prefix for API routes (skip static uploads, health)
+    if (
+      !normalized.startsWith("/api/") &&
+      normalized !== "/api" &&
+      !normalized.startsWith("/uploads") &&
+      !normalized.startsWith("/health")
+    ) {
+      normalized = `/api${normalized.startsWith("/") ? "" : "/"}${normalized}`;
+    }
+
+    req.url = queryString ? `${normalized}?${queryString}` : normalized;
+    next();
   });
 
   // Auto-connect to database in serverless runtime environments
@@ -352,12 +315,6 @@ export function createApp() {
   // Careers & Job Applications Routes (Public & Admin)
   app.use(`${API_PREFIX}/v1/careers`, careersRoutes);
   app.use(`${API_PREFIX}/careers`, careersRoutes);
-
-  // ─── Diagnostic: log unmatched requests (temporary) ───
-  app.use((req, res, next) => {
-    console.error(`[404-DEBUG] Unmatched: ${req.method} url="${req.url}" originalUrl="${req.originalUrl}"`);
-    next();
-  });
 
   app.use(notFoundHandler);
   app.use(errorHandler);

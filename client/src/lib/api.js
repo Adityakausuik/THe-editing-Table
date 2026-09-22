@@ -6,13 +6,15 @@ import { sanitizeStudio } from "./sanitizeStudio.js";
 const configuredApiRoot = import.meta.env.VITE_API_URL;
 
 export const API_ROOT = (() => {
-  if (configuredApiRoot && configuredApiRoot.trim()) {
-    return configuredApiRoot.trim().replace(/\/+$/, "");
-  }
+  const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
   if (import.meta.env.PROD) {
+    // In production, never allow localhost/127.0.0.1 to be used even if accidentally configured
+    if (configured && !configured.includes("localhost") && !configured.includes("127.0.0.1")) {
+      return configured.replace(/\/+$/, "");
+    }
     return "/api";
   }
-  return "http://127.0.0.1:5000/api";
+  return configured || "http://127.0.0.1:5000/api";
 })();
 
 export const API_ORIGIN = (() => {
@@ -60,9 +62,20 @@ function cmsEventKey(rawUrl = "") {
 
 export function apiUrl(path) {
   if (/^https?:\/\//i.test(path)) return path;
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  if (API_ROOT.endsWith("/api") && normalizedPath.startsWith("/api/")) {
-    return `${API_ROOT}${normalizedPath.slice(4)}`;
+  let normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  // If API_ROOT ends with /api (e.g. "/api" or "https://domain.com/api")
+  if (API_ROOT.endsWith("/api")) {
+    // If path also starts with /api/, strip one /api to prevent /api/api/
+    if (normalizedPath.startsWith("/api/")) {
+      normalizedPath = normalizedPath.slice(4);
+    }
+    return `${API_ROOT}${normalizedPath}`;
+  }
+
+  // If API_ROOT does not end with /api (e.g. "https://domain.com")
+  if (!normalizedPath.startsWith("/api/") && normalizedPath !== "/api" && !normalizedPath.startsWith("/uploads")) {
+    normalizedPath = `/api${normalizedPath}`;
   }
   return `${API_ROOT}${normalizedPath}`;
 }

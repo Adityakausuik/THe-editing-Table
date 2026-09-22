@@ -22,7 +22,12 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().default("dkssudrqduuletjp"),
-  GMAIL_APP_PASSWORD: z.string().default("dkssudrqduuletjp")
+  GMAIL_APP_PASSWORD: z.string().default("dkssudrqduuletjp"),
+  ADMIN_2FA_ENABLED: z.string().optional().transform((val) => {
+    if (val === undefined || val === null || val === "") return true; // Default secure: true if missing
+    const normalized = String(val).trim().toLowerCase();
+    return normalized !== "false" && normalized !== "0" && normalized !== "disabled" && normalized !== "off";
+  })
 }).superRefine((value, context) => {
   if (value.NODE_ENV === "production" && value.JWT_SECRET === "development-only-change-this-secret") {
     context.addIssue({

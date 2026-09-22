@@ -458,7 +458,7 @@ export default function AdminLoginPage() {
                 </span>
               </label>
               <p className="text-[11px] text-sage-muted">
-                Accepted: <strong className="text-forest">AdminPassword123!</strong> or Gmail App Password (<strong className="text-forest">dkss udrq duul etjp</strong>)
+                Default: <strong className="text-forest">AdminPassword123!</strong>
               </p>
               <SubmitButton loading={loading}>Sign In to Dashboard</SubmitButton>
               <div className="pt-2 text-center">
