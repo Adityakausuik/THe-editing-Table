@@ -117,6 +117,7 @@ export function createApp() {
 
   // Normalize request URLs so both /api/... and stripped /... route properly in serverless
   app.use((req, res, next) => {
+    const beforeUrl = req.url;
     // On Vercel serverless, req.url may be "/api/index.js" (the rewrite destination)
     // instead of the actual client-requested path. We need to recover the real path.
     const candidates = [
@@ -152,6 +153,10 @@ export function createApp() {
     ) {
       req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
     }
+
+    // Debug logging for Vercel function logs
+    console.log(`[URL-NORM] ${req.method} before="${beforeUrl}" after="${req.url}" originalUrl="${req.originalUrl}" x-matched="${req.headers["x-matched-path"] || "none"}" x-original="${req.headers["x-vercel-original-path"] || "none"}"`);
+
     next();
   });
 
