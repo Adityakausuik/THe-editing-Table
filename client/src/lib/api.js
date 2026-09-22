@@ -112,24 +112,35 @@ export async function apiFetch(path, options = {}) {
     headers.set("X-CSRF-Token", csrfToken);
   }
 
-  const response = await fetch(apiUrl(path), {
+  const url = apiUrl(path);
+  const response = await fetch(url, {
     credentials: "include",
     cache: "no-store",
     ...options,
     headers
   });
-  const payload = await response.json().catch(() => null);
 
-  if (!response.ok || payload?.success === false) {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const payload = isJson ? await response.json().catch(() => null) : null;
+
+  if (!response.ok || !payload || payload?.success === false) {
     if (response.status === 401) notifyAuthSessionExpired(path);
-    const error = new Error(payload?.message || `API request failed with status ${response.status}`);
+    let errMsg = payload?.message;
+    if (!errMsg) {
+      if (!isJson) {
+        errMsg = `API endpoint returned non-JSON (${contentType || "text/html"}). The backend API is not accessible at ${url}.`;
+      } else {
+        errMsg = `API request failed with status ${response.status}`;
+      }
+    }
+    const error = new Error(errMsg);
     error.status = response.status;
     error.payload = payload;
     throw error;
   }
 
-  const rawResult = payload || { success: true, message: "Operation completed successfully", data: null };
-  const result = sanitizeStudio(rawResult);
+  const result = sanitizeStudio(payload);
   if (method !== "GET" && method !== "HEAD") {
     const key = cmsEventKey(path);
     if (key) notifyCmsChanged(key);

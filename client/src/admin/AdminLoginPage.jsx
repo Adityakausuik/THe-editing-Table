@@ -212,6 +212,8 @@ export default function AdminLoginPage() {
       } else if (loginRes.data?.status === "two_factor_setup_required") {
         setStage("setup");
         await beginSetup();
+      } else {
+        setErrorMsg(loginRes?.message || "Login failed after reset.");
       }
     } catch (err) {
       setErrorMsg(err.message || "Failed to reset admin access.");
@@ -260,6 +262,8 @@ export default function AdminLoginPage() {
       } else if (response.data?.status === "two_factor_setup_required") {
         setStage("setup");
         await beginSetup();
+      } else {
+        setErrorMsg(response?.message || "Invalid credentials or login failed.");
       }
     } catch (error) {
       setErrorMsg(error.message || "Authentication failed.");
