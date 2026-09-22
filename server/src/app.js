@@ -279,6 +279,16 @@ export function createApp() {
     app.post(path, verifyTwoFactorSetup);
   });
 
+  app.get("/api", (req, res) => {
+    res.json({
+      success: true,
+      name: "The Editing Table API",
+      status: "online",
+      version: "1.0.0",
+      timestamp: new Date().toISOString()
+    });
+  });
+
   app.use("/health", healthRoutes);
   app.use(`${API_PREFIX}/health`, healthRoutes);
   app.use(`${API_PREFIX}/v1/auth`, authRoutes);

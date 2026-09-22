@@ -108,6 +108,11 @@ export async function apiFetch(path, options = {}) {
 
   const method = String(options.method || "GET").toUpperCase();
   const csrfToken = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("csrfToken") : null;
+  const authToken = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("accessToken") : null;
+
+  if (authToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${authToken}`);
+  }
   if (!["GET", "HEAD", "OPTIONS"].includes(method) && csrfToken && !headers.has("X-CSRF-Token")) {
     headers.set("X-CSRF-Token", csrfToken);
   }

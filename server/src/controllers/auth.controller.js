@@ -43,7 +43,7 @@ function baseCookieOptions() {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    sameSite: env.COOKIE_SAMESITE || "lax",
     path: "/"
   };
 }
@@ -111,7 +111,7 @@ async function issueSession(req, res, user, policy, { twoFactorVerified = false,
   user.failedPasswordAttempts = 0;
   user.accountLockUntil = undefined;
   await user.save();
-  return { session, csrfToken: csrfTokenForSession(session._id.toString()) };
+  return { session, csrfToken: csrfTokenForSession(session._id.toString()), token };
 }
 
 async function setPreAuthChallenge(res, user) {
@@ -314,9 +314,9 @@ export async function login(req, res) {
     if (user.twoFactor?.enabled && env.ADMIN_2FA_ENABLED !== false) {
       const trustedDevice = await validateTrustedDevice(req, user);
       if (trustedDevice) {
-        const { csrfToken } = await issueSession(req, res, user, policy, { twoFactorVerified: true, trustedDeviceUsed: true });
+        const { csrfToken, token } = await issueSession(req, res, user, policy, { twoFactorVerified: true, trustedDeviceUsed: true });
         await writeSecurityAudit({ req, user, action: "LOGIN_SUCCESS", metadata: { trustedDevice: true } });
-        return res.json({ success: true, message: "Logged in successfully", data: { status: "authenticated", user: safeUser(user), csrfToken } });
+        return res.json({ success: true, message: "Logged in successfully", data: { status: "authenticated", user: safeUser(user), csrfToken, token } });
       }
     }
 
@@ -373,9 +373,9 @@ export async function login(req, res) {
       });
     }
 
-    const { csrfToken } = await issueSession(req, res, user, policy);
+    const { csrfToken, token } = await issueSession(req, res, user, policy);
     await writeSecurityAudit({ req, user, action: "LOGIN_SUCCESS" });
-    return res.json({ success: true, message: "Logged in successfully", data: { status: "authenticated", user: safeUser(user), csrfToken } });
+    return res.json({ success: true, message: "Logged in successfully", data: { status: "authenticated", user: safeUser(user), csrfToken, token } });
   } catch {
     return res.status(500).json({ success: false, message: "Login failed", data: null });
   }
@@ -451,7 +451,7 @@ export async function verifyTwoFactorSetup(req, res) {
     let authData = {};
     if (!fromSession) {
       const issued = await issueSession(req, res, fullUser, policy, { twoFactorVerified: true });
-      authData = { user: safeUser(fullUser), csrfToken: issued.csrfToken, status: "authenticated" };
+      authData = { user: safeUser(fullUser), csrfToken: issued.csrfToken, token: issued.token, status: "authenticated" };
       await writeSecurityAudit({ req, user: fullUser, action: "LOGIN_SUCCESS", metadata: { afterSetup: true } });
     }
     return res.json({ success: true, message: "Two-factor authentication enabled", data: { ...authData, recoveryCodes } });
@@ -493,10 +493,10 @@ export async function verifyLoginTwoFactor(req, res) {
     user.preAuthNonceHash = "";
     await user.save();
     if (req.body?.trustDevice) await addTrustedDevice(req, res, user, policy, req.body?.deviceName);
-    const { csrfToken } = await issueSession(req, res, user, policy, { twoFactorVerified: true });
+    const { csrfToken, token } = await issueSession(req, res, user, policy, { twoFactorVerified: true });
     await writeSecurityAudit({ req, user, action: recoveryUsed ? "RECOVERY_CODE_USED" : "TWO_FACTOR_SUCCESS" });
     await writeSecurityAudit({ req, user, action: "LOGIN_SUCCESS" });
-    return res.json({ success: true, message: "Security verification successful", data: { status: "authenticated", user: safeUser(user), csrfToken } });
+    return res.json({ success: true, message: "Security verification successful", data: { status: "authenticated", user: safeUser(user), csrfToken, token } });
   } catch {
     return res.status(401).json({ success: false, message: "Security verification failed.", data: null });
   }
@@ -572,7 +572,7 @@ export async function verifyEmailOtp(req, res) {
       await addTrustedDevice(req, res, user, policy, req.body?.deviceName || "Admin Browser");
     }
 
-    const { csrfToken } = await issueSession(req, res, user, policy, { twoFactorVerified: true });
+    const { csrfToken, token } = await issueSession(req, res, user, policy, { twoFactorVerified: true });
     await writeSecurityAudit({ req, user, action: "EMAIL_OTP_VERIFIED" });
     await writeSecurityAudit({ req, user, action: "LOGIN_SUCCESS" });
 
@@ -582,7 +582,8 @@ export async function verifyEmailOtp(req, res) {
       data: {
         status: "authenticated",
         user: safeUser(user),
-        csrfToken
+        csrfToken,
+        token
       }
     });
   } catch (error) {

@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
 
   const finishLogin = (data) => {
     sessionStorage.removeItem("admin_login_stage");
-    loginUser(data.data?.user, data.data?.csrfToken);
+    loginUser(data.data?.user, data.data?.csrfToken, data.data?.token);
     navigate("/admin/dashboard");
   };
 
@@ -351,7 +351,7 @@ export default function AdminLoginPage() {
       });
       setRecoveryCodes(response.data?.recoveryCodes || []);
       sessionStorage.setItem("csrfToken", response.data?.csrfToken || "");
-      loginUser(response.data?.user, response.data?.csrfToken);
+      loginUser(response.data?.user, response.data?.csrfToken, response.data?.token);
       setStage("recovery");
     } catch (error) {
       setErrorMsg(error.message || "Authenticator verification failed.");

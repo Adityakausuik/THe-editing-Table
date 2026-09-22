@@ -15,6 +15,7 @@ export function AdminProvider({ children }) {
     const expireSession = () => {
       if (!active) return;
       sessionStorage.removeItem("csrfToken");
+      sessionStorage.removeItem("accessToken");
       setUser(null);
       setAuthLoading(false);
     };
@@ -25,12 +26,14 @@ export function AdminProvider({ children }) {
       .then((response) => {
         if (active) {
           if (response.data?.csrfToken) sessionStorage.setItem("csrfToken", response.data.csrfToken);
+          if (response.data?.token) sessionStorage.setItem("accessToken", response.data.token);
           setUser(response.data || null);
         }
       })
       .catch(() => {
         if (active) {
           sessionStorage.removeItem("csrfToken");
+          sessionStorage.removeItem("accessToken");
           setUser(null);
         }
       })
@@ -43,8 +46,9 @@ export function AdminProvider({ children }) {
     };
   }, []);
 
-  const loginUser = (userData, csrfToken) => {
+  const loginUser = (userData, csrfToken, token) => {
     if (csrfToken) sessionStorage.setItem("csrfToken", csrfToken);
+    if (token) sessionStorage.setItem("accessToken", token);
     setUser(userData);
     setAuthLoading(false);
   };
@@ -54,6 +58,7 @@ export function AdminProvider({ children }) {
       await apiFetch("/api/v1/auth/logout", { method: "POST" });
     } finally {
       sessionStorage.removeItem("csrfToken");
+      sessionStorage.removeItem("accessToken");
       setUser(null);
     }
   };
