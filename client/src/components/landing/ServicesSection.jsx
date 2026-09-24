@@ -45,7 +45,7 @@ export default function ServicesSection() {
   const displayServices = Array.isArray(services) && services.length > 0 ? services : DEFAULT_SERVICES;
 
   return (
-    <section aria-label="Post-Production Services Suite" className="py-24 sm:py-32 bg-sage-card text-forest relative">
+    <section id="services" aria-label="Post-Production Services Suite" className="py-24 sm:py-32 bg-sage-card text-forest relative overflow-hidden">
       <Container>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-12 border-b border-sage-border/80">
@@ -63,17 +63,24 @@ export default function ServicesSection() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 pt-12">
+        <div className="grid gap-6 md:grid-cols-3 pt-12" style={{ perspective: 1200 }}>
           {displayServices.map((service, idx) => {
             const Icon = categoryIcons[service.category] || Film;
             return (
               <m.div
                 key={service._id || service.id || idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="group relative rounded-3xl border border-sage-border/80 bg-sage-card p-7 sm:p-8 shadow-soft hover:shadow-editorial hover:border-[rgb(72,125,72)]/70 transition-all duration-500 flex flex-col justify-between"
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.6, delay: idx * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{
+                  y: -6,
+                  rotateX: 2.5,
+                  rotateY: idx === 0 ? 2 : idx === 2 ? -2 : 0,
+                  transition: { duration: 0.3 }
+                }}
+                style={{ transformStyle: "preserve-3d" }}
+                className="group relative rounded-3xl border border-sage-border/80 bg-sage-card p-7 sm:p-8 shadow-soft hover:shadow-editorial hover:border-[rgb(72,125,72)]/70 transition-all duration-500 flex flex-col justify-between will-change-transform"
               >
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
