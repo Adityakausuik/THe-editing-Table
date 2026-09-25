@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
 import Container from "../ui/Container.jsx";
+import VideoShowcaseBackground from "./VideoShowcaseBackground.jsx";
 
 const DEFAULT_VIDEOS = [
   {
@@ -119,7 +120,7 @@ const DEFAULT_SETTINGS = {
   sectionPaddingBottom: 80,
   maxWidth: 1440,
   autoplay: true,
-  autoplayDelay: 5000,
+  autoplayDelay: 4000,
   infiniteLoop: true,
   pauseOnHover: true,
   hoverPlayback: true,
@@ -411,8 +412,6 @@ export default function VideoShowcaseSection() {
       id={settings.anchorId || "video-showcase"}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      onMouseEnter={handleMouseEnterContainer}
-      onMouseLeave={handleMouseLeaveContainer}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -424,47 +423,10 @@ export default function VideoShowcaseSection() {
         paddingBottom: `${settings.sectionPaddingBottom || 80}px`
       }}
     >
-      {/* Soft Ambient Dynamic Background Lighting with Floating Aurora Mesh */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
-        <m.div
-          animate={
-            shouldReduceMotion
-              ? {}
-              : {
-                  scale: [1, 1.15, 0.95, 1.1, 1],
-                  x: [-25, 30, -15, 20, -25],
-                  y: [-20, 20, -25, 15, -20],
-                  opacity: [0.35, 0.55, 0.38, 0.5, 0.35]
-                }
-          }
-          transition={{
-            duration: 16,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[550px] sm:h-[700px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(200,216,190,0.38)_0%,rgba(143,174,123,0.14)_50%,transparent_75%)] blur-3xl will-change-transform"
-        />
-        <m.div
-          animate={
-            shouldReduceMotion
-              ? {}
-              : {
-                  scale: [0.9, 1.12, 0.95, 1.08, 0.9],
-                  x: [25, -20, 30, -15, 25],
-                  y: [15, -25, 15, -20, 15],
-                  opacity: [0.2, 0.4, 0.25, 0.35, 0.2]
-                }
-          }
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/4 right-1/6 w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(143,174,123,0.25)_0%,rgba(72,125,72,0.08)_55%,transparent_75%)] blur-3xl will-change-transform"
-        />
-      </div>
+      {/* Dynamic Animated Background with Visible Rotating Motion & Running Speed */}
+      <VideoShowcaseBackground />
 
-      <Container className="space-y-12 max-w-[1440px] mx-auto">
+      <Container className="relative z-10 space-y-12 max-w-[1440px] mx-auto">
         {/* Dynamic Section Header with Scroll-Triggered Kinetic Reveal */}
         <m.div
           initial={{ opacity: 0, y: 32 }}
@@ -564,7 +526,11 @@ export default function VideoShowcaseSection() {
           )}
 
           {/* Cards Flex Container with Symmetric 5-Slot Infinite Wrapping */}
-          <div className="flex items-center justify-center gap-3 sm:gap-5 w-full overflow-visible py-4">
+          <div
+            onMouseEnter={handleMouseEnterContainer}
+            onMouseLeave={handleMouseLeaveContainer}
+            className="flex items-center justify-center gap-3 sm:gap-5 w-full overflow-visible py-4"
+          >
             {slots.map((offset) => {
               const videoIndex = (activeIndex + offset + totalItems * 100) % totalItems;
               const video = displayVideos[videoIndex];
@@ -594,33 +560,35 @@ export default function VideoShowcaseSection() {
               }
 
               return (
-                <m.div
+                <div
                   key={`${video._id || videoIndex}-${offset}`}
-                  layout
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  onMouseEnter={() => setHoveredIndex(videoIndex)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  onClick={() => handleCardClick(videoIndex, video)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleCardClick(videoIndex, video);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={isCenter ? `Play or pause ${video.title || "video"}` : `Show ${video.title || "video"}`}
-                  style={{ borderRadius: `${settings.cardRadius || 24}px` }}
-                  className={`group relative overflow-hidden bg-forest flex-col justify-between transition-all duration-500 shrink-0 ${cardHeightClass} ${hideOnMobile} ${hideOnTablet}`}
+                  className={`relative shrink-0 flex items-center justify-center ${hideOnMobile} ${hideOnTablet}`}
                 >
                   {/* Center Card Breathing Ambient Halo */}
                   {isCenter && (
-                    <m.div
-                      animate={shouldReduceMotion ? {} : { opacity: [0.35, 0.65, 0.35], scale: [1, 1.04, 1] }}
-                      transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute -inset-2.5 sm:-inset-3.5 rounded-[30px] bg-[radial-gradient(circle,rgba(72,125,72,0.30)_0%,rgba(143,174,123,0.12)_60%,transparent_75%)] blur-xl pointer-events-none -z-10"
+                    <div
+                      className="absolute -inset-3.5 sm:-inset-5 rounded-[34px] bg-[radial-gradient(circle,rgba(72,125,72,0.45)_0%,rgba(143,174,123,0.22)_60%,transparent_75%)] blur-2xl pointer-events-none z-0 animate-showcase-pulse allow-motion"
                     />
                   )}
+
+                  <m.div
+                    layout
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    onMouseEnter={() => setHoveredIndex(videoIndex)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    onClick={() => handleCardClick(videoIndex, video)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleCardClick(videoIndex, video);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={isCenter ? `Play or pause ${video.title || "video"}` : `Show ${video.title || "video"}`}
+                    style={{ borderRadius: `${settings.cardRadius || 24}px` }}
+                    className={`group relative overflow-hidden bg-forest flex flex-col justify-between transition-all duration-500 shrink-0 ${cardHeightClass}`}
+                  >
 
                   {/* Poster Image Thumbnail */}
                   <img
@@ -723,7 +691,8 @@ export default function VideoShowcaseSection() {
                     )}
                   </div>
                 </m.div>
-              );
+              </div>
+            );
             })}
           </div>
         </m.div>
