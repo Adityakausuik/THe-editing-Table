@@ -1,5 +1,5 @@
 /* global clearTimeout */
-import { m } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   ChevronLeft,
@@ -145,6 +145,7 @@ function formatDuration(seconds = 0) {
 }
 
 export default function VideoShowcaseSection() {
+  const shouldReduceMotion = useReducedMotion();
   const [videos, setVideos] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [activeIndex, setActiveIndex] = useState(2); // Center card index
@@ -423,13 +424,54 @@ export default function VideoShowcaseSection() {
         paddingBottom: `${settings.sectionPaddingBottom || 80}px`
       }}
     >
-      {/* Soft Ambient Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,rgba(200,216,190,0.35)_0%,rgba(143,174,123,0.08)_50%,transparent_75%)] blur-3xl pointer-events-none -z-10" />
+      {/* Soft Ambient Dynamic Background Lighting with Floating Aurora Mesh */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
+        <m.div
+          animate={
+            shouldReduceMotion
+              ? {}
+              : {
+                  scale: [1, 1.15, 0.95, 1.1, 1],
+                  x: [-25, 30, -15, 20, -25],
+                  y: [-20, 20, -25, 15, -20],
+                  opacity: [0.35, 0.55, 0.38, 0.5, 0.35]
+                }
+          }
+          transition={{
+            duration: 16,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[550px] sm:h-[700px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(200,216,190,0.38)_0%,rgba(143,174,123,0.14)_50%,transparent_75%)] blur-3xl will-change-transform"
+        />
+        <m.div
+          animate={
+            shouldReduceMotion
+              ? {}
+              : {
+                  scale: [0.9, 1.12, 0.95, 1.08, 0.9],
+                  x: [25, -20, 30, -15, 25],
+                  y: [15, -25, 15, -20, 15],
+                  opacity: [0.2, 0.4, 0.25, 0.35, 0.2]
+                }
+          }
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/4 right-1/6 w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(143,174,123,0.25)_0%,rgba(72,125,72,0.08)_55%,transparent_75%)] blur-3xl will-change-transform"
+        />
+      </div>
 
       <Container className="space-y-12 max-w-[1440px] mx-auto">
-        {/* Dynamic Section Header */}
-        <div
-          className={`space-y-3 max-w-3xl ${
+        {/* Dynamic Section Header with Scroll-Triggered Kinetic Reveal */}
+        <m.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className={`space-y-4 max-w-3xl ${
             settings.alignment === "left"
               ? "text-left mr-auto"
               : settings.alignment === "right"
@@ -437,19 +479,40 @@ export default function VideoShowcaseSection() {
               : "text-center mx-auto"
           }`}
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-site shadow-soft">
-            <Film className="h-3.5 w-3.5 text-site" /> Creative Post-Production &amp; Visual Storytelling
-          </div>
+          <m.div
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-site shadow-soft backdrop-blur-sm hover:border-[rgb(72,125,72)]/60 transition-colors"
+          >
+            <m.span
+              animate={shouldReduceMotion ? {} : { rotate: [0, 360] }}
+              transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+              className="inline-flex items-center justify-center"
+            >
+              <Film className="h-3.5 w-3.5 text-site" />
+            </m.span>
+            <span>Creative Post-Production &amp; Visual Storytelling</span>
+          </m.div>
 
-          <h2
-            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight tracking-tight"
+          <m.h2
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal leading-[1.18] tracking-tight"
             style={{ color: "var(--site-text-color)" }}
           >
             {settings.heading || DEFAULT_SETTINGS.heading}
-          </h2>
+          </m.h2>
 
           {settings.showSubheading && (
-            <p
+            <m.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="text-sm sm:text-base leading-relaxed font-normal max-w-2xl mx-auto"
               style={{ color: "var(--site-text-color)" }}
             >
@@ -461,32 +524,42 @@ export default function VideoShowcaseSection() {
               ) : (
                 settings.subheading
               )}
-            </p>
+            </m.p>
           )}
-        </div>
+        </m.div>
 
         {/* 5-Card Vertical Video Showcase Layout */}
-        <div className="relative flex items-center justify-center min-h-[520px] sm:min-h-[580px] px-2 sm:px-4">
-          {/* Arrow Navigation (Desktop/Tablet) */}
+        <m.div
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex items-center justify-center min-h-[520px] sm:min-h-[580px] px-2 sm:px-4"
+        >
+          {/* Arrow Navigation (Desktop/Tablet) with Magnetic Motion */}
           {settings.showArrows && (
             <>
-              <button
+              <m.button
                 type="button"
                 onClick={handlePrevious}
+                whileHover={{ scale: 1.12, x: -3 }}
+                whileTap={{ scale: 0.92 }}
                 aria-label="Previous Video"
-                className="absolute left-2 sm:left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-all duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
+                className="absolute left-2 sm:left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
               >
                 <ChevronLeft className="h-5 w-5" />
-              </button>
+              </m.button>
 
-              <button
+              <m.button
                 type="button"
                 onClick={handleNext}
+                whileHover={{ scale: 1.12, x: 3 }}
+                whileTap={{ scale: 0.92 }}
                 aria-label="Next Video"
-                className="absolute right-2 sm:right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-all duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
+                className="absolute right-2 sm:right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
               >
                 <ChevronRight className="h-5 w-5" />
-              </button>
+              </m.button>
             </>
           )}
 
@@ -540,6 +613,15 @@ export default function VideoShowcaseSection() {
                   style={{ borderRadius: `${settings.cardRadius || 24}px` }}
                   className={`group relative overflow-hidden bg-forest flex-col justify-between transition-all duration-500 shrink-0 ${cardHeightClass} ${hideOnMobile} ${hideOnTablet}`}
                 >
+                  {/* Center Card Breathing Ambient Halo */}
+                  {isCenter && (
+                    <m.div
+                      animate={shouldReduceMotion ? {} : { opacity: [0.35, 0.65, 0.35], scale: [1, 1.04, 1] }}
+                      transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute -inset-2.5 sm:-inset-3.5 rounded-[30px] bg-[radial-gradient(circle,rgba(72,125,72,0.30)_0%,rgba(143,174,123,0.12)_60%,transparent_75%)] blur-xl pointer-events-none -z-10"
+                    />
+                  )}
+
                   {/* Poster Image Thumbnail */}
                   <img
                     src={thumbSrc}
@@ -596,12 +678,20 @@ export default function VideoShowcaseSection() {
                   {/* Center Play Button Overlay */}
                   <div className="relative z-10 my-auto flex items-center justify-center">
                     <div
-                      className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border border-white/40 bg-white/20 backdrop-blur-md text-white shadow-deep transition-all duration-300 ${
+                      className={`relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border border-white/40 bg-white/20 backdrop-blur-md text-white shadow-deep transition-all duration-300 ${
                         isCenter
                           ? "group-hover:scale-110 group-hover:bg-[rgb(72,125,72)] group-hover:border-[rgb(72,125,72)]"
                           : "group-hover:scale-105 group-hover:bg-white/40"
                       }`}
                     >
+                      {/* Pulsing ripple ring when paused on center card */}
+                      {isCenter && !isPlaying && (
+                        <m.div
+                          animate={shouldReduceMotion ? {} : { scale: [1, 1.45, 1], opacity: [0.65, 0, 0.65] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                          className="absolute inset-0 rounded-full border-2 border-white/60 pointer-events-none"
+                        />
+                      )}
                       {isCenter && isPlaying ? (
                         <Pause className="h-6 w-6 text-white fill-white" />
                       ) : (
@@ -636,7 +726,7 @@ export default function VideoShowcaseSection() {
               );
             })}
           </div>
-        </div>
+        </m.div>
 
         {/* Pagination Dots Indicator */}
         {settings.showPagination && (
@@ -661,9 +751,15 @@ export default function VideoShowcaseSection() {
           </div>
         )}
 
-        {/* Bottom CTA Button */}
+        {/* Bottom CTA Button with Scroll-Triggered Reveal */}
         {settings.ctaVisible && (
-          <div className="pt-4 flex justify-center">
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="pt-4 flex justify-center"
+          >
             <Link
               to={settings.ctaUrl || "/portfolio"}
               target={settings.ctaNewTab ? "_blank" : undefined}
@@ -678,7 +774,7 @@ export default function VideoShowcaseSection() {
               <span>{settings.ctaText || "Explore Our Portfolio"}</span>
               <ArrowRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-          </div>
+          </m.div>
         )}
       </Container>
     </section>
