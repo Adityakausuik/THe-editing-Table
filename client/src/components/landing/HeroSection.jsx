@@ -2,6 +2,7 @@ import { m, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import logo from "../../assets/the-editing-table-logo.png";
 import Container from "../ui/Container.jsx";
+import HeroAnimatedBackground from "./HeroAnimatedBackground.jsx";
 
 const INTRO_SEEN_KEY = "tet_hero_intro_seen";
 
@@ -146,42 +147,8 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* AMBIENT BACKGROUND GLOW — Apple / VisionOS Inspired Aura with Circular Mask Expansion */}
-      <m.div
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-        aria-hidden="true"
-        initial={isIntroActive ? { clipPath: "circle(0% at 50% 50%)" } : { clipPath: "circle(150% at 50% 50%)" }}
-        animate={{ clipPath: "circle(150% at 50% 50%)" }}
-        transition={
-          isIntroActive
-            ? { duration: 0.95, delay: 1.75, ease: [0.22, 1, 0.36, 1] }
-            : { duration: 0 }
-        }
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F8FBF7] via-[#F5F8F3] to-[#F8FBF7]" />
-
-        {/* Central soft atmospheric orb — dynamically scaled for all desktop & mobile resolutions */}
-        <m.div
-          animate={
-            shouldReduceMotion
-              ? { scale: 1, opacity: 0.2 }
-              : {
-                  scale: [1, 1.08, 1.08, 1, 1],
-                  opacity: [0.18, 0.28, 0.28, 0.18, 0.18]
-                }
-          }
-          transition={{
-            duration: 5.0,
-            times: [0, 0.4, 0.5, 0.9, 1.0],
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[clamp(420px,50vw,920px)] w-[clamp(420px,50vw,920px)] rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.22)_0%,rgba(200,216,190,0.08)_45%,transparent_70%)] blur-3xl pointer-events-none"
-        />
-
-        {/* Fine luxury vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(248,251,247,0.85)_100%)]" />
-      </m.div>
+      {/* DYNAMIC ANIMATED HERO BACKGROUND — Fluid Aurora Mesh, Drifting Bokeh Particles & Parallax */}
+      <HeroAnimatedBackground isIntroActive={isIntroActive} />
 
       {/* CENTER HERO CONTENT — LOGO + TAGLINE WITH BALANCED RESPONSIVE SPACING */}
       <Container className="relative z-20 flex flex-col items-center justify-center text-center my-auto px-4 sm:px-6 w-full max-w-7xl">
