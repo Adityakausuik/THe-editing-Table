@@ -196,7 +196,59 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         </div>
       )}
 
-      {/* 4. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
+      {/* 4. FLOATING ADOBE PREMIERE PRO BADGE WITH CONTINUOUS FLOATING ANIMATION */}
+      <m.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : {
+                opacity: 1,
+                y: [0, -18, -4, -22, 0],
+                x: [mousePos.x * 24, mousePos.x * 24 + 8, mousePos.x * 24 - 6, mousePos.x * 24 + 5, mousePos.x * 24],
+                rotate: [-3, 4, -2, 5, -3],
+                scale: [1, 1.04, 0.98, 1.03, 1]
+              }
+        }
+        transition={{
+          duration: 6.8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        whileHover={{ scale: 1.12, rotate: 6 }}
+        style={{
+          perspective: 1000
+        }}
+        className="absolute top-[26%] sm:top-[30%] lg:top-[32%] left-[5%] sm:left-[8%] lg:left-[12%] pointer-events-auto cursor-pointer z-10 group"
+        title="Adobe Premiere Pro"
+      >
+        {/* Soft violet ambient back-glow aura */}
+        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(153,102,255,0.45)_0%,rgba(110,60,220,0.18)_50%,transparent_75%)] blur-xl sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Premiere Pro Badge */}
+        <div className="relative w-13 h-13 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[22%] bg-gradient-to-br from-[#1F0A38] via-[#0E031E] to-[#04010A] p-2.5 sm:p-3 shadow-[0_16px_36px_-6px_rgba(40,10,70,0.5),0_0_24px_rgba(153,102,255,0.25)] border border-[rgba(179,136,255,0.45)] group-hover:border-[#B388FF] group-hover:shadow-[0_20px_45px_-4px_rgba(120,60,240,0.6),0_0_35px_rgba(179,136,255,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
+          {/* Subtle glossy sheen */}
+          <div className="absolute inset-0 rounded-[22%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+
+          {/* Authentic Adobe Premiere Pro Icon */}
+          <svg
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-full fill-[#B388FF] group-hover:fill-[#D1A8FF] transition-colors duration-300 drop-shadow-[0_2px_8px_rgba(179,136,255,0.6)]"
+          >
+            <title>Adobe Premiere Pro</title>
+            <path d="M10.15 8.42a2.93 2.93 0 00-1.18-.2 13.9 13.9 0 00-1.09.02v3.36l.39.02h.53c.39 0 .78-.06 1.15-.18.32-.09.6-.28.82-.53.21-.25.31-.59.31-1.03a1.45 1.45 0 00-.93-1.46zM19.75.3H4.25A4.25 4.25 0 000 4.55v14.9c0 2.35 1.9 4.25 4.25 4.25h15.5c2.35 0 4.25-1.9 4.25-4.25V4.55C24 2.2 22.1.3 19.75.3zm-7.09 11.65c-.4.56-.96.98-1.61 1.22-.68.25-1.43.34-2.25.34l-.5-.01-.43-.01v3.21a.12.12 0 01-.11.14H5.82c-.08 0-.12-.04-.12-.13V6.42c0-.07.03-.11.1-.11l.56-.01.76-.02.87-.02.91-.01c.82 0 1.5.1 2.06.31.5.17.96.45 1.34.82.32.32.57.71.73 1.14.15.42.23.85.23 1.3 0 .86-.2 1.57-.6 2.13zm6.82-3.15v1.95c0 .08-.05.11-.16.11a4.35 4.35 0 00-1.92.37c-.19.09-.37.21-.51.37v5.1c0 .1-.04.14-.13.14h-1.97a.14.14 0 01-.16-.12v-5.58l-.01-.75-.02-.78c0-.23-.02-.45-.04-.68a.1.1 0 01.07-.11h1.78c.1 0 .18.07.2.16a3.03 3.03 0 01.13.92c.3-.35.67-.64 1.08-.86a3.1 3.1 0 011.52-.39c.07-.01.13.04.14.11v.04z" />
+          </svg>
+        </div>
+
+        {/* Floating tooltip badge */}
+        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#1F0A38]/90 border border-[#B388FF]/30 backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#E0B0FF] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
+          Premiere Pro
+        </div>
+      </m.div>
+
+      {/* 5. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
@@ -205,7 +257,7 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         }}
       />
 
-      {/* 5. SMOOTH LUXURY PERIMETER VIGNETTE */}
+      {/* 6. SMOOTH LUXURY PERIMETER VIGNETTE */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(248,251,247,0.72)_100%)] pointer-events-none" />
     </m.div>
   );
