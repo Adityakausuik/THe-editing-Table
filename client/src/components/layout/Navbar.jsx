@@ -10,7 +10,7 @@ const DEFAULT_NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/portfolio", label: "Portfolio" },
-  { href: "/about", label: "About Me" },
+  { href: "/about", label: "About" },
   { href: "/careers", label: "Careers" },
   { href: "/blog", label: "Blog" },
   { href: "/contactus", label: "Contact" },
@@ -39,11 +39,11 @@ export default function Navbar() {
   const siteLinks = rawLinks
     .filter((link) => link.href !== "/founder" && link.href !== "/team")
     .map((link) => {
-      if (link.href === "/aboutus" || link.href === "/about-me") {
+      if (link.href === "/aboutus" || link.href === "/about-me" || link.href === "/about") {
         return {
           ...link,
           href: "/about",
-          label: link.label === "About" || link.label === "About Us" ? "About Me" : link.label
+          label: "About"
         };
       }
       return link;

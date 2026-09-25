@@ -43,7 +43,7 @@ const navSections = [
       { label: "Wedding Gallery", path: "/admin/wedding-gallery", icon: Image },
       { label: "Brand Collaborations", path: "/admin/collaborations", icon: Briefcase },
       { label: "Blog Journal", path: "/admin/blog", icon: FileText },
-      { label: "About Me Profile", path: "/admin/about-me", icon: UserCheck },
+      { label: "About Profile", path: "/admin/about-me", icon: UserCheck },
       { label: "Team Members", path: "/admin/team", icon: Users },
       { label: "Careers & Jobs", path: "/admin/careers", icon: Briefcase }
     ]

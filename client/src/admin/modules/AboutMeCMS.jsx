@@ -294,7 +294,7 @@ export default function AboutMeCMS() {
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
             CMS Management
           </span>
-          <h1 className="font-heading text-3xl font-normal text-forest">About Me Profile CMS</h1>
+          <h1 className="font-heading text-3xl font-normal text-forest">About Profile CMS</h1>
           <p className="text-xs text-sage-muted mt-1">
             Manage personal storytelling, leadership vision, skills, responsibilities, and creative philosophy for Akshay Chhabra.
           </p>
