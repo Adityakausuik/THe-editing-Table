@@ -1,5 +1,6 @@
 import { m, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import editorSticker from "../../assets/editor-sticker.png";
 
 // Pre-calculated deterministic floating light particles (avoids SSR hydration mismatch)
 const PARTICLES = [
@@ -300,7 +301,57 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         </div>
       </m.div>
 
-      {/* 5. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
+      {/* 6. FLOATING DIE-CUT STICKER DOWNWARD OF PREMIERE PRO LOGO */}
+      <m.div
+        initial={{ opacity: 0, scale: 0.85, y: 15 }}
+        animate={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1, y: 0 }
+            : {
+                opacity: 1,
+                y: [0, -14, 2, -10, 0],
+                x: [mousePos.x * 20, mousePos.x * 20 - 6, mousePos.x * 20 + 8, mousePos.x * 20 - 4, mousePos.x * 20],
+                rotate: [-4, -1, -6, -2, -4],
+                scale: [1, 1.025, 0.985, 1.02, 1]
+              }
+        }
+        transition={{
+          duration: 7.8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        whileHover={{
+          scale: 1.08,
+          rotate: -1,
+          transition: { duration: 0.25 }
+        }}
+        style={{
+          perspective: 1000
+        }}
+        className="absolute bottom-[10%] sm:bottom-auto sm:top-[48%] lg:top-[52%] left-[5%] sm:left-[7%] lg:left-[10%] w-20 sm:w-28 lg:w-36 xl:w-40 pointer-events-auto cursor-pointer z-10 group"
+        title="Lead Editor"
+      >
+        {/* Soft ambient back-glow aura */}
+        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.22)_0%,rgba(143,174,123,0.10)_50%,transparent_75%)] blur-xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Die-Cut Sticker Image with Dynamic Drop Shadow */}
+        <div className="relative w-full transition-transform duration-300">
+          <img
+            src={editorSticker}
+            alt="Lead Editor Sticker"
+            className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] group-hover:drop-shadow-[0_18px_32px_rgba(72,125,72,0.28)] transition-all duration-300"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        {/* Floating tooltip badge */}
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#1A241A]/90 border border-[rgba(143,174,123,0.35)] backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#C8D8BE] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
+          Lead Editor
+        </div>
+      </m.div>
+
+      {/* 7. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
