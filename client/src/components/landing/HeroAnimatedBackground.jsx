@@ -1,6 +1,7 @@
 import { m, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import editorSticker from "../../assets/editor-sticker.png";
+import editorStickerRight from "../../assets/editor-sticker-right.png";
 
 // Pre-calculated deterministic floating light particles (avoids SSR hydration mismatch)
 const PARTICLES = [
@@ -351,7 +352,57 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         </div>
       </m.div>
 
-      {/* 7. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
+      {/* 7. FLOATING DIE-CUT STICKER DOWNWARD OF ADOBE LOGO (RIGHT SIDE) */}
+      <m.div
+        initial={{ opacity: 0, scale: 0.85, y: 15 }}
+        animate={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1, y: 0 }
+            : {
+                opacity: 1,
+                y: [0, -16, 3, -12, 0],
+                x: [mousePos.x * -20, mousePos.x * -20 + 7, mousePos.x * -20 - 7, mousePos.x * -20 + 5, mousePos.x * -20],
+                rotate: [4, 1, 6, 2, 4],
+                scale: [1, 1.03, 0.98, 1.025, 1]
+              }
+        }
+        transition={{
+          duration: 8.4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        whileHover={{
+          scale: 1.08,
+          rotate: 1,
+          transition: { duration: 0.25 }
+        }}
+        style={{
+          perspective: 1000
+        }}
+        className="absolute bottom-[10%] sm:bottom-auto sm:top-[50%] lg:top-[54%] right-[5%] sm:right-[7%] lg:right-[10%] w-20 sm:w-28 lg:w-36 xl:w-40 pointer-events-auto cursor-pointer z-10 group"
+        title="Creative Editor"
+      >
+        {/* Soft warm terracotta/amber ambient back-glow aura */}
+        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(196,123,85,0.24)_0%,rgba(176,106,66,0.12)_50%,transparent_75%)] blur-xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Die-Cut Sticker Image with Dynamic Drop Shadow */}
+        <div className="relative w-full transition-transform duration-300">
+          <img
+            src={editorStickerRight}
+            alt="Creative Editor Sticker"
+            className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] group-hover:drop-shadow-[0_18px_32px_rgba(196,123,85,0.30)] transition-all duration-300"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        {/* Floating tooltip badge */}
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#1A241A]/90 border border-[rgba(196,123,85,0.40)] backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#E8C5A8] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
+          Creative Editor
+        </div>
+      </m.div>
+
+      {/* 8. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
