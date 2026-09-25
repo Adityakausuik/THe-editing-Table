@@ -16,7 +16,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
 import Container from "../ui/Container.jsx";
-import VideoShowcaseBackground from "./VideoShowcaseBackground.jsx";
 import editorSticker from "../../assets/editor-sticker.png";
 
 const DEFAULT_VIDEOS = [
@@ -444,9 +443,6 @@ export default function VideoShowcaseSection() {
         paddingBottom: `${settings.sectionPaddingBottom || 80}px`
       }}
     >
-      {/* Dynamic Animated Background with Visible Rotating Motion & Running Speed */}
-      <VideoShowcaseBackground />
-
       <Container className="relative z-10 space-y-12 max-w-[1440px] mx-auto">
         {/* Dynamic Section Header with Scroll-Triggered Kinetic Reveal */}
         <m.div
