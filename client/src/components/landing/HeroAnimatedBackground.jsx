@@ -248,6 +248,58 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         </div>
       </m.div>
 
+      {/* 5. FLOATING ADOBE LOGO BADGE WITH CONTINUOUS FLOATING ANIMATION */}
+      <m.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : {
+                opacity: 1,
+                y: [0, -20, -5, -16, 0],
+                x: [mousePos.x * -24, mousePos.x * -24 - 8, mousePos.x * -24 + 6, mousePos.x * -24 - 4, mousePos.x * -24],
+                rotate: [3, -4, 2, -5, 3],
+                scale: [1, 1.03, 0.97, 1.04, 1]
+              }
+        }
+        transition={{
+          duration: 7.4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        whileHover={{ scale: 1.12, rotate: -6 }}
+        style={{
+          perspective: 1000
+        }}
+        className="absolute top-[28%] sm:top-[32%] lg:top-[34%] right-[5%] sm:right-[8%] lg:right-[12%] pointer-events-auto cursor-pointer z-10 group"
+        title="Adobe"
+      >
+        {/* Soft crimson/coral ambient back-glow aura */}
+        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(235,16,0,0.45)_0%,rgba(180,20,20,0.18)_50%,transparent_75%)] blur-xl sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Adobe Badge */}
+        <div className="relative w-13 h-13 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[22%] bg-gradient-to-br from-[#2E0508] via-[#140203] to-[#050001] p-2.5 sm:p-3 shadow-[0_16px_36px_-6px_rgba(70,10,15,0.5),0_0_24px_rgba(235,16,0,0.25)] border border-[rgba(255,80,80,0.45)] group-hover:border-[#FF4D4D] group-hover:shadow-[0_20px_45px_-4px_rgba(235,16,0,0.6),0_0_35px_rgba(255,80,80,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
+          {/* Subtle glossy sheen */}
+          <div className="absolute inset-0 rounded-[22%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+
+          {/* Authentic Adobe "A" Icon */}
+          <svg
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-full fill-[#FF4D4D] group-hover:fill-[#FF6B6B] transition-colors duration-300 drop-shadow-[0_2px_8px_rgba(235,16,0,0.6)] p-0.5"
+          >
+            <title>Adobe</title>
+            <path d="M13.966 22.624l-1.69-4.281H8.122l3.892-9.144 5.662 13.425zM8.884 1.376H0v21.248zm15.116 0h-8.884L24 22.624Z" />
+          </svg>
+        </div>
+
+        {/* Floating tooltip badge */}
+        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#2E0508]/90 border border-[#FF4D4D]/30 backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#FFA8A8] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
+          Adobe
+        </div>
+      </m.div>
+
       {/* 5. SUBTLE EDITORIAL FILM GRAIN / MESH TEXTURE */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
