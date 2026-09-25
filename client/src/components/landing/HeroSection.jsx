@@ -74,13 +74,10 @@ export default function HeroSection() {
         ]
       };
 
-  // Cinematic 360° rotation + subtle 3D depth and settle animation sequence
+  // Cinematic subtle scale, lighting & settle intro animation sequence without rotation
   const introLogoAnimation = {
     opacity: [0, 1, 1, 1, 1, 1],
-    scale: [0.92, 1.0, 1.04, 1.0, 1.08, 1.0],
-    rotateZ: [0, 0, 180, 360, 360, 360],
-    rotateX: [0, 0, 6, 0, 0, 0],
-    rotateY: [0, 0, -8, 0, 0, 0],
+    scale: [0.94, 1.0, 1.04, 1.0, 1.04, 1.0],
     filter: [
       "drop-shadow(0 4px 12px rgba(72, 125, 72, 0.04))",
       "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.12))",
@@ -193,9 +190,8 @@ export default function HeroSection() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           className="relative flex flex-col items-center justify-center w-full"
-          style={{ perspective: 1200 }}
         >
-          {/* Main Logo with Controlled 360° Circular Intro & Continuous Breathing Animation */}
+          {/* Main Logo with Controlled Smooth Intro & Continuous Breathing Animation */}
           <m.img
             src={logo}
             alt="The Editing Table"
@@ -204,7 +200,6 @@ export default function HeroSection() {
             style={{
               width: "clamp(260px, 40vw, 680px)",
               maxHeight: "min(36vh, 360px)",
-              transformStyle: "preserve-3d",
               willChange: "transform, filter"
             }}
             className="max-w-[88vw] h-auto object-contain cursor-default select-none"
