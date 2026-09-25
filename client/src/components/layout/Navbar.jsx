@@ -27,6 +27,28 @@ const NAV_ORDER = {
   "/contact": 7
 };
 
+function formatNavLabel(label, href = "") {
+  const cleanLabel = String(label || "").trim();
+  const cleanHref = String(href || "").trim().toLowerCase();
+  if (
+    cleanLabel.toLowerCase() === "about me" ||
+    cleanLabel.toLowerCase() === "about us" ||
+    cleanLabel.toLowerCase() === "about" ||
+    cleanHref.includes("about")
+  ) {
+    return "About";
+  }
+  return cleanLabel;
+}
+
+function normalizeNavHref(href = "") {
+  const clean = String(href || "").trim().replace(/\/+$/, "") || "/";
+  if (clean.includes("about")) {
+    return "/about";
+  }
+  return clean;
+}
+
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -37,16 +59,27 @@ export default function Navbar() {
     ? cmsNav
     : DEFAULT_NAV_LINKS;
   const siteLinks = rawLinks
-    .filter((link) => link.href !== "/founder" && link.href !== "/team")
+    .filter((link) => {
+      const h = String(link?.href || "").trim();
+      return h !== "/founder" && h !== "/team";
+    })
     .map((link) => {
-      if (link.href === "/aboutus" || link.href === "/about-me" || link.href === "/about") {
+      const isAbout =
+        String(link?.label || "").trim().toLowerCase().includes("about") ||
+        String(link?.href || "").trim().toLowerCase().includes("about");
+
+      if (isAbout) {
         return {
           ...link,
           href: "/about",
           label: "About"
         };
       }
-      return link;
+      return {
+        ...link,
+        href: normalizeNavHref(link?.href),
+        label: formatNavLabel(link?.label, link?.href)
+      };
     })
     .sort((a, b) => {
       const orderA = NAV_ORDER[a.href] ?? 99;
@@ -102,7 +135,7 @@ export default function Navbar() {
                 `liquid-nav-link ${isActive ? "is-active" : ""}`
               }
             >
-              <span>{link.label}</span>
+              <span>{formatNavLabel(link.label, link.href)}</span>
             </NavLink>
           ))}
         </nav>
@@ -151,7 +184,7 @@ export default function Navbar() {
                   }
                   onClick={closeMenu}
                 >
-                  <span>{link.label}</span>
+                  <span>{formatNavLabel(link.label, link.href)}</span>
                 </NavLink>
               ))}
               <NavLink

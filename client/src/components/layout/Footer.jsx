@@ -104,22 +104,46 @@ export default function Footer() {
     return () => unsubscribe();
   }, []);
 
+function formatNavLabel(label, href = "") {
+  const cleanLabel = String(label || "").trim();
+  const cleanHref = String(href || "").trim().toLowerCase();
+  if (
+    cleanLabel.toLowerCase() === "about me" ||
+    cleanLabel.toLowerCase() === "about us" ||
+    cleanLabel.toLowerCase() === "about" ||
+    cleanHref.includes("about")
+  ) {
+    return "About";
+  }
+  return cleanLabel;
+}
+
   const publicContent = settings.publicContent || {};
   const footer = publicContent.footer || {};
 
   const cmsNav = publicContent.navigation;
   const rawLinks = Array.isArray(cmsNav) && cmsNav.length > 0 ? cmsNav : DEFAULT_NAV_LINKS;
   const siteLinks = rawLinks
-    .filter((link) => link.href !== "/founder" && link.href !== "/team")
+    .filter((link) => {
+      const h = String(link?.href || "").trim();
+      return h !== "/founder" && h !== "/team";
+    })
     .map((link) => {
-      if (link.href === "/aboutus" || link.href === "/about-me" || link.href === "/about") {
+      const isAbout =
+        String(link?.label || "").trim().toLowerCase().includes("about") ||
+        String(link?.href || "").trim().toLowerCase().includes("about");
+
+      if (isAbout) {
         return {
           ...link,
           href: "/about",
           label: "About"
         };
       }
-      return link;
+      return {
+        ...link,
+        label: formatNavLabel(link?.label, link?.href)
+      };
     });
   const displayServices = services.length > 0 ? services : DEFAULT_SERVICES;
   const description = footer.description || DEFAULT_DESCRIPTION;
@@ -200,7 +224,7 @@ export default function Footer() {
                     className="inline-block text-[clamp(15px,1.1vw,18px)] font-medium text-sage-muted transition-all duration-300 hover:translate-x-1 hover:text-site"
                     to={link.href}
                   >
-                    {link.label}
+                    {formatNavLabel(link.label, link.href)}
                   </Link>
                 </li>
               ))}

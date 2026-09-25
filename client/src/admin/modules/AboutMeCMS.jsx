@@ -139,8 +139,8 @@ export default function AboutMeCMS() {
         });
       }
     } catch (err) {
-      console.error("Fetch About Me failed:", err);
-      setError(err.message || "Failed to load About Me profile content.");
+      console.error("Fetch About profile failed:", err);
+      setError(err.message || "Failed to load About profile content.");
     } finally {
       setLoading(false);
     }
@@ -259,12 +259,12 @@ export default function AboutMeCMS() {
         body: JSON.stringify(formData)
       });
       if (res?.success) {
-        setSavedMsg("About Me content updated and published successfully!");
+        setSavedMsg("About content updated and published successfully!");
         setTimeout(() => setSavedMsg(""), 3500);
       }
     } catch (err) {
-      console.error("Save About Me failed:", err);
-      setError(err.message || "Failed to update About Me profile.");
+      console.error("Save About profile failed:", err);
+      setError(err.message || "Failed to update About profile.");
     } finally {
       setSaving(false);
     }
