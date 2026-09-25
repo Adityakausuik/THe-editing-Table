@@ -165,11 +165,11 @@ export default function HeroSection() {
             animate={activeLogoAnimation}
             transition={activeLogoTransition}
             style={{
-              width: "clamp(260px, 40vw, 680px)",
+              width: "clamp(240px, 40vw, 680px)",
               maxHeight: "min(36vh, 360px)",
               willChange: "transform, filter"
             }}
-            className="max-w-[88vw] h-auto object-contain cursor-default select-none"
+            className="max-w-[84vw] sm:max-w-[88vw] h-auto object-contain cursor-default select-none"
             loading="eager"
             decoding="sync"
             fetchPriority="high"

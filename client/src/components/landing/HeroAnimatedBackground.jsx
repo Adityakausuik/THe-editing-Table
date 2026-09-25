@@ -219,14 +219,14 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="absolute top-[26%] sm:top-[30%] lg:top-[32%] left-[5%] sm:left-[8%] lg:left-[12%] pointer-events-auto cursor-pointer z-10 group"
+        className="absolute top-[18%] sm:top-[30%] lg:top-[34%] left-[6%] sm:left-[8%] lg:left-[12%] w-11 h-11 sm:w-16 sm:h-16 lg:w-20 lg:h-20 pointer-events-auto cursor-pointer z-10 group"
         title="Adobe Premiere Pro"
       >
         {/* Soft violet ambient back-glow aura */}
-        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(153,102,255,0.45)_0%,rgba(110,60,220,0.18)_50%,transparent_75%)] blur-xl sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute -inset-3 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(153,102,255,0.45)_0%,rgba(110,60,220,0.18)_50%,transparent_75%)] blur-lg sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Premiere Pro Badge */}
-        <div className="relative w-13 h-13 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[22%] bg-gradient-to-br from-[#1F0A38] via-[#0E031E] to-[#04010A] p-2.5 sm:p-3 shadow-[0_16px_36px_-6px_rgba(40,10,70,0.5),0_0_24px_rgba(153,102,255,0.25)] border border-[rgba(179,136,255,0.45)] group-hover:border-[#B388FF] group-hover:shadow-[0_20px_45px_-4px_rgba(120,60,240,0.6),0_0_35px_rgba(179,136,255,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
+        <div className="relative w-full h-full rounded-[22%] bg-gradient-to-br from-[#1F0A38] via-[#0E031E] to-[#04010A] p-2 sm:p-3 lg:p-3.5 shadow-[0_12px_28px_-4px_rgba(40,10,70,0.5),0_0_20px_rgba(153,102,255,0.25)] border border-[rgba(179,136,255,0.45)] group-hover:border-[#B388FF] group-hover:shadow-[0_20px_45px_-4px_rgba(120,60,240,0.6),0_0_35px_rgba(179,136,255,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
           {/* Subtle glossy sheen */}
           <div className="absolute inset-0 rounded-[22%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
 
@@ -271,14 +271,14 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="absolute top-[28%] sm:top-[32%] lg:top-[34%] right-[5%] sm:right-[8%] lg:right-[12%] pointer-events-auto cursor-pointer z-10 group"
+        className="absolute top-[18%] sm:top-[32%] lg:top-[36%] right-[6%] sm:right-[8%] lg:right-[12%] w-11 h-11 sm:w-16 sm:h-16 lg:w-20 lg:h-20 pointer-events-auto cursor-pointer z-10 group"
         title="Adobe"
       >
         {/* Soft crimson/coral ambient back-glow aura */}
-        <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(235,16,0,0.45)_0%,rgba(180,20,20,0.18)_50%,transparent_75%)] blur-xl sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute -inset-3 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(235,16,0,0.45)_0%,rgba(180,20,20,0.18)_50%,transparent_75%)] blur-lg sm:blur-2xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Adobe Badge */}
-        <div className="relative w-13 h-13 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[22%] bg-gradient-to-br from-[#2E0508] via-[#140203] to-[#050001] p-2.5 sm:p-3 shadow-[0_16px_36px_-6px_rgba(70,10,15,0.5),0_0_24px_rgba(235,16,0,0.25)] border border-[rgba(255,80,80,0.45)] group-hover:border-[#FF4D4D] group-hover:shadow-[0_20px_45px_-4px_rgba(235,16,0,0.6),0_0_35px_rgba(255,80,80,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
+        <div className="relative w-full h-full rounded-[22%] bg-gradient-to-br from-[#2E0508] via-[#140203] to-[#050001] p-2 sm:p-3 lg:p-3.5 shadow-[0_12px_28px_-4px_rgba(70,10,15,0.5),0_0_20px_rgba(235,16,0,0.25)] border border-[rgba(255,80,80,0.45)] group-hover:border-[#FF4D4D] group-hover:shadow-[0_20px_45px_-4px_rgba(235,16,0,0.6),0_0_35px_rgba(255,80,80,0.5)] transition-all duration-300 backdrop-blur-md flex items-center justify-center">
           {/* Subtle glossy sheen */}
           <div className="absolute inset-0 rounded-[22%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
 
