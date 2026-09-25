@@ -528,7 +528,7 @@ export default function VideoShowcaseSection() {
                 whileHover={{ scale: 1.12, x: -3 }}
                 whileTap={{ scale: 0.92 }}
                 aria-label="Previous Video"
-                className="absolute left-2 sm:left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
+                className="absolute left-2 sm:left-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
               >
                 <ChevronLeft className="h-5 w-5" />
               </m.button>
@@ -539,57 +539,12 @@ export default function VideoShowcaseSection() {
                 whileHover={{ scale: 1.12, x: 3 }}
                 whileTap={{ scale: 0.92 }}
                 aria-label="Next Video"
-                className="absolute right-2 sm:right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
+                className="absolute right-2 sm:right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-sage-border bg-white text-forest shadow-editorial transition-colors duration-300 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white cursor-pointer"
               >
                 <ChevronRight className="h-5 w-5" />
               </m.button>
             </>
           )}
-
-          {/* Floating Die-Cut Lead Editor Sticker with Motion Animation (Left Flank) */}
-          <m.div
-            initial={{ opacity: 0, scale: 0.85, y: 25 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            animate={{
-              y: [0, -14, 2, -10, 0],
-              x: [mousePos.x * 12, mousePos.x * 12 + 5, mousePos.x * 12 - 4, mousePos.x * 12 + 3, mousePos.x * 12],
-              rotate: [-3, 1, -5, 0, -3],
-              scale: [1, 1.025, 0.985, 1.02, 1]
-            }}
-            transition={{
-              duration: 7.2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            whileHover={{
-              scale: 1.08,
-              rotate: 0,
-              transition: { duration: 0.25 }
-            }}
-            style={{ perspective: 1000 }}
-            className="absolute bottom-1 sm:bottom-3 lg:bottom-4 left-1 sm:left-4 lg:left-6 xl:left-10 w-20 sm:w-28 md:w-32 lg:w-36 xl:w-44 pointer-events-auto cursor-pointer z-20 group allow-motion"
-            title="Lead Editor"
-          >
-            {/* Soft ambient emerald back-glow aura */}
-            <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.32)_0%,rgba(143,174,123,0.12)_50%,transparent_75%)] blur-xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500 animate-showcase-pulse allow-motion" />
-
-            {/* Die-Cut Sticker Image with Dynamic Drop Shadow */}
-            <div className="relative w-full transition-transform duration-300">
-              <img
-                src={editorSticker}
-                alt="Lead Editor Sticker"
-                className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] group-hover:drop-shadow-[0_20px_36px_rgba(72,125,72,0.32)] transition-all duration-300"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-
-            {/* Floating tooltip badge */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#1A241A]/90 border border-[rgba(143,174,123,0.35)] backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#C8D8BE] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
-              Lead Editor
-            </div>
-          </m.div>
 
           {/* Cards Flex Container with Symmetric 5-Slot Infinite Wrapping */}
           <div
@@ -606,9 +561,9 @@ export default function VideoShowcaseSection() {
               const isMedium = Math.abs(offset) === 1;
               const isSmall = Math.abs(offset) === 2;
 
-              // Hide outer cards on small screens
+              // Hide outer cards on small screens and laptops to preserve flank breathing room
               const hideOnMobile = Math.abs(offset) > 0 ? "hidden md:flex" : "flex";
-              const hideOnTablet = Math.abs(offset) > 1 ? "hidden lg:flex" : "";
+              const hideOnTablet = Math.abs(offset) > 1 ? "hidden xl:flex" : "";
 
               const videoSrc = mediaUrl(video.videoFile?.url || video.videoUrl);
               const thumbSrc = mediaUrl(video.thumbnail?.url || video.thumbnail);
@@ -616,13 +571,13 @@ export default function VideoShowcaseSection() {
 
               // Responsive Card Styling & Scale Hierarchy
               let cardHeightClass =
-                "h-[500px] sm:h-[540px] w-[280px] sm:w-[320px] z-20 scale-100 opacity-100 shadow-deep border-2 border-[rgb(72,125,72)]";
+                "h-[480px] sm:h-[520px] lg:h-[540px] w-[270px] sm:w-[300px] lg:w-[320px] z-20 scale-100 opacity-100 shadow-deep border-2 border-[rgb(72,125,72)]";
               if (isMedium) {
                 cardHeightClass =
-                  "h-[380px] sm:h-[420px] w-[220px] sm:w-[260px] z-10 scale-95 opacity-85 shadow-soft border border-sage-border cursor-pointer hover:opacity-100";
+                  "h-[360px] sm:h-[400px] lg:h-[420px] w-[210px] sm:w-[240px] lg:w-[260px] z-10 scale-95 opacity-85 shadow-soft border border-sage-border cursor-pointer hover:opacity-100";
               } else if (isSmall) {
                 cardHeightClass =
-                  "h-[300px] sm:h-[340px] w-[180px] sm:w-[210px] z-0 scale-90 opacity-60 shadow-soft border border-sage-border/60 cursor-pointer hover:opacity-90";
+                  "h-[290px] sm:h-[320px] lg:h-[340px] w-[170px] sm:w-[190px] lg:w-[210px] z-0 scale-90 opacity-60 shadow-soft border border-sage-border/60 cursor-pointer hover:opacity-90";
               }
 
               return (
@@ -761,6 +716,51 @@ export default function VideoShowcaseSection() {
             );
             })}
           </div>
+
+          {/* Floating Die-Cut Lead Editor Sticker with Responsive Motion Animation (Left Flank) */}
+          <m.div
+            initial={{ opacity: 0, scale: 0.85, y: 25 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            animate={{
+              y: [0, -14, 2, -10, 0],
+              x: [mousePos.x * 10, mousePos.x * 10 + 4, mousePos.x * 10 - 3, mousePos.x * 10 + 2, mousePos.x * 10],
+              rotate: [-3, 1, -5, 0, -3],
+              scale: [1, 1.025, 0.985, 1.02, 1]
+            }}
+            transition={{
+              duration: 7.2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            whileHover={{
+              scale: 1.08,
+              rotate: 0,
+              transition: { duration: 0.25 }
+            }}
+            style={{ perspective: 1000 }}
+            className="absolute -bottom-4 sm:-bottom-6 lg:-bottom-8 xl:-bottom-10 left-1 sm:left-3 md:left-4 lg:left-6 xl:left-8 2xl:left-12 w-20 sm:w-24 md:w-28 lg:w-32 xl:w-36 2xl:w-40 pointer-events-auto cursor-pointer z-30 group allow-motion"
+            title="Lead Editor"
+          >
+            {/* Soft ambient emerald back-glow aura */}
+            <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.32)_0%,rgba(143,174,123,0.12)_50%,transparent_75%)] blur-xl pointer-events-none group-hover:opacity-100 transition-opacity duration-500 animate-showcase-pulse allow-motion" />
+
+            {/* Die-Cut Sticker Image with Dynamic Drop Shadow */}
+            <div className="relative w-full transition-transform duration-300">
+              <img
+                src={editorSticker}
+                alt="Lead Editor Sticker"
+                className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] group-hover:drop-shadow-[0_20px_36px_rgba(72,125,72,0.32)] transition-all duration-300"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+
+            {/* Floating tooltip badge */}
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#1A241A]/90 border border-[rgba(143,174,123,0.35)] backdrop-blur-md text-[10px] font-semibold tracking-wider text-[#C8D8BE] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-soft">
+              Lead Editor
+            </div>
+          </m.div>
         </m.div>
 
         {/* Pagination Dots Indicator */}
