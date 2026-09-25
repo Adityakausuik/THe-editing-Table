@@ -213,7 +213,7 @@ export default function HeroSection() {
             fetchPriority="high"
           />
 
-          {/* BRAND TAGLINE — LARGE, BOLD, EDITORIAL & FULLY RESPONSIVE */}
+          {/* BRAND TAGLINE — ELEGANT CALLIGRAPHIC SCRIPT & FULLY RESPONSIVE */}
           <m.p
             initial={{ opacity: 0, y: isIntroActive ? 16 : 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -223,18 +223,18 @@ export default function HeroSection() {
               ease: [0.22, 1, 0.36, 1]
             }}
             style={{
-              fontSize: "clamp(1.15rem, 2.2vw, 2.25rem)",
-              letterSpacing: "clamp(0.18em, 0.45vw, 0.35em)",
-              fontFamily: '"Bona Nova", Georgia, serif'
+              fontSize: "clamp(1.75rem, 3.6vw, 3.5rem)",
+              fontFamily: '"Lavishly Yours", cursive',
+              lineHeight: 1.15
             }}
-            className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-heading font-bona font-bold uppercase text-forest select-none leading-none"
+            className="mt-[clamp(0.75rem,1.8vh,1.75rem)] text-forest select-none font-normal"
           >
-            YOU SHOOT,{" "}
+            You Shoot,{" "}
             <span
-              className="text-[rgba(72,125,72,0.52)]"
-              style={{ color: "rgba(72, 125, 72, 0.52)" }}
+              className="text-[rgba(72,125,72,0.65)]"
+              style={{ color: "rgba(72, 125, 72, 0.65)" }}
             >
-              WE EDIT
+              We Edit
             </span>
           </m.p>
         </m.div>

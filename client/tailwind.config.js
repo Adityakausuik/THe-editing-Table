@@ -7,7 +7,8 @@ export default {
         heading: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
         bona: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
         serif: ['"Bona Nova"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
-        sans: ["Manrope", '"Avenir Next"', '"Segoe UI Variable"', "Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"]
+        sans: ["Manrope", '"Avenir Next"', '"Segoe UI Variable"', "Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+        lavishly: ['"Lavishly Yours"', "cursive"]
       },
       colors: {
         // Flat Soft Sage Green + Off-White Palette
