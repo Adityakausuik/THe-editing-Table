@@ -1,6 +1,6 @@
 import { m } from "framer-motion";
 import { useId, useState } from "react";
-import { Sparkles, SlidersHorizontal, Layers, CheckCircle2 } from "lucide-react";
+import { Sparkles, SlidersHorizontal } from "lucide-react";
 import { mediaUrl } from "../../lib/api.js";
 import { useSiteSettings } from "../../lib/useSiteSettings.js";
 import Container from "../ui/Container.jsx";
@@ -31,13 +31,13 @@ export default function BeforeAfterSection() {
   const afterImage = content.afterImage ? mediaUrl(content.afterImage) : beforeImage;
 
   return (
-    <section data-theme="gallery" className="section-pad overflow-hidden">
+    <section data-theme="gallery" className="section-pad">
       <Container className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
         <div className="space-y-6">
           <SectionHeading
             align="left"
-            label="Interactive Color Studio"
-            title="Raw Sensor Data vs. Editorial Master Grade"
+            label="Interactive Comparison"
+            title="Raw Footage vs. Editorial Master Grade"
             text="Drag the interactive slider to experience the dramatic depth, skin-tone precision, and color refinement delivered by our master suites."
           />
 
@@ -45,46 +45,33 @@ export default function BeforeAfterSection() {
             {improvements.map((item) => (
               <div
                 key={item}
-                className="flex items-center gap-3 rounded-2xl border border-sage-border bg-sage-card/90 px-4 py-3.5 text-xs font-medium text-forest shadow-soft transition-all duration-300 hover:border-[rgb(72,125,72)]/50 hover:shadow-md"
+                className="flex items-center gap-3 rounded-2xl border border-sage-border bg-sage-card/80 px-4 py-3.5 text-xs font-medium text-forest shadow-soft"
               >
                 <Sparkles className="h-4 w-4 text-site shrink-0" />
                 <span>{item}</span>
               </div>
             ))}
           </div>
-
-          <div className="flex items-center gap-4 text-xs font-mono text-sage-muted pt-2 border-t border-sage-border/50">
-            <span className="flex items-center gap-1.5">
-              <Layers className="h-3.5 w-3.5 text-site" />
-              DaVinci ACES 1.3
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-site" />
-              Calibrated 10-Bit D65
-            </span>
-          </div>
         </div>
 
-        {/* Before / After Slider Frame with 3D Depth */}
+        {/* Before / After Slider Frame */}
         <m.div
-          className="relative rounded-3xl border border-sage-border bg-sage-card p-4 shadow-editorial transition-all duration-500 hover:shadow-2xl"
-          style={{ perspective: 1200 }}
-          initial={{ opacity: 0, y: 30, rotateX: 4 }}
-          whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="relative rounded-3xl border border-sage-border bg-sage-card p-4 shadow-editorial"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-forest select-none shadow-inner">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-forest select-none">
             {/* RAW BEFORE image */}
             <img
               src={beforeImage}
-              alt="Raw unedited footage preview"
+              alt="Raw unedited wedding footage preview"
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src = DEFAULT_BEFORE_AFTER_IMAGE;
               }}
-              className="h-full w-full object-cover filter saturate-[0.32] contrast-[0.82] brightness-[0.94]"
+              className="h-full w-full object-cover filter saturate-[0.35] contrast-[0.85] brightness-[0.95]"
             />
 
             {/* REFINED AFTER image overlay */}
@@ -94,27 +81,21 @@ export default function BeforeAfterSection() {
             >
               <img
                 src={afterImage}
-                alt="Master graded editorial preview"
+                alt="Master graded editorial wedding preview"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = DEFAULT_BEFORE_AFTER_IMAGE;
                 }}
-                className="h-full w-full object-cover filter saturate-[1.18] contrast-[1.08] brightness-[1.02]"
+                className="h-full w-full object-cover filter saturate-[1.15] contrast-[1.05] brightness-[1.02]"
               />
             </div>
 
             {/* Badges */}
-            <div className="absolute top-4 left-4 rounded-full border border-sage-light/40 bg-sage-card/90 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-site backdrop-blur-md shadow-soft z-10 font-mono">
+            <div className="absolute top-4 left-4 rounded-full border border-sage-light/40 bg-sage-card/90 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-site backdrop-blur-md shadow-soft z-10">
               Graded Master
             </div>
-            <div className="absolute top-4 right-4 rounded-full border border-white/30 bg-forest/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md z-10 font-mono">
+            <div className="absolute top-4 right-4 rounded-full border border-white/30 bg-forest/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md z-10">
               Raw Neutral
-            </div>
-
-            {/* Micro Film Specs HUD at Bottom */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] font-mono text-white/90 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15 z-10 pointer-events-none">
-              <span className="truncate">LOG: S-Gamut3.Cine / Flat</span>
-              <span className="text-[#8FAE7B] font-bold truncate">LUT: TET_KODAK_2383_D65</span>
             </div>
 
             {/* Divider Line & Control Thumb */}
@@ -122,7 +103,7 @@ export default function BeforeAfterSection() {
               className="absolute top-0 bottom-0 w-0.5 bg-sage-light shadow-[0_0_12px_rgb(72,125,72)] pointer-events-none z-10"
               style={{ left: `${position}%` }}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-sage-light bg-sage-card text-site shadow-sage cursor-ew-resize">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-sage-light bg-sage-card text-site shadow-sage">
                 <SlidersHorizontal className="h-4 w-4" />
               </div>
             </div>

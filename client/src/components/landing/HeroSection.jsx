@@ -1,9 +1,7 @@
 import { m, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowRight } from "lucide-react";
 import logo from "../../assets/the-editing-table-logo.png";
 import Container from "../ui/Container.jsx";
-import Hero3DScene from "./Hero3DScene.jsx";
 
 const INTRO_SEEN_KEY = "tet_hero_intro_seen";
 
@@ -27,7 +25,6 @@ export default function HeroSection() {
 
   // Controls the completion of the intro sequence so breathing animation takes over
   const [isIntroComplete, setIsIntroComplete] = useState(() => !isIntroActive);
-  const [activeChapterTitle, setActiveChapterTitle] = useState("Raw Ingest & Curated Story Assembly");
 
   useEffect(() => {
     if (!isIntroActive) return;
@@ -66,12 +63,12 @@ export default function HeroSection() {
         filter: "drop-shadow(0 10px 28px rgba(72, 125, 72, 0.12))"
       }
     : {
-        scale: [1.0, 1.04, 1.04, 1.0, 1.0],
-        opacity: [0.96, 1.0, 1.0, 0.96, 0.96],
+        scale: [1.0, 1.06, 1.06, 1.0, 1.0],
+        opacity: [0.94, 1.0, 1.0, 0.94, 0.94],
         filter: [
           "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.10)) drop-shadow(0 2px 6px rgba(72, 125, 72, 0.05))",
-          "drop-shadow(0 18px 40px rgba(72, 125, 72, 0.22)) drop-shadow(0 4px 14px rgba(72, 125, 72, 0.12))",
-          "drop-shadow(0 18px 40px rgba(72, 125, 72, 0.22)) drop-shadow(0 4px 14px rgba(72, 125, 72, 0.12))",
+          "drop-shadow(0 18px 40px rgba(72, 125, 72, 0.24)) drop-shadow(0 4px 14px rgba(72, 125, 72, 0.14))",
+          "drop-shadow(0 18px 40px rgba(72, 125, 72, 0.24)) drop-shadow(0 4px 14px rgba(72, 125, 72, 0.14))",
           "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.10)) drop-shadow(0 2px 6px rgba(72, 125, 72, 0.05))",
           "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.10)) drop-shadow(0 2px 6px rgba(72, 125, 72, 0.05))"
         ]
@@ -80,7 +77,7 @@ export default function HeroSection() {
   // Cinematic 360° rotation + subtle 3D depth and settle animation sequence
   const introLogoAnimation = {
     opacity: [0, 1, 1, 1, 1, 1],
-    scale: [0.92, 1.0, 1.04, 1.0, 1.06, 1.0],
+    scale: [0.92, 1.0, 1.04, 1.0, 1.08, 1.0],
     rotateZ: [0, 0, 180, 360, 360, 360],
     rotateX: [0, 0, 6, 0, 0, 0],
     rotateY: [0, 0, -8, 0, 0, 0],
@@ -89,7 +86,7 @@ export default function HeroSection() {
       "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.12))",
       "drop-shadow(0 26px 54px rgba(72, 125, 72, 0.28)) drop-shadow(0 4px 14px rgba(72, 125, 72, 0.12))",
       "drop-shadow(0 12px 28px rgba(72, 125, 72, 0.14))",
-      "drop-shadow(0 24px 50px rgba(72, 125, 72, 0.28)) drop-shadow(0 6px 16px rgba(72, 125, 72, 0.14))",
+      "drop-shadow(0 24px 50px rgba(72, 125, 72, 0.30)) drop-shadow(0 6px 16px rgba(72, 125, 72, 0.15))",
       "drop-shadow(0 10px 24px rgba(72, 125, 72, 0.10))"
     ]
   };
@@ -115,11 +112,12 @@ export default function HeroSection() {
     <section
       data-theme="hero"
       aria-label="The Editing Table Hero"
-      className="relative min-h-[100svh] w-full flex flex-col items-center justify-center overflow-hidden bg-sage-bg select-none outline-none pt-16 sm:pt-20 pb-16 sm:pb-24"
+      className="relative min-h-[100svh] w-full flex flex-col items-center justify-center overflow-hidden bg-sage-bg select-none outline-none pt-16 sm:pt-20 pb-8 sm:pb-12"
     >
-      {/* CINEMATIC CIRCULAR REVEAL EXPANSION WAVE */}
+      {/* CINEMATIC CIRCULAR REVEAL EXPANSION WAVE (Originating from Logo Center at 1.8s) */}
       {isIntroActive && (
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden flex items-center justify-center" aria-hidden="true">
+          {/* Primary expanding radiant aura ring */}
           <m.div
             initial={{ scale: 0.2, opacity: 0 }}
             animate={{
@@ -133,6 +131,8 @@ export default function HeroSection() {
             }}
             className="w-[320px] h-[320px] rounded-full border border-[rgb(72,125,72)]/40 bg-[radial-gradient(circle,rgba(72,125,72,0.18)_0%,rgba(200,216,190,0.10)_40%,transparent_75%)] blur-md will-change-transform"
           />
+
+          {/* Secondary micro-ring for cinematic lens flare depth */}
           <m.div
             initial={{ scale: 0.1, opacity: 0 }}
             animate={{
@@ -149,7 +149,7 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* AMBIENT BACKGROUND GLOW & VIGNETTE */}
+      {/* AMBIENT BACKGROUND GLOW — Apple / VisionOS Inspired Aura with Circular Mask Expansion */}
       <m.div
         className="absolute inset-0 pointer-events-none overflow-hidden"
         aria-hidden="true"
@@ -163,6 +163,7 @@ export default function HeroSection() {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#F8FBF7] via-[#F5F8F3] to-[#F8FBF7]" />
 
+        {/* Central soft atmospheric orb — dynamically scaled for all desktop & mobile resolutions */}
         <m.div
           animate={
             shouldReduceMotion
@@ -181,35 +182,12 @@ export default function HeroSection() {
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[clamp(420px,50vw,920px)] w-[clamp(420px,50vw,920px)] rounded-full bg-[radial-gradient(circle,rgba(72,125,72,0.22)_0%,rgba(200,216,190,0.08)_45%,transparent_70%)] blur-3xl pointer-events-none"
         />
 
+        {/* Fine luxury vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(248,251,247,0.85)_100%)]" />
       </m.div>
 
-      {/* ========================================================
-          3D CINEMATIC POST-PRODUCTION ENVIRONMENT
-          ======================================================== */}
-      <Hero3DScene
-        isIntroActive={isIntroActive}
-        onChapterChange={(ch) => setActiveChapterTitle(ch.title)}
-      />
-
-      {/* ========================================================
-          CENTER HERO CONTENT — LOGO + TAGLINE + EDITORIAL BADGES
-          ======================================================== */}
-      <Container className="relative z-20 flex flex-col items-center justify-center text-center my-auto px-4 sm:px-6 w-full max-w-7xl pointer-events-none">
-        {/* Subtle Top Studio Metadata Pill */}
-        <m.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: isIntroActive ? 2.1 : 0.1 }}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-[rgb(72,125,72)]/25 bg-white/70 backdrop-blur-md text-[10px] sm:text-xs font-mono font-semibold uppercase tracking-widest text-[rgb(72,125,72)] shadow-sm mb-4 sm:mb-6 pointer-events-auto"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(72,125,72)] animate-pulse" />
-          <span>Post-Production Suites & Color Lab</span>
-          <span className="hidden sm:inline text-forest/40">•</span>
-          <span className="hidden sm:inline text-forest/60">Worldwide Remote</span>
-        </m.div>
-
-        {/* Main Logo Container */}
+      {/* CENTER HERO CONTENT — LOGO + TAGLINE WITH BALANCED RESPONSIVE SPACING */}
+      <Container className="relative z-20 flex flex-col items-center justify-center text-center my-auto px-4 sm:px-6 w-full max-w-7xl">
         <m.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -217,24 +195,25 @@ export default function HeroSection() {
           className="relative flex flex-col items-center justify-center w-full"
           style={{ perspective: 1200 }}
         >
+          {/* Main Logo with Controlled 360° Circular Intro & Continuous Breathing Animation */}
           <m.img
             src={logo}
             alt="The Editing Table"
             animate={activeLogoAnimation}
             transition={activeLogoTransition}
             style={{
-              width: "clamp(260px, 38vw, 640px)",
-              maxHeight: "min(34vh, 340px)",
+              width: "clamp(260px, 40vw, 680px)",
+              maxHeight: "min(36vh, 360px)",
               transformStyle: "preserve-3d",
               willChange: "transform, filter"
             }}
-            className="max-w-[88vw] h-auto object-contain cursor-default select-none pointer-events-auto"
+            className="max-w-[88vw] h-auto object-contain cursor-default select-none"
             loading="eager"
             decoding="sync"
             fetchPriority="high"
           />
 
-          {/* BRAND TAGLINE — LARGE, BOLD, EDITORIAL & RESPONSIVE */}
+          {/* BRAND TAGLINE — LARGE, BOLD, EDITORIAL & FULLY RESPONSIVE */}
           <m.p
             initial={{ opacity: 0, y: isIntroActive ? 16 : 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -248,7 +227,7 @@ export default function HeroSection() {
               letterSpacing: "clamp(0.18em, 0.45vw, 0.35em)",
               fontFamily: '"Bona Nova", Georgia, serif'
             }}
-            className="mt-[clamp(1rem,2.2vh,2rem)] font-heading font-bona font-bold uppercase text-forest select-none leading-none pointer-events-auto"
+            className="mt-[clamp(1.25rem,2.8vh,2.5rem)] font-heading font-bona font-bold uppercase text-forest select-none leading-none"
           >
             YOU SHOOT,{" "}
             <span
@@ -258,43 +237,6 @@ export default function HeroSection() {
               WE EDIT
             </span>
           </m.p>
-
-          {/* Active Chapter Dynamic Indicator */}
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-3 text-[11px] sm:text-xs font-mono text-sage-muted tracking-wider uppercase"
-          >
-            Studio Focus: <span className="text-site font-semibold">{activeChapterTitle}</span>
-          </m.div>
-
-          {/* Quick Action Buttons */}
-          <m.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.8,
-              delay: isIntroActive ? 2.45 : 0.35,
-              ease: [0.22, 1, 0.36, 1]
-            }}
-            className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center gap-3 pointer-events-auto"
-          >
-            <a
-              href="#services"
-              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[rgb(72,125,72)] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md hover:bg-[#3B693B] hover:shadow-lg transition-all duration-300"
-            >
-              <span>Explore Services</span>
-              <ArrowDown className="h-3.5 w-3.5" />
-            </a>
-
-            <a
-              href="#process"
-              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full border border-[rgb(72,125,72)]/30 bg-white/70 backdrop-blur-md text-forest text-xs sm:text-sm font-semibold tracking-wide hover:bg-white hover:border-[rgb(72,125,72)] transition-all duration-300 shadow-sm"
-            >
-              <span>How We Work</span>
-              <ArrowRight className="h-3.5 w-3.5 text-[rgb(72,125,72)]" />
-            </a>
-          </m.div>
         </m.div>
       </Container>
     </section>
