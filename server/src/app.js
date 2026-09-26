@@ -40,7 +40,9 @@ const explicitOrigins = new Set([
   env.CLIENT_ORIGIN,
   env.CLIENT_URL,
   "https://t-he-editing-table-client.vercel.app",
-  ...(env.NODE_ENV === "production" ? [] : ["http://127.0.0.1:5173", "http://localhost:5173"])
+  "https://theeditingtable.com",
+  "https://www.theeditingtable.com",
+  ...(env.NODE_ENV === "production" ? [] : ["http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:5174", "http://localhost:5174"])
 ].filter(Boolean));
 
 function isAllowedOrigin(origin) {
@@ -51,6 +53,8 @@ function isAllowedOrigin(origin) {
     if (hostname === "theeditingtable.com" || hostname.endsWith(".theeditingtable.com")) return true;
     if (hostname.endsWith(".vercel.app")) return true;
     if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+    // Allow local private network IP addresses for mobile & LAN development
+    if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) return true;
   } catch {
     return false;
   }
@@ -72,9 +76,7 @@ export function createApp() {
           callback(null, true);
           return;
         }
-        const error = new Error(`CORS origin not allowed: ${origin}`);
-        error.status = 403;
-        callback(error);
+        callback(null, false);
       },
       credentials: true,
       optionsSuccessStatus: 204

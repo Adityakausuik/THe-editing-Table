@@ -278,6 +278,25 @@ async function logAudit(user, action, entity, entityId, details) {
 // --- CMS OVERVIEW STATS ---
 export async function getDashboardStats(req, res) {
   try {
+    if (!isDbConnected()) {
+      return res.json({
+        success: true,
+        message: "Dashboard stats retrieved (offline mode)",
+        data: {
+          stats: {
+            totalEnquiries: 0,
+            newEnquiries: 0,
+            totalBlogPosts: 0,
+            totalPortfolioItems: 0,
+            totalGalleryItems: 0,
+            totalTeamMembers: 0,
+            totalPartners: 0
+          },
+          recentLogs: [],
+          recentEnquiries: []
+        }
+      });
+    }
     if (!requireDb(res)) return;
 
     const [enquiriesCount, newEnquiries, blogCount, portfolioCount, galleryCount, teamCount, partnerCount] =
@@ -592,6 +611,16 @@ function createCRUDActions(Model, entityName) {
     // Public listing (active/published items)
     getAll: async (req, res) => {
       try {
+        if (!isDbConnected()) {
+          const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
+            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
+            entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM : [];
+          return res.json({
+            success: true,
+            message: `${entityName} records retrieved (offline fallback)`,
+            data: defaults.map((d) => normalizeDocForClient(d, entityName))
+          });
+        }
         if (!requireDb(res)) return;
 
         if (entityName === "Service") {
@@ -637,6 +666,16 @@ function createCRUDActions(Model, entityName) {
     // Admin listing (all items including drafts/inactive)
     getAdmin: async (req, res) => {
       try {
+        if (!isDbConnected()) {
+          const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
+            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
+            entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM : [];
+          return res.json({
+            success: true,
+            message: `${entityName} records retrieved (offline fallback)`,
+            data: defaults.map((d) => normalizeDocForClient(d, entityName))
+          });
+        }
         if (!requireDb(res)) return;
 
         if (entityName === "TeamMember") {

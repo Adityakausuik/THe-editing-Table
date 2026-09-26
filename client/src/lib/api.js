@@ -14,7 +14,12 @@ export const API_ROOT = (() => {
     }
     return "/api";
   }
-  return configured || "/api";
+  // In development, default to /api so Vite proxy forwards to port 5000 smoothly
+  // for localhost, 127.0.0.1, and mobile/LAN IP testing
+  if (!configured || configured.includes("localhost") || configured.includes("127.0.0.1")) {
+    return "/api";
+  }
+  return configured;
 })();
 
 export const API_ORIGIN = (() => {
@@ -118,12 +123,30 @@ export async function apiFetch(path, options = {}) {
   }
 
   const url = apiUrl(path);
-  const response = await fetch(url, {
-    credentials: "include",
-    cache: "no-store",
-    ...options,
-    headers
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      credentials: "include",
+      cache: "no-store",
+      ...options,
+      headers
+    });
+  } catch (netErr) {
+    const isNetworkError =
+      netErr instanceof TypeError ||
+      netErr.name === "TypeError" ||
+      /failed to fetch/i.test(netErr.message) ||
+      /network\s?error/i.test(netErr.message);
+
+    const err = new Error(
+      isNetworkError
+        ? `Unable to connect to the backend server (${netErr.message}). Please verify the server is running and accessible at ${url}.`
+        : (netErr.message || "Network request failed")
+    );
+    err.isNetworkError = isNetworkError;
+    err.originalError = netErr;
+    throw err;
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
@@ -154,8 +177,12 @@ export async function apiFetch(path, options = {}) {
 }
 
 export async function getCmsData(path) {
-  const payload = await apiFetch(path);
-  return Array.isArray(payload.data) ? payload.data : [];
+  try {
+    const payload = await apiFetch(path);
+    return Array.isArray(payload.data) ? payload.data : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function apiFetchBlob(path) {

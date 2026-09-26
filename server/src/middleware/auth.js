@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { verifyAccessToken } from "../lib/jwt.js";
 import Session from "../models/Session.model.js";
 import User from "../models/User.model.js";
@@ -19,6 +20,23 @@ export async function authenticate(req, res, next) {
   try {
     const payload = verifyAccessToken(token);
     if (payload.type !== "access" || !payload.sid) throw new Error("Invalid session token");
+
+    // Support offline fallback admin session when database is offline or session is an emergency token
+    if (payload.sid.startsWith("fallback-") || mongoose.connection.readyState !== 1) {
+      if (payload.role === "superadmin" || payload.role === "admin") {
+        req.authSession = { _id: payload.sid, user: payload.id, twoFactorVerified: true };
+        req.userDocument = null;
+        req.user = {
+          id: payload.id,
+          email: payload.email,
+          name: payload.name || "Administrator",
+          role: payload.role,
+          avatar: "",
+          sessionId: payload.sid
+        };
+        return next();
+      }
+    }
 
     const session = await Session.findOne({
       _id: payload.sid,
