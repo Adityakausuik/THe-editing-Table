@@ -115,7 +115,13 @@ export default function AboutMeCMS() {
     setLoading(true);
     setError("");
     try {
-      const res = await apiFetch("/api/v1/cms/about-me/admin");
+      let res;
+      try {
+        res = await apiFetch("/api/v1/cms/about-me/admin");
+      } catch (adminErr) {
+        console.warn("Fetch About profile admin endpoint failed, falling back to public endpoint:", adminErr.message);
+        res = await apiFetch("/api/v1/cms/about-me");
+      }
       if (res?.data) {
         setFormData({
           ...DEFAULT_STATE,

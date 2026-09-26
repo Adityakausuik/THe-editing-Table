@@ -7,16 +7,42 @@ const configuredApiRoot = import.meta.env.VITE_API_URL;
 
 export const API_ROOT = (() => {
   const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
+
+  // If running in browser and the host is a known deployment (vercel.app, theeditingtable.com) or localhost,
+  // always use same-origin /api to avoid cross-domain CORS, PSL cookie drops, and stale separated backends.
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host.endsWith(".vercel.app") || host.includes("theeditingtable") || host === "localhost" || host === "127.0.0.1") {
+      // If configured points to an external vercel app (like t-he-editing-table-server), localhost, or empty, always use /api
+      if (!configured || configured.includes(".vercel.app") || configured.includes("localhost") || configured.includes("127.0.0.1")) {
+        return "/api";
+      }
+    }
+  }
+
   if (import.meta.env.PROD) {
-    // In production, never allow localhost/127.0.0.1 to be used even if accidentally configured
-    if (configured && !configured.includes("localhost") && !configured.includes("127.0.0.1")) {
+    // In production, never allow localhost/127.0.0.1 or stale separated Vercel server deployments
+    if (
+      configured &&
+      !configured.includes("localhost") &&
+      !configured.includes("127.0.0.1") &&
+      !configured.includes("t-he-editing-table-server") &&
+      !configured.includes(".vercel.app")
+    ) {
       return configured.replace(/\/+$/, "");
     }
     return "/api";
   }
+
   // In development, default to /api so Vite proxy forwards to port 5000 smoothly
   // for localhost, 127.0.0.1, and mobile/LAN IP testing
-  if (!configured || configured.includes("localhost") || configured.includes("127.0.0.1")) {
+  if (
+    !configured ||
+    configured.includes("localhost") ||
+    configured.includes("127.0.0.1") ||
+    configured.includes("t-he-editing-table-server") ||
+    configured.includes(".vercel.app")
+  ) {
     return "/api";
   }
   return configured;

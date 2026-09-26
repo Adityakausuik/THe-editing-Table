@@ -50,7 +50,17 @@ export default function TeamCMS() {
       const data = await apiFetch("/api/v1/cms/team/admin");
       setItems(Array.isArray(data?.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch team failed:", err);
+      console.warn("Fetch team admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/team");
+        if (Array.isArray(publicData?.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch team members.");
     } finally {
       setLoading(false);

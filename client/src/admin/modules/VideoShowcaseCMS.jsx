@@ -118,6 +118,17 @@ export default function VideoShowcaseCMS() {
       const data = await apiFetch("/api/v1/admin/video-showcase");
       setVideos(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
+      console.warn("Fetch video showcase failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/video-showcase");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setVideos(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch video showcase items.");
     } finally {
       setLoading(false);

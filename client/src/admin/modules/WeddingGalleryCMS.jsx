@@ -34,7 +34,17 @@ export default function WeddingGalleryCMS() {
       const data = await apiFetch("/api/v1/cms/wedding-gallery/admin");
       setItems(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch wedding gallery failed:", err);
+      console.warn("Fetch wedding gallery admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/wedding-gallery");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch wedding gallery showcases.");
     } finally {
       setLoading(false);

@@ -34,7 +34,17 @@ export default function PortfolioCMS() {
       const data = await apiFetch("/api/v1/cms/portfolio/admin");
       setItems(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch portfolio failed:", err);
+      console.warn("Fetch portfolio admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/portfolio");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch portfolio showcase items.");
     } finally {
       setLoading(false);

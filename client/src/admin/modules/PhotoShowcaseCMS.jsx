@@ -98,6 +98,17 @@ export default function PhotoShowcaseCMS() {
       const data = await apiFetch("/api/v1/admin/photo-showcase");
       setPhotos(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
+      console.warn("Fetch photo showcase failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/photo-showcase");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setPhotos(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch photo showcase items.");
     } finally {
       setLoading(false);

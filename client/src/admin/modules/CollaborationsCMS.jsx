@@ -33,7 +33,17 @@ export default function CollaborationsCMS() {
       const data = await apiFetch("/api/v1/cms/collaborations/admin");
       setItems(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch collaborations failed:", err);
+      console.warn("Fetch collaborations admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/collaborations");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch brand collaborations.");
     } finally {
       setLoading(false);

@@ -32,7 +32,17 @@ export default function PartnersCMS() {
       const data = await apiFetch("/api/v1/cms/partners/admin");
       setPartners(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch partners failed:", err);
+      console.warn("Fetch partners admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/partners");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setPartners(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch working partner companies.");
     } finally {
       setLoading(false);

@@ -34,7 +34,17 @@ export default function BlogCMS() {
       const data = await apiFetch("/api/v1/cms/blog/admin");
       setItems(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch blog posts failed:", err);
+      console.warn("Fetch blog posts admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/blog");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch blog journal posts.");
     } finally {
       setLoading(false);

@@ -36,7 +36,17 @@ export default function ServicesCMS() {
       const data = await apiFetch("/api/v1/cms/services/admin");
       setItems(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
-      console.error("Fetch services failed:", err);
+      console.warn("Fetch services admin endpoint failed, falling back to public endpoint:", err.message);
+      try {
+        const publicData = await apiFetch("/api/v1/cms/services");
+        if (Array.isArray(publicData.data) && publicData.data.length > 0) {
+          setItems(publicData.data);
+          setError(null);
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Failed to fetch service suites.");
     } finally {
       setLoading(false);
