@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { env } from "./env.js";
 import { bootstrapDatabase } from "./bootstrap.js";
+import { isServerlessEnvironment } from "../utils/fileUtils.js";
 
 // Disable command buffering globally so queries fail-fast when DB is offline instead of hanging for 10s
 mongoose.set("bufferCommands", false);
@@ -28,6 +29,11 @@ export async function connectDatabase() {
     return mongoose.connection;
   }
 
+  // In serverless, if MONGODB_URI points to localhost, fail fast to avoid blocking the lambda
+  if (isServerlessEnvironment() && (env.MONGODB_URI.includes("127.0.0.1") || env.MONGODB_URI.includes("localhost"))) {
+    return null;
+  }
+
   // If connection dropped or failed previously, invalidate the stale promise
   if (mongoose.connection.readyState !== 2) {
     cachedConnection = null;
@@ -36,8 +42,8 @@ export async function connectDatabase() {
   if (!cachedConnection) {
     cachedConnection = mongoose
       .connect(env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 3000,
+        connectTimeoutMS: 3000,
         bufferCommands: false
       })
       .then(async (m) => {

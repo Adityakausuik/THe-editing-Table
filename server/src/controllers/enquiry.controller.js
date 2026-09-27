@@ -1,5 +1,11 @@
+import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
 import { Enquiry } from "../models/Enquiry.model.js";
 import { validateEnquiryInput } from "../validators/enquiry.validator.js";
+
+function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
 
 export async function createEnquiry(req, res, next) {
   try {
@@ -9,6 +15,18 @@ export async function createEnquiry(req, res, next) {
         success: false,
         message: "Validation failed.",
         data: { errors }
+      });
+    }
+
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+
+    if (!isDbConnected()) {
+      return res.status(503).json({
+        success: false,
+        message: "Database service is temporarily offline. Please reach out via email or phone while we reconnect.",
+        data: null
       });
     }
 

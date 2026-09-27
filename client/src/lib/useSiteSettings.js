@@ -1,17 +1,39 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, subscribeToCmsChanges } from "./api.js";
 
-let settingsCache = null;
+const CLIENT_DEFAULT_SETTINGS = {
+  siteName: "THE EDITING TABLE",
+  metaTitle: "The Editing Table | High-End Film & Video Post-Production",
+  metaDescription: "Bespoke color grading, video editing, and visual post-production for commercials, weddings, and cinema.",
+  maintenanceMode: false,
+  publicContent: {
+    hero: {
+      tagline: "WE CRAFT VISUAL STORIES",
+      subtitle: "Bespoke color grading, video editing, and visual post-production for luxury weddings, brands, and cinema."
+    },
+    footer: {
+      instagram: "https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw==",
+      linkedin: "https://www.linkedin.com/company/the-editing-table/",
+      email: "hello@theeditingtable.com",
+      address: "Mumbai & New Delhi, India"
+    }
+  }
+};
+
+let settingsCache = CLIENT_DEFAULT_SETTINGS;
 let settingsRequest = null;
 
 async function fetchSettings(force = false) {
   if (settingsRequest) return settingsRequest;
-  if (!force && settingsCache) return settingsCache;
+  if (!force && settingsCache && settingsCache !== CLIENT_DEFAULT_SETTINGS) return settingsCache;
 
   settingsRequest = apiFetch("/api/v1/cms/settings")
     .then((response) => {
-      settingsCache = response.data || {};
+      settingsCache = { ...CLIENT_DEFAULT_SETTINGS, ...(response.data || {}) };
       return settingsCache;
+    })
+    .catch(() => {
+      return settingsCache || CLIENT_DEFAULT_SETTINGS;
     })
     .finally(() => {
       settingsRequest = null;
@@ -21,17 +43,16 @@ async function fetchSettings(force = false) {
 }
 
 export function useSiteSettings() {
-  const [settings, setSettings] = useState(settingsCache || {});
-  const [loading, setLoading] = useState(!settingsCache);
+  const [settings, setSettings] = useState(settingsCache || CLIENT_DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(async (force = false) => {
-    setLoading(true);
     setError("");
     try {
       setSettings(await fetchSettings(force));
     } catch (requestError) {
-      setSettings({});
+      setSettings((current) => current || CLIENT_DEFAULT_SETTINGS);
       setError(requestError.message || "Website settings could not be loaded.");
     } finally {
       setLoading(false);

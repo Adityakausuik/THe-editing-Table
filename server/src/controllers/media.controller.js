@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
 import { processAndSaveFile } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
@@ -8,8 +9,14 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
-function requireDb(res) {
+async function requireDb(res) {
   if (isDbConnected()) return true;
+  try {
+    await connectDatabase();
+    if (isDbConnected()) return true;
+  } catch (err) {
+    console.warn("[media:requireDb] Auto-connect attempt failed:", err.message);
+  }
   res.status(503).json({
     success: false,
     message: "MongoDB is unavailable. Media changes were not saved.",
@@ -20,7 +27,7 @@ function requireDb(res) {
 
 export async function uploadMedia(req, res, next) {
   try {
-    if (!requireDb(res)) return;
+    if (!await requireDb(res)) return;
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded", data: null });
     }
@@ -58,7 +65,13 @@ export async function uploadMedia(req, res, next) {
 
 export async function getMediaFiles(req, res, next) {
   try {
-    if (!requireDb(res)) return;
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+    if (!isDbConnected()) {
+      return res.json({ success: true, message: "Media files retrieved (offline mode)", data: [] });
+    }
+
     const { category, search } = req.query;
     const query = {};
 
@@ -79,7 +92,7 @@ export async function getMediaFiles(req, res, next) {
 
 export async function deleteMedia(req, res, next) {
   try {
-    if (!requireDb(res)) return;
+    if (!await requireDb(res)) return;
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid media ID", data: null });
     }

@@ -1,9 +1,30 @@
 import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
 import { processAndSaveResume } from "../middleware/careersUpload.js";
 import CareersContent from "../models/CareersContent.model.js";
 import Job from "../models/Job.model.js";
 import JobApplication from "../models/JobApplication.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
+
+function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
+async function requireDb(res) {
+  if (isDbConnected()) return true;
+  try {
+    await connectDatabase();
+    if (isDbConnected()) return true;
+  } catch (err) {
+    console.warn("[careers:requireDb] Auto-connect attempt failed:", err.message);
+  }
+  res.status(503).json({
+    success: false,
+    message: "MongoDB is unavailable. Careers data cannot be retrieved or changed.",
+    data: null
+  });
+  return false;
+}
 
 // ==========================================
 // PUBLIC CONTROLLERS
@@ -11,6 +32,16 @@ import { safeDeleteFile } from "../utils/fileUtils.js";
 
 export async function getPublicJobs(req, res, next) {
   try {
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+    if (!isDbConnected()) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+
     const jobs = await Job.find({ status: "Active" })
       .sort({ order: 1, createdAt: -1 })
       .lean();
@@ -20,7 +51,10 @@ export async function getPublicJobs(req, res, next) {
       data: jobs
     });
   } catch (error) {
-    next(error);
+    return res.json({
+      success: true,
+      data: []
+    });
   }
 }
 
@@ -47,6 +81,16 @@ export async function getPublicJobById(req, res, next) {
 
 export async function getCareersContent(req, res, next) {
   try {
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+    if (!isDbConnected()) {
+      return res.json({
+        success: true,
+        data: new CareersContent().toObject()
+      });
+    }
+
     let content = await CareersContent.findOne({ key: "careers_page_content" }).lean();
     if (!content) {
       content = await CareersContent.create({ key: "careers_page_content" });
@@ -57,12 +101,16 @@ export async function getCareersContent(req, res, next) {
       data: content
     });
   } catch (error) {
-    next(error);
+    return res.json({
+      success: true,
+      data: new CareersContent().toObject()
+    });
   }
 }
 
 export async function submitApplication(req, res, next) {
   try {
+    if (!await requireDb(res)) return;
     const {
       jobId,
       positionTitle,

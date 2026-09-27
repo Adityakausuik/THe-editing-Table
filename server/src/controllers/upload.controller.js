@@ -1,10 +1,21 @@
 import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
 import { processAndSaveFile } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
 
-function requireDb(res) {
-  if (mongoose.connection.readyState === 1) return true;
+function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
+async function requireDb(res) {
+  if (isDbConnected()) return true;
+  try {
+    await connectDatabase();
+    if (isDbConnected()) return true;
+  } catch (err) {
+    console.warn("[upload:requireDb] Auto-connect attempt failed:", err.message);
+  }
   res.status(503).json({
     success: false,
     message: "MongoDB is unavailable. Media cannot be uploaded.",
@@ -15,7 +26,7 @@ function requireDb(res) {
 
 export async function uploadSingleMedia(req, res, next) {
   try {
-    if (!requireDb(res)) return;
+    if (!await requireDb(res)) return;
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file provided for upload.", data: null });
     }
@@ -52,7 +63,7 @@ export async function uploadSingleMedia(req, res, next) {
 
 export async function uploadMultipleMedia(req, res, next) {
   try {
-    if (!requireDb(res)) return;
+    if (!await requireDb(res)) return;
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ success: false, message: "No files provided for upload.", data: null });
     }

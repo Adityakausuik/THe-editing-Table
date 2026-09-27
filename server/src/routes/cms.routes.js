@@ -54,8 +54,10 @@ router.get("/settings", getSiteSettings);
 registerModuleRoutes("services", servicesCMS);
 registerModuleRoutes("portfolio", portfolioCMS);
 registerModuleRoutes("wedding-gallery", weddingGalleryCMS);
+registerModuleRoutes("wedding", weddingGalleryCMS);
 registerModuleRoutes("collaborations", collaborationsCMS);
 registerModuleRoutes("blog", blogCMS);
+registerModuleRoutes("blogs", blogCMS);
 registerModuleRoutes("team", teamCMS);
 registerModuleRoutes("partners", partnersCMS);
 

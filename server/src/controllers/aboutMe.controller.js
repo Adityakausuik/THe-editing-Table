@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
 import AboutMe from "../models/AboutMe.model.js";
 import AuditLog from "../models/AuditLog.model.js";
 
@@ -6,8 +7,14 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
-function requireDb(res) {
+async function requireDb(res) {
   if (isDbConnected()) return true;
+  try {
+    await connectDatabase();
+    if (isDbConnected()) return true;
+  } catch (err) {
+    console.warn("[aboutMe:requireDb] Auto-connect attempt failed:", err.message);
+  }
   res.status(503).json({
     success: false,
     message: "MongoDB is unavailable. About Me content cannot be retrieved or updated.",
@@ -41,7 +48,17 @@ function getDefaultAboutMeData() {
  */
 export async function getPublicAboutMe(req, res) {
   try {
-    if (!requireDb(res)) return;
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+    if (!isDbConnected()) {
+      return res.json({
+        success: true,
+        message: "About Me content retrieved (offline fallback)",
+        data: getDefaultAboutMeData()
+      });
+    }
+
     let doc = await AboutMe.findOne({ key: "about_me_content" }).lean();
     if (!doc) {
       doc = await AboutMe.create({ key: "about_me_content" });
@@ -53,9 +70,9 @@ export async function getPublicAboutMe(req, res) {
       data: doc
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to retrieve About Me content",
+    return res.json({
+      success: true,
+      message: "About Me content retrieved (offline fallback)",
       data: getDefaultAboutMeData()
     });
   }
@@ -66,7 +83,17 @@ export async function getPublicAboutMe(req, res) {
  */
 export async function getAdminAboutMe(req, res) {
   try {
-    if (!requireDb(res)) return;
+    if (!isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+    if (!isDbConnected()) {
+      return res.json({
+        success: true,
+        message: "Admin About Me content retrieved (offline fallback)",
+        data: getDefaultAboutMeData()
+      });
+    }
+
     let doc = await AboutMe.findOne({ key: "about_me_content" }).lean();
     if (!doc) {
       doc = await AboutMe.create({ key: "about_me_content" });
@@ -78,10 +105,10 @@ export async function getAdminAboutMe(req, res) {
       data: doc
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to retrieve Admin About Me content",
-      data: null
+    return res.json({
+      success: true,
+      message: "Admin About Me content retrieved (offline fallback)",
+      data: getDefaultAboutMeData()
     });
   }
 }
@@ -91,7 +118,7 @@ export async function getAdminAboutMe(req, res) {
  */
 export async function updateAboutMe(req, res) {
   try {
-    if (!requireDb(res)) return;
+    if (!await requireDb(res)) return;
     const {
       fullName,
       designation,
