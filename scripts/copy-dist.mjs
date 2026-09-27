@@ -9,6 +9,8 @@ const rootDist = path.join(rootDir, "dist");
 const serverDist = path.join(rootDir, "server", "dist");
 
 if (fs.existsSync(clientDist)) {
+  if (fs.existsSync(rootDist)) fs.rmSync(rootDist, { recursive: true, force: true });
+  if (fs.existsSync(serverDist)) fs.rmSync(serverDist, { recursive: true, force: true });
   fs.cpSync(clientDist, rootDist, { recursive: true });
   fs.cpSync(clientDist, serverDist, { recursive: true });
   console.log(`[BUILD] Successfully mirrored static build across root/dist and server/dist`);

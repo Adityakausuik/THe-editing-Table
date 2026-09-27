@@ -8,44 +8,26 @@ const configuredApiRoot = import.meta.env.VITE_API_URL;
 export const API_ROOT = (() => {
   const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
 
-  // If running in browser and the host is a known deployment (vercel.app, theeditingtable.com) or localhost,
-  // always use same-origin /api to avoid cross-domain CORS, PSL cookie drops, and stale separated backends.
-  if (typeof window !== "undefined" && window.location?.hostname) {
-    const host = window.location.hostname;
-    if (host.endsWith(".vercel.app") || host.includes("theeditingtable") || host === "localhost" || host === "127.0.0.1") {
-      // If configured points to an external vercel app (like t-he-editing-table-server), localhost, or empty, always use /api
-      if (!configured || configured.includes(".vercel.app") || configured.includes("localhost") || configured.includes("127.0.0.1")) {
-        return "/api";
-      }
-    }
+  // Stale separated server URL or any vercel.app domain should NEVER be called cross-origin
+  if (
+    !configured ||
+    configured.includes("t-he-editing-table-server") ||
+    configured.includes(".vercel.app") ||
+    configured.includes("localhost") ||
+    configured.includes("127.0.0.1")
+  ) {
+    return "/api";
   }
 
-  if (import.meta.env.PROD) {
-    // In production, never allow localhost/127.0.0.1 or stale separated Vercel server deployments
-    if (
-      configured &&
-      !configured.includes("localhost") &&
-      !configured.includes("127.0.0.1") &&
-      !configured.includes("t-he-editing-table-server") &&
-      !configured.includes(".vercel.app")
-    ) {
+  // If running in browser, always default to same-origin /api unless an explicit custom domain HTTPS backend is set
+  if (typeof window !== "undefined") {
+    if (/^https?:\/\//i.test(configured)) {
       return configured.replace(/\/+$/, "");
     }
     return "/api";
   }
 
-  // In development, default to /api so Vite proxy forwards to port 5000 smoothly
-  // for localhost, 127.0.0.1, and mobile/LAN IP testing
-  if (
-    !configured ||
-    configured.includes("localhost") ||
-    configured.includes("127.0.0.1") ||
-    configured.includes("t-he-editing-table-server") ||
-    configured.includes(".vercel.app")
-  ) {
-    return "/api";
-  }
-  return configured;
+  return configured.replace(/\/+$/, "");
 })();
 
 export const API_ORIGIN = (() => {
