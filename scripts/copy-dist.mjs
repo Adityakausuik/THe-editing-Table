@@ -2,21 +2,51 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, "..");
-const clientDist = path.join(rootDir, "client", "dist");
-const rootDist = path.join(rootDir, "dist");
-const rootPublic = path.join(rootDir, "public");
-const serverDist = path.join(rootDir, "server", "dist");
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(scriptDir, "..");
+const realRootDir = fs.existsSync(rootDir) ? fs.realpathSync(rootDir) : rootDir;
 
-if (fs.existsSync(clientDist)) {
-  if (fs.existsSync(rootDist)) fs.rmSync(rootDist, { recursive: true, force: true });
-  if (fs.existsSync(rootPublic)) fs.rmSync(rootPublic, { recursive: true, force: true });
-  if (fs.existsSync(serverDist)) fs.rmSync(serverDist, { recursive: true, force: true });
-  fs.cpSync(clientDist, rootDist, { recursive: true });
-  fs.cpSync(clientDist, rootPublic, { recursive: true });
-  fs.cpSync(clientDist, serverDist, { recursive: true });
-  console.log(`[BUILD] Successfully mirrored static build across root/dist, root/public, and server/dist`);
+// Possible locations where build artifacts could be produced
+const candidateSources = [
+  path.join(rootDir, "client", "dist"),
+  path.join(realRootDir, "client", "dist"),
+  path.join(rootDir, "dist"),
+  path.join(realRootDir, "dist"),
+  path.join(rootDir, "public"),
+  path.join(realRootDir, "public")
+];
+
+let sourceDir = null;
+for (const cand of candidateSources) {
+  if (fs.existsSync(cand) && fs.existsSync(path.join(cand, "index.html"))) {
+    sourceDir = cand;
+    break;
+  }
+}
+
+const targets = [
+  path.join(rootDir, "dist"),
+  path.join(rootDir, "public"),
+  path.join(rootDir, "client", "dist"),
+  path.join(rootDir, "server", "dist")
+];
+
+if (sourceDir) {
+  for (const target of targets) {
+    try {
+      if (fs.existsSync(target) && fs.realpathSync(target) === fs.realpathSync(sourceDir)) {
+        continue;
+      }
+    } catch {
+      // Continue if realpath fails
+    }
+    fs.mkdirSync(target, { recursive: true });
+    fs.cpSync(sourceDir, target, { recursive: true, force: true });
+  }
+  console.log(`[BUILD] Successfully mirrored static build from ${sourceDir} across all targets (dist, public, client/dist, server/dist)`);
 } else {
-  console.warn(`[BUILD] Warning: ${clientDist} does not exist to mirror.`);
+  console.warn(`[BUILD] Warning: No compiled index.html found. Ensuring output directories exist.`);
+  for (const target of targets) {
+    fs.mkdirSync(target, { recursive: true });
+  }
 }
