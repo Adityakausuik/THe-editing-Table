@@ -1,28 +1,24 @@
+import fs from "node:fs";
+// Fix Windows junction / OneDrive symlink path mismatch so Vite's optimizer
+// paths match process.cwd() perfectly without throwing TypeError reading imports.
+try {
+  const realCwd = fs.realpathSync(process.cwd());
+  if (realCwd !== process.cwd()) {
+    process.chdir(realCwd);
+  }
+} catch {
+  // Ignore in environments where realpath is unsupported
+}
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath } from "node:url";
-import fs from "node:fs";
-import path from "node:path";
-
-const clientRoot = fileURLToPath(new URL(".", import.meta.url));
-const realClientRoot = fs.existsSync(clientRoot) ? fs.realpathSync(clientRoot) : clientRoot;
 
 export default defineConfig({
-  root: realClientRoot,
   plugins: [react()],
   server: {
     host: true,
     port: 5173,
     strictPort: true,
-    fs: {
-      strict: false,
-      allow: [
-        realClientRoot,
-        clientRoot,
-        path.resolve(realClientRoot, ".."),
-        path.resolve(clientRoot, "..")
-      ]
-    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:5000",
@@ -41,9 +37,6 @@ export default defineConfig({
     strictPort: true
   },
   build: {
-    // outDir defaults to "dist" relative to root (= client/dist).
-    // Vercel's outputDirectory is set to "client/dist" in vercel.json —
-    // this is the simplest, most reliable cross-platform approach.
     target: "es2020",
     minify: "esbuild",
     cssCodeSplit: true,
