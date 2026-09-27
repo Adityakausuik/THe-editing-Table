@@ -125,6 +125,16 @@ export default function CareersCMS() {
       const res = await apiFetch("/api/v1/careers/admin/jobs");
       setJobs(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
+      console.warn("Fetch jobs admin failed, attempting public endpoint:", err.message);
+      try {
+        const pubRes = await apiFetch("/api/v1/careers/jobs");
+        if (Array.isArray(pubRes.data) && pubRes.data.length > 0) {
+          setJobs(pubRes.data);
+          return;
+        }
+      } catch {
+        // Fall back to error
+      }
       setErrorMessage(err.message || "Failed to fetch jobs.");
     } finally {
       setJobsLoading(false);
@@ -159,6 +169,16 @@ export default function CareersCMS() {
       const res = await apiFetch("/api/v1/careers/admin/content");
       setPageContent(res.data || null);
     } catch (err) {
+      console.warn("Fetch careers content admin failed, attempting public endpoint:", err.message);
+      try {
+        const pubRes = await apiFetch("/api/v1/careers/content");
+        if (pubRes.data) {
+          setPageContent(pubRes.data);
+          return;
+        }
+      } catch {
+        // Fall back to error
+      }
       setErrorMessage(err.message || "Failed to load page content.");
     } finally {
       setContentLoading(false);

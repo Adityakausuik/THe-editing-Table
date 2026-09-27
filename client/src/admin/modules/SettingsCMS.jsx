@@ -27,7 +27,20 @@ export default function SettingsCMS() {
         setPublicContentJson(JSON.stringify(data.data.publicContent || {}, null, 2));
       }
     } catch (err) {
-      console.error("Fetch settings error:", err);
+      console.warn("Fetch settings admin failed, trying public endpoint:", err.message);
+      try {
+        const pubData = await apiFetch("/api/v1/cms/settings");
+        if (pubData?.data) {
+          if (pubData.data.siteName) setSiteName(pubData.data.siteName);
+          if (pubData.data.metaTitle) setMetaTitle(pubData.data.metaTitle);
+          if (pubData.data.metaDescription) setMetaDescription(pubData.data.metaDescription);
+          if (pubData.data.maintenanceMode !== undefined) setMaintenanceMode(pubData.data.maintenanceMode === "true" || pubData.data.maintenanceMode === true);
+          setPublicContentJson(JSON.stringify(pubData.data.publicContent || {}, null, 2));
+          return;
+        }
+      } catch {
+        // Fall back to original error
+      }
       setError(err.message || "Website settings could not be loaded.");
     } finally {
       setLoading(false);

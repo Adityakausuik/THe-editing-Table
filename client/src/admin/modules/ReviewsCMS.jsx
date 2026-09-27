@@ -51,7 +51,22 @@ export default function ReviewsCMS() {
       setReviews(records);
       recalculateStats(records);
     } catch (err) {
-      console.error("Fetch reviews failed:", err);
+      console.warn("Fetch reviews admin failed, attempting public endpoint:", err.message);
+      try {
+        const pubData = await apiFetch("/api/v1/reviews?limit=100");
+        const pubRecords = Array.isArray(pubData.data?.items)
+          ? pubData.data.items
+          : Array.isArray(pubData.data)
+            ? pubData.data
+            : [];
+        if (pubRecords.length > 0) {
+          setReviews(pubRecords);
+          recalculateStats(pubRecords);
+          return;
+        }
+      } catch {
+        // Fall back to empty
+      }
       setReviews([]);
       recalculateStats([]);
     } finally {
