@@ -5,7 +5,7 @@ import Session from "../models/Session.model.js";
 import TrustedDevice from "../models/TrustedDevice.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import EmailOtp from "../models/EmailOtp.model.js";
-import { signAccessToken, signPreAuthToken, verifyPreAuthToken } from "../lib/jwt.js";
+import { signAccessToken, signPreAuthToken, verifyAccessToken, verifyPreAuthToken } from "../lib/jwt.js";
 import { env } from "../config/env.js";
 import { connectDatabase } from "../config/db.js";
 import { csrfTokenForSession } from "../middleware/auth.js";
@@ -709,14 +709,46 @@ export async function resendEmailOtp(req, res) {
 }
 
 export async function logout(req, res) {
-  if (req.authSession) {
-    req.authSession.revokedAt = new Date();
-    req.authSession.revokeReason = "logout";
-    await req.authSession.save();
-    await writeSecurityAudit({ req, user: req.userDocument, action: "SESSION_REVOKED", entity: "Session", entityId: req.authSession._id.toString(), metadata: { reason: "logout" } });
+  try {
+    const header = req.get("authorization");
+    const token = header?.startsWith("Bearer ") ? header.slice(7) : req.cookies?.accessToken;
+    if (token && isDbConnected()) {
+      try {
+        const payload = verifyAccessToken(token);
+        if (payload?.sid && !payload.sid.startsWith("fallback-")) {
+          const session = await Session.findById(payload.sid);
+          if (session) {
+            session.revokedAt = new Date();
+            session.revokeReason = "logout";
+            await session.save().catch(() => null);
+          }
+        }
+      } catch {
+        // ignore invalid/expired token during logout
+      }
+    }
+    if (req.authSession && typeof req.authSession.save === "function" && isDbConnected()) {
+      req.authSession.revokedAt = new Date();
+      req.authSession.revokeReason = "logout";
+      await req.authSession.save().catch(() => null);
+      if (req.userDocument) {
+        writeSecurityAudit({ req, user: req.userDocument, action: "SESSION_REVOKED", entity: "Session", entityId: req.authSession._id?.toString() || "session", metadata: { reason: "logout" } }).catch(() => null);
+      }
+    }
+  } catch {
+    // Non-blocking
   }
-  clearCookie(res, "accessToken");
-  clearCookie(res, "preAuthToken");
+
+  try {
+    clearCookie(res, "accessToken");
+    clearCookie(res, "preAuthToken");
+    clearCookie(res, "trustedDevice");
+    res.cookie("accessToken", "", { ...baseCookieOptions(), expires: new Date(0), maxAge: 0 });
+    res.cookie("preAuthToken", "", { ...baseCookieOptions(), expires: new Date(0), maxAge: 0 });
+  } catch {
+    // Non-blocking
+  }
+
   return res.json({ success: true, message: "Logged out successfully", data: null });
 }
 

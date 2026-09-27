@@ -1,3 +1,4 @@
+/* global sessionStorage */
 import {
   Briefcase,
   Camera,
@@ -6,6 +7,7 @@ import {
   Image,
   Images,
   LayoutDashboard,
+  Loader2,
   LogOut,
   Mail,
   Menu,
@@ -68,19 +70,40 @@ const navSections = [
 export default function AdminLayout() {
   const { user, authLoading, isAuthenticated, logoutUser } = useAdmin();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
 
   if (authLoading) {
     return <div className="min-h-svh flex items-center justify-center bg-sage-bg text-sage-muted">Checking session...</div>;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLoggingOut) {
     return <Navigate to="/admin/login" replace />;
   }
 
   const handleLogout = async () => {
-    await logoutUser();
-    navigate("/admin/login");
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    setMobileOpen(false);
+    try {
+      await logoutUser();
+    } catch {
+      // Non-blocking
+    } finally {
+      try {
+        sessionStorage.removeItem("csrfToken");
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("admin_login_stage");
+      } catch {
+        // ignore
+      }
+      navigate("/admin/login", { replace: true });
+      setTimeout(() => {
+        if (window.location.pathname.startsWith("/admin") && window.location.pathname !== "/admin/login") {
+          window.location.href = "/admin/login";
+        }
+      }, 100);
+    }
   };
 
   return (
@@ -138,7 +161,7 @@ export default function AdminLayout() {
                 <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-site">
                   {section.title}
                 </p>
-                {section.items.filter((item) => !item.roles || item.roles.includes(user.role)).map((item) => {
+                {section.items.filter((item) => !item.roles || item.roles.includes(user?.role)).map((item) => {
                   const Icon = item.icon;
                   return (
                     <NavLink
@@ -175,9 +198,15 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200/60 px-3.5 py-1.5 text-[11px] font-semibold hover:bg-rose-100 transition cursor-pointer"
+              disabled={isLoggingOut}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200/60 px-3.5 py-1.5 text-[11px] font-semibold hover:bg-rose-100 transition cursor-pointer disabled:opacity-60"
             >
-              <LogOut className="h-3.5 w-3.5" /> Sign Out
+              {isLoggingOut ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <LogOut className="h-3.5 w-3.5" />
+              )}
+              <span>{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
             </button>
           </div>
         </div>

@@ -29,6 +29,7 @@ import { sanitizeStudio } from "./utils/sanitizeStudio.js";
 import {
   beginTwoFactorSetup,
   login,
+  logout,
   resetDefaultAdmin,
   resendEmailOtp,
   verifyEmailOtp,
@@ -214,6 +215,17 @@ export function createApp() {
   ];
   directLoginPaths.forEach((path) => {
     app.post(path, login);
+  });
+
+  const directLogoutPaths = [
+    "/api/v1/auth/logout",
+    "/api/auth/logout",
+    "/v1/auth/logout",
+    "/auth/logout",
+    "/logout"
+  ];
+  directLogoutPaths.forEach((path) => {
+    app.all(path, logout);
   });
 
   const directVerifyPaths = [

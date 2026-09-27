@@ -1,4 +1,4 @@
-/* global sessionStorage */
+/* global AbortController, clearTimeout, sessionStorage */
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { apiFetch, AUTH_SESSION_EXPIRED_EVENT } from "../lib/api.js";
 
@@ -55,10 +55,22 @@ export function AdminProvider({ children }) {
 
   const logoutUser = async () => {
     try {
-      await apiFetch("/api/v1/auth/logout", { method: "POST" });
+      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 2500) : null;
+      try {
+        await apiFetch("/api/v1/auth/logout", {
+          method: "POST",
+          signal: controller?.signal
+        });
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    } catch {
+      // Non-blocking: ensure client state is cleared even if network or server fails
     } finally {
       sessionStorage.removeItem("csrfToken");
       sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("admin_login_stage");
       setUser(null);
     }
   };
