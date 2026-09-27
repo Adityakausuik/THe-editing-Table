@@ -7,11 +7,6 @@ import path from "node:path";
 const clientRoot = fileURLToPath(new URL(".", import.meta.url));
 const realClientRoot = fs.existsSync(clientRoot) ? fs.realpathSync(clientRoot) : clientRoot;
 
-// Output directly to root /dist so Vercel's outputDirectory:"dist" works
-// without any copy step — resolves the "dist is empty" Vercel build error.
-const rootDir = path.resolve(realClientRoot, "..");
-const outDir = path.join(rootDir, "dist");
-
 export default defineConfig({
   root: realClientRoot,
   plugins: [react()],
@@ -46,8 +41,9 @@ export default defineConfig({
     strictPort: true
   },
   build: {
-    outDir,
-    emptyOutDir: true,
+    // outDir defaults to "dist" relative to root (= client/dist).
+    // Vercel's outputDirectory is set to "client/dist" in vercel.json —
+    // this is the simplest, most reliable cross-platform approach.
     target: "es2020",
     minify: "esbuild",
     cssCodeSplit: true,
