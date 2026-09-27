@@ -28,6 +28,7 @@ const router = Router();
 // ==========================================
 // PUBLIC ROUTES
 // ==========================================
+router.get("/", asyncHandler(getPublicJobs));
 router.get("/jobs", asyncHandler(getPublicJobs));
 router.get("/jobs/:id", asyncHandler(getPublicJobById));
 router.get("/content", asyncHandler(getCareersContent));

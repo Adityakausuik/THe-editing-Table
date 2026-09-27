@@ -7,6 +7,15 @@ mongoose.set("bufferCommands", false);
 
 let cachedConnection = null;
 
+// Ensure cached promise is invalidated if connection drops
+mongoose.connection.on("disconnected", () => {
+  cachedConnection = null;
+});
+
+mongoose.connection.on("error", () => {
+  cachedConnection = null;
+});
+
 export async function connectDatabase() {
   if (mongoose.connection.readyState === 1) {
     if (env.NODE_ENV !== "test") {
@@ -17,6 +26,11 @@ export async function connectDatabase() {
 
   if (env.NODE_ENV === "test") {
     return mongoose.connection;
+  }
+
+  // If connection dropped or failed previously, invalidate the stale promise
+  if (mongoose.connection.readyState !== 2) {
+    cachedConnection = null;
   }
 
   if (!cachedConnection) {

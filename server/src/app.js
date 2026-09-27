@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -26,6 +28,7 @@ import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
+import { getFileStreamFromGridFS } from "./utils/gridfs.js";
 import {
   beginTwoFactorSetup,
   login,
@@ -170,20 +173,77 @@ export function createApp() {
     next();
   });
 
-  // Static uploads directory with caching headers for media assets
+  // Persistent media streaming handler (Local disk cache first, MongoDB GridFS fallback)
   const staticUploadsDir = resolveUploadsDirectory();
-  app.use(
-    "/uploads",
-    express.static(staticUploadsDir, {
-      etag: true,
-      maxAge: "30d",
-      lastModified: true,
-      fallthrough: true,
-      setHeaders(res) {
+
+  const handleMediaRequest = async (req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+
+    let subPath = req.path || "";
+    subPath = subPath.replace(/^\/+/, "").replace(/^uploads\//, "").replace(/^api\/uploads\//, "");
+    if (!subPath) return next();
+
+    // Prevent path traversal
+    if (subPath.includes("..") || path.isAbsolute(subPath)) {
+      return res.status(403).json({ success: false, message: "Forbidden media path." });
+    }
+
+    const localFilePath = path.join(staticUploadsDir, subPath);
+
+    // 1. High-speed disk cache hit
+    try {
+      if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
         res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+        return res.sendFile(path.resolve(localFilePath));
       }
-    })
-  );
+    } catch {
+      // Non-fatal, check GridFS
+    }
+
+    // 2. Stream fallback from MongoDB GridFS
+    try {
+      if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
+        await connectDatabase().catch(() => {});
+      }
+
+      if (mongoose.connection.readyState === 1) {
+        const gridItem = await getFileStreamFromGridFS(subPath);
+        if (gridItem) {
+          const { stream, fileDoc } = gridItem;
+          const mimeType = fileDoc.contentType || fileDoc.metadata?.mimeType || "application/octet-stream";
+
+          res.setHeader("Content-Type", mimeType);
+          res.setHeader("Content-Length", fileDoc.length);
+          res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+          res.setHeader("ETag", `"${fileDoc._id.toString()}"`);
+
+          if (req.method === "HEAD") {
+            return res.status(200).end();
+          }
+
+          // Cache stream back to disk for subsequent requests in this container
+          try {
+            const dir = path.dirname(localFilePath);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            const diskWriter = fs.createWriteStream(localFilePath);
+            stream.pipe(diskWriter);
+          } catch {
+            // Read-only filesystem or container restriction
+          }
+
+          return stream.pipe(res);
+        }
+      }
+    } catch (streamErr) {
+      console.error(`[Media Serve Error] for ${subPath}:`, streamErr.message);
+    }
+
+    return next();
+  };
+
+  app.use("/uploads", handleMediaRequest);
+  app.use("/api/uploads", handleMediaRequest);
+  app.use(`${API_PREFIX}/uploads`, handleMediaRequest);
 
   if (env.NODE_ENV !== "test") {
     app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
@@ -311,13 +371,25 @@ export function createApp() {
   app.use("/v1/auth", authRoutes);
   app.use("/auth", authRoutes);
   app.use(`${API_PREFIX}/v1/security`, securityRoutes);
+  app.use(`${API_PREFIX}/security`, securityRoutes);
+
   app.use(`${API_PREFIX}/v1/upload`, uploadRoutes);
+  app.use(`${API_PREFIX}/upload`, uploadRoutes);
+
   app.use(`${API_PREFIX}/v1/cms/hero-slides`, heroSlideRoutes);
+  app.use(`${API_PREFIX}/cms/hero-slides`, heroSlideRoutes);
+
   app.use(`${API_PREFIX}/v1/cms`, cmsRoutes);
+  app.use(`${API_PREFIX}/cms`, cmsRoutes);
+
   app.use(`${API_PREFIX}/v1/media`, mediaRoutes);
+  app.use(`${API_PREFIX}/media`, mediaRoutes);
+
   app.use(`${API_PREFIX}/v1/enquiries`, enquiryRoutes);
   app.use(`${API_PREFIX}/enquiries`, enquiryRoutes);
+
   app.use(`${API_PREFIX}/v1/reviews`, reviewRoutes);
+  app.use(`${API_PREFIX}/reviews`, reviewRoutes);
 
   // Video Showcase Routes
   app.use(`${API_PREFIX}/v1/video-showcase`, publicVideoShowcaseRouter);

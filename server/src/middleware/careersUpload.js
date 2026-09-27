@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
+import { saveBufferToGridFS } from "../utils/gridfs.js";
 
 const memoryStorage = multer.memoryStorage();
 
@@ -55,8 +56,14 @@ export async function processAndSaveResume(file) {
   const { cleanName, uniqueSuffix } = sanitizeFilename(file.originalname);
   const filename = `${cleanName}-${uniqueSuffix}${ext}`;
   const filePath = path.join(targetDir, filename);
+  const mimeType = file.mimetype || (ext === ".pdf" ? "application/pdf" : "application/msword");
 
   fs.writeFileSync(filePath, file.buffer);
+
+  // Persist resume to MongoDB GridFS for permanent storage across serverless instances
+  await saveBufferToGridFS(filename, file.buffer, mimeType, "resumes").catch((err) => {
+    console.warn(`[GridFS] Resume sync note for ${filename}:`, err.message);
+  });
 
   return {
     filename,
@@ -64,6 +71,6 @@ export async function processAndSaveResume(file) {
     path: filePath,
     originalName: file.originalname,
     size: file.size,
-    mimeType: file.mimetype || (ext === ".pdf" ? "application/pdf" : "application/msword")
+    mimeType
   };
 }

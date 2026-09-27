@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
+import { deleteFromGridFS } from "./gridfs.js";
 
 // Comprehensive detection for Vercel and AWS Lambda serverless runtime environments
 export function isServerlessEnvironment() {
@@ -130,8 +131,10 @@ export function safeDeleteFile(relativePathOrUrl) {
       return false;
     }
 
+    let deletedFromDisk = false;
     if (fs.existsSync(absoluteTarget)) {
       fs.unlinkSync(absoluteTarget);
+      deletedFromDisk = true;
 
       // Check if thumbnail version exists and delete it
       const ext = path.extname(absoluteTarget);
@@ -139,8 +142,17 @@ export function safeDeleteFile(relativePathOrUrl) {
       if (fs.existsSync(thumbPath)) {
         fs.unlinkSync(thumbPath);
       }
-      return true;
     }
+
+    // Always delete from MongoDB GridFS to clean up persistent cloud storage
+    deleteFromGridFS(uploadsRelativePath).catch(() => {});
+    const ext = path.extname(uploadsRelativePath);
+    if (ext) {
+      const thumbRelative = uploadsRelativePath.replace(ext, `-thumb${ext}`);
+      deleteFromGridFS(thumbRelative).catch(() => {});
+    }
+
+    return deletedFromDisk;
   } catch (err) {
     console.error("Safe file deletion error:", err);
   }

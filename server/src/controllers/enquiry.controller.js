@@ -3,7 +3,7 @@ import { validateEnquiryInput } from "../validators/enquiry.validator.js";
 
 export async function createEnquiry(req, res, next) {
   try {
-    const { isValid, errors } = validateEnquiryInput(req.body);
+    const { isValid, errors, normalizedData } = validateEnquiryInput(req.body);
     if (!isValid) {
       return res.status(400).json({
         success: false,
@@ -12,7 +12,7 @@ export async function createEnquiry(req, res, next) {
       });
     }
 
-    const { name, email, phone, service, budget, deliveryDate, referenceUrl, description } = req.body;
+    const { name, email, phone, service, budget, deliveryDate, referenceUrl, description } = normalizedData;
 
     // Rate limiting / Duplicate prevention check (e.g. within 2 minutes)
     const recentDuplicate = await Enquiry.findOne({

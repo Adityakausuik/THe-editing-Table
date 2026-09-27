@@ -72,9 +72,14 @@ export default function AppRoutes() {
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/servicesdetails/:slug" element={<ServiceDetailPage />} />
               <Route path="/portfolio" element={<PortfolioPage />} />
+              <Route path="/wedding" element={<Navigate to="/portfolio" replace />} />
+              <Route path="/weddings" element={<Navigate to="/portfolio" replace />} />
               <Route path="/contactus" element={<ContactPage />} />
+              <Route path="/contact" element={<Navigate to="/contactus" replace />} />
               <Route path="/blog" element={<BlogListingPage />} />
+              <Route path="/blogs" element={<Navigate to="/blog" replace />} />
               <Route path="/blog/:slug" element={<BlogDetailPage />} />
+              <Route path="/blogs/:slug" element={<BlogDetailPage />} />
               <Route path="/brand-collaborations" element={<BrandCollaborationsPage />} />
               <Route path="/brand-collaborations/:slug" element={<BrandCollaborationDetailPage />} />
               <Route path="/team" element={<Navigate to="/about#team" replace />} />

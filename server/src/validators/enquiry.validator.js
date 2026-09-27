@@ -1,4 +1,27 @@
-export function validateEnquiryInput(data) {
+export function normalizeEnquiryInput(data = {}) {
+  const name = typeof data.name === "string" ? data.name : (typeof data.fullName === "string" ? data.fullName : "");
+  const email = typeof data.email === "string" ? data.email : "";
+  const phone = typeof data.phone === "string" ? data.phone : "";
+  const service = typeof data.service === "string" ? data.service : "";
+  const budget = typeof data.budget === "string" ? data.budget : (typeof data.budgetRange === "string" ? data.budgetRange : "Discuss after scope");
+  const deliveryDate = typeof data.deliveryDate === "string" ? data.deliveryDate : "";
+  const referenceUrl = typeof data.referenceUrl === "string" ? data.referenceUrl : (typeof data.referenceLink === "string" ? data.referenceLink : "");
+  const description = typeof data.description === "string" ? data.description : (typeof data.projectDetails === "string" ? data.projectDetails : "");
+
+  return {
+    name,
+    email,
+    phone,
+    service,
+    budget,
+    deliveryDate,
+    referenceUrl,
+    description
+  };
+}
+
+export function validateEnquiryInput(rawData) {
+  const data = normalizeEnquiryInput(rawData);
   const errors = {};
 
   if (!data.name || typeof data.name !== "string" || data.name.trim().length < 2) {
@@ -28,6 +51,7 @@ export function validateEnquiryInput(data) {
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
+    normalizedData: data
   };
 }

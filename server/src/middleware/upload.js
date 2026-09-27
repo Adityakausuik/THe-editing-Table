@@ -3,6 +3,7 @@ import path from "path";
 import multer from "multer";
 import sharp from "sharp";
 import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
+import { saveBufferToGridFS } from "../utils/gridfs.js";
 
 // Memory storage for Sharp buffer processing
 const memoryStorage = multer.memoryStorage();
@@ -54,6 +55,11 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
 
     fs.writeFileSync(filePath, file.buffer);
 
+    // Persist video to MongoDB GridFS for serverless persistence
+    await saveBufferToGridFS(filename, file.buffer, file.mimetype, folder).catch((err) => {
+      console.warn(`[GridFS] Video sync note for ${filename}:`, err.message);
+    });
+
     return {
       filename,
       url: `/uploads/${folder}/${filename}`,
@@ -83,16 +89,23 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     .webp({ quality: 82 })
     .toBuffer();
 
+  const thumbBuffer = await sharp(file.buffer)
+    .rotate()
+    .resize({ width: 400, height: 400, fit: "cover" })
+    .webp({ quality: 75 })
+    .toBuffer();
+
   try {
     fs.writeFileSync(webpPath, processedBuffer);
-
-    const thumbBuffer = await sharp(file.buffer)
-      .rotate()
-      .resize({ width: 400, height: 400, fit: "cover" })
-      .webp({ quality: 75 })
-      .toBuffer();
-
     fs.writeFileSync(thumbPath, thumbBuffer);
+
+    // Persist optimized images to MongoDB GridFS
+    await Promise.all([
+      saveBufferToGridFS(webpFilename, processedBuffer, "image/webp", folder),
+      saveBufferToGridFS(thumbFilename, thumbBuffer, "image/webp", folder)
+    ]).catch((err) => {
+      console.warn(`[GridFS] Image sync note for ${webpFilename}:`, err.message);
+    });
   } catch (error) {
     if (fs.existsSync(webpPath)) fs.unlinkSync(webpPath);
     if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath);
