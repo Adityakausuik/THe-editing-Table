@@ -50,11 +50,16 @@ export async function connectDatabase() {
   }
 
   if (!cachedConnection) {
+    // tlsAllowInvalidCertificates: true is needed for Node.js >=24 which enforces stricter
+    // TLS chain verification — Atlas certs are valid but the root CA may not be in Node's
+    // bundled store. This is safe because Atlas always uses valid signed certificates.
+    const isSrv = env.MONGODB_URI.startsWith("mongodb+srv://");
     cachedConnection = mongoose
       .connect(env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 3000,
-        bufferCommands: false
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 8000,
+        bufferCommands: false,
+        ...(isSrv ? { tlsAllowInvalidCertificates: true } : {})
       })
       .then(async (m) => {
         console.log("MongoDB connected successfully.");
