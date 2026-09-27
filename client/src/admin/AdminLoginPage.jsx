@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
   const { loginUser } = useAdmin();
   const [email, setEmail] = useState("admin@theeditingtable.com");
-  const [password, setPassword] = useState("AdminPassword123!");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [stage, setStage] = useState("password"); // "password" | "otp" | "verify" | "setup" | "recovery"
   const [code, setCode] = useState("");
@@ -38,7 +38,6 @@ export default function AdminLoginPage() {
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -187,68 +186,6 @@ export default function AdminLoginPage() {
     throw lastError || new Error("Resend endpoint unreachable.");
   };
 
-  const handleReset = async () => {
-    setResetting(true);
-    setErrorMsg("");
-    setSuccessMsg("");
-    try {
-      let res;
-      try {
-        res = await performReset();
-      } catch (resetErr) {
-        // If the server is unreachable or offline, allow fallback unlock if default admin
-        if (resetErr.isNetworkError || /failed to fetch/i.test(resetErr.message) || resetErr.status === 503) {
-          loginUser(
-            { id: "fallback-admin", name: "Administrator", email: "admin@theeditingtable.com", role: "superadmin" },
-            "fallback-csrf-token",
-            "fallback-access-token"
-          );
-          navigate("/admin/dashboard");
-          return;
-        }
-        throw resetErr;
-      }
-
-      const defaultEmail = res.data?.email || "admin@theeditingtable.com";
-      const defaultPass = res.data?.password || "AdminPassword123!";
-      setEmail(defaultEmail);
-      setPassword(defaultPass);
-      setSuccessMsg("Superadmin credentials synced & unlocked. Progressing to 2FA...");
-      const loginRes = await performLogin({ email: defaultEmail, password: defaultPass });
-
-      if (loginRes.data?.status === "authenticated") {
-        finishLogin(loginRes);
-      } else if (loginRes.data?.status === "two_factor_otp_required") {
-        const masked = loginRes.data?.email || "";
-        const cd = loginRes.data?.cooldownSeconds || 60;
-        setStage("otp");
-        setMaskedEmail(masked);
-        setCooldown(cd);
-        setOtpCode("");
-        sessionStorage.setItem("admin_login_stage", JSON.stringify({
-          stage: "otp",
-          email: masked,
-          cooldownUntil: Date.now() + cd * 1000
-        }));
-      } else if (loginRes.data?.status === "two_factor_required") {
-        setStage("verify");
-      } else if (loginRes.data?.status === "two_factor_setup_required") {
-        setStage("setup");
-        await beginSetup();
-      } else {
-        setErrorMsg(loginRes?.message || "Login failed after reset.");
-      }
-    } catch (err) {
-      if (err.isNetworkError || /failed to fetch/i.test(err.message)) {
-        setErrorMsg("Server connection failed (Failed to fetch). Click 'Auto-Unlock Admin & Sign In' below to enter directly.");
-      } else {
-        setErrorMsg(err.message || "Failed to reset admin access.");
-      }
-    } finally {
-      setResetting(false);
-    }
-  };
-
   const handleLogin = async (event) => {
     event?.preventDefault?.();
     setLoading(true);
@@ -308,7 +245,7 @@ export default function AdminLoginPage() {
       }
     } catch (error) {
       if (error.isNetworkError || /failed to fetch/i.test(error.message)) {
-        setErrorMsg("Unable to connect to the backend server (Failed to fetch). Click 'Auto-Unlock Admin & Sign In' below to enter dashboard.");
+        setErrorMsg("Unable to connect to the backend server. Please check your connection and try again.");
       } else {
         setErrorMsg(error.message || "Authentication failed.");
       }
@@ -439,22 +376,9 @@ export default function AdminLoginPage() {
           </div>
 
           {errorMsg && (
-            <div className="space-y-2 rounded-2xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-900">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                <span>{errorMsg}</span>
-              </div>
-              {stage === "password" && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  disabled={resetting || loading}
-                  className="w-full mt-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 px-3 py-2 text-xs font-semibold transition-colors"
-                >
-                  {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-                  <span>Auto-Unlock Admin & Sign In</span>
-                </button>
-              )}
+            <div className="flex items-center gap-2 rounded-2xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-900">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -506,21 +430,7 @@ export default function AdminLoginPage() {
                   </button>
                 </span>
               </label>
-              <p className="text-[11px] text-sage-muted">
-                Default: <strong className="text-forest">AdminPassword123!</strong>
-              </p>
               <SubmitButton loading={loading}>Sign In to Dashboard</SubmitButton>
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  disabled={resetting || loading}
-                  className="inline-flex items-center gap-1.5 text-xs text-site hover:underline opacity-80 hover:opacity-100 disabled:opacity-40"
-                >
-                  {resetting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-                  <span>Trouble signing in? Sync & Unlock Default Admin</span>
-                </button>
-              </div>
             </form>
           )}
 
