@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import Button from "../ui/Button.jsx";
 
 /**
  * The Editing Table – hero section.
@@ -94,10 +95,7 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 .brand{text-align:center;max-width:60ch}
 .brand h2{margin:0 0 .5rem;font:600 clamp(1.7rem,3.6vw,2.6rem)/1.1 'Cormorant Garamond',Georgia,serif;letter-spacing:.14em;color:var(--deep)}
 .brand p{margin:.9rem auto 0;font-size:clamp(.95rem,1.5vw,1.08rem);line-height:1.55;color:var(--muted);text-wrap:balance}
-.cta{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;padding:.9rem 1.8rem;border-radius:999px;background:linear-gradient(180deg,var(--moss),var(--deep));color:var(--bg);
-  text-decoration:none;font-weight:500;box-shadow:0 10px 20px -10px var(--shadow);transition:transform .2s}
-.cta::before{content:'';width:.6rem;height:.6rem;border-radius:50%;background:var(--cut);box-shadow:0 0 0 3px color-mix(in srgb,var(--cut) 30%,transparent)}
-.cta:hover{transform:translateY(-2px)}.cta:focus-visible{outline:3px solid var(--moss);outline-offset:3px}
+
 
 /* motion pop */
 .panel{animation:panelpop .8s cubic-bezier(.34,1.56,.64,1) backwards}
@@ -119,7 +117,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 @media (max-width:980px){.orbs{position:relative;left:auto;top:auto;order:-1;margin:24px 0 20px;zoom:.78}}
 @media (max-width:480px){
   .brand h2{letter-spacing:.08em}
-  .cta{padding:.8rem 1.4rem;margin-top:1.2rem}
 }
 @media (max-width:340px){.orbs{zoom:.66}.script{font-size:3rem}.bold{font-size:2.3rem}}
 @media (max-height:520px) and (orientation:landscape){.hero{padding-block:16px}.stage{gap:18px}.panel{padding-top:52px}.orbs{zoom:.6;margin:10px 0}}
@@ -268,7 +265,11 @@ export default function HeroSection({
           <div className="brand">
             <h2>The Editing Table</h2>
             <p>Professional photo &amp; video editing for creators, filmmakers and brands around the world.</p>
-            <a className="cta" href={ctaHref}>{ctaLabel}</a>
+            <div className="mt-6 flex justify-center">
+              <Button href={ctaHref} variant="primary">
+                {ctaLabel}
+              </Button>
+            </div>
           </div>
         </div>
       </main>
