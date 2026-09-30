@@ -160,23 +160,7 @@ export default function HeroSection() {
               className="h-auto object-contain max-w-[82vw] sm:max-w-[86vw]"
             />
 
-            {/* ── Tagline ── */}
-            <m.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                fontSize: "clamp(1.65rem, 3.4vw, 3.2rem)",
-                fontFamily: '"Lavishly Yours", cursive',
-                lineHeight: 1.15,
-                color: "#FFFFFF",
-                textShadow: "0 2px 18px rgba(0,0,0,0.28), 0 0 60px rgba(72,125,72,0.14)"
-              }}
-              className="mt-[clamp(0.75rem,1.6vh,1.5rem)] select-none font-normal"
-            >
-              You Shoot,{" "}
-              <span style={{ color: "rgba(200,230,200,0.90)" }}>We Edit</span>
-            </m.p>
+
           </m.div>
         </Container>
       </div>
