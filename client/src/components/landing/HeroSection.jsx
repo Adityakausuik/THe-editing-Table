@@ -92,9 +92,10 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
   80%{transform:translate(9px, 9px) scale(0.94);box-shadow:0 8px 16px -5px rgba(240,80,60,.25)}
 }
 
-.brand{text-align:center;max-width:60ch}
+.brand{text-align:center;width:100%;max-width:960px}
 .brand h2{margin:0 0 .5rem;font:600 clamp(1.7rem,3.6vw,2.6rem)/1.1 'Cormorant Garamond',Georgia,serif;letter-spacing:.14em;color:var(--deep)}
-.brand p{margin:.9rem auto 0;font-size:clamp(.95rem,1.5vw,1.08rem);line-height:1.55;color:var(--muted);text-wrap:balance}
+.brand p{margin:.9rem auto 0;font-size:clamp(.88rem,1.35vw,1.05rem);line-height:1.55;color:var(--muted);white-space:nowrap}
+@media (max-width:767px){.brand p{white-space:normal}}
 
 
 /* motion pop */
