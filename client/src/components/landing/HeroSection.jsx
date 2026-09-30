@@ -29,7 +29,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=
 .hero::before{content:'';position:absolute;width:min(70vw,720px);aspect-ratio:1;left:50%;top:38%;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--moss) 38%,transparent),transparent 68%);filter:blur(30px);pointer-events:none}
 .stage{z-index:1}
 /* the monitor: glass panel that doubles as a timeline */
-.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) 0;cursor:ew-resize;touch-action:pan-y;user-select:none;overflow:visible}
+.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) clamp(24px,4vw,40px);cursor:ew-resize;touch-action:pan-y;user-select:none;overflow:visible}
 .title{display:grid;justify-items:stretch}
 .title>*{grid-area:1/1}
 h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;font-weight:400;line-height:1;text-align:center}
@@ -44,23 +44,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 .rawcopy .bold{letter-spacing:.05em}
 .rawcopy{position:relative}
 
-/* ruler */
-.ruler{position:relative;height:46px;margin:clamp(26px,4vw,44px) calc(-1*var(--pad)) 0;
-  border-top:1px solid var(--moss);
-  background:repeating-linear-gradient(90deg,var(--moss) 0 1px,transparent 1px 12px) 0 0/100% 8px no-repeat,
-  repeating-linear-gradient(90deg,var(--moss) 0 1px,transparent 1px 60px) 0 0/100% 16px no-repeat;opacity:.95}
-.ruler span{position:absolute;bottom:8px;font-size:.7rem;color:var(--muted);letter-spacing:.06em}
-.label-l{left:var(--pad)}.label-r{right:var(--pad)}
-/* clip tracks: same footage, graded left of the playhead, raw right of it */
-.tracks{position:relative;display:grid;margin:0 calc(-1*var(--pad)) 18px;padding:0 var(--pad);height:64px}
-.lane{grid-area:1/1;display:flex;flex-direction:column;gap:6px;padding-top:2px}
-.lane.ed{clip-path:inset(0 calc(100% - var(--x)) 0 0)}
-.lane.rw{clip-path:inset(0 0 0 var(--x));filter:grayscale(1);opacity:.55}
-.row{display:flex;gap:4px;height:28px}
-.clip{border-radius:6px;background:linear-gradient(180deg,var(--moss),var(--deep));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 10px -6px var(--shadow);position:relative;overflow:hidden}
-.lane.rw .clip{background:var(--raw);box-shadow:none}
-.clip.a{background:linear-gradient(180deg,color-mix(in srgb,var(--cut) 85%,#fff),var(--cut))}
-.clip::after{content:'';position:absolute;inset:auto 0 0 0;height:40%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 2px,transparent 2px 5px);opacity:.5}
 
 /* playhead */
 .head{position:absolute;top:0;bottom:0;left:var(--x);width:44px;margin-left:-22px;display:flex;justify-content:center;outline:none}
@@ -137,22 +120,6 @@ const ORBS = [
   { cls: "dv", label: "" },
 ];
 
-const TRACKS = [
-  [14, 9, 18, 7, 12, 11, 16, 13],
-  [8, 15, 6, 17, 10, 14, 9, 21],
-];
-
-const Lane = ({ cls }) => (
-  <div className={"lane " + cls} aria-hidden="true">
-    {TRACKS.map((row, i) => (
-      <div className="row" key={i}>
-        {row.map((w, j) => (
-          <span key={j} className={"clip" + (i === 1 && j % 3 === 0 ? " a" : "")} style={{ flex: w }} />
-        ))}
-      </div>
-    ))}
-  </div>
-);
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -281,15 +248,6 @@ export default function HeroSection({
               </h1>
             </div>
 
-            <div className="ruler">
-              <span className="label-l">00:00</span>
-              <span className="label-r">00:10</span>
-            </div>
-
-            <div className="tracks">
-              <Lane cls="rw" />
-              <Lane cls="ed" />
-            </div>
 
             <div
               ref={headRef}
