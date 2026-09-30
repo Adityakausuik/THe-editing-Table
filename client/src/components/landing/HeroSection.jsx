@@ -24,18 +24,18 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=
 .et-hero{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;
   background-image:radial-gradient(ellipse 70% 55% at 85% -10%,rgba(255,255,255,.5),transparent 60%),
   radial-gradient(ellipse 60% 50% at 8% 110%,var(--bg2),transparent 65%)}
-.hero{position:relative;overflow:hidden;min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:grid;place-items:center;padding:clamp(24px,5vw,64px) max(clamp(16px,4vw,48px),env(safe-area-inset-right,0px)) clamp(24px,5vw,64px) max(clamp(16px,4vw,48px),env(safe-area-inset-left,0px))}
-.stage{position:relative;width:min(1040px,100%);display:grid;justify-items:center;gap:clamp(26px,4.5vw,48px)}
+.hero{position:relative;overflow:hidden;min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:grid;place-items:center;padding:clamp(16px,4vw,64px) max(clamp(12px,3vw,48px),env(safe-area-inset-right,0px)) clamp(20px,4vw,64px) max(clamp(12px,3vw,48px),env(safe-area-inset-left,0px))}
+.stage{position:relative;width:min(1040px,100%);display:grid;justify-items:center;gap:clamp(16px,3.8vw,48px)}
 
 .hero::before{content:'';position:absolute;width:min(70vw,720px);aspect-ratio:1;left:50%;top:38%;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--moss) 38%,transparent),transparent 68%);filter:blur(30px);pointer-events:none}
 .stage{z-index:1}
 /* the monitor: glass panel that doubles as a timeline */
-.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(16px,3vw,32px) var(--pad);cursor:default;touch-action:pan-y;user-select:none;overflow:visible}
+.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(10px,2.5vw,32px) var(--pad);cursor:default;touch-action:pan-y;user-select:none;overflow:visible}
 .title{display:grid;justify-items:stretch}
 .title>*{grid-area:1/1}
-h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;font-weight:400;line-height:1;text-align:center}
-.script{font-family:'Mrs Saint Delafield',cursive;font-size:clamp(3.4rem,10.5vw,8.6rem);margin-right:.05em}
-.bold{font-family:'Anton',Impact,sans-serif;font-size:clamp(2.6rem,8vw,6.4rem);letter-spacing:.01em;text-transform:uppercase}
+h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:nowrap;white-space:nowrap;gap:0 clamp(0.18em,2.2vw,0.45em);font-weight:400;line-height:1;text-align:center}
+.script{font-family:'Mrs Saint Delafield',cursive;font-size:clamp(1.9rem,8.6vw,8.6rem);margin-right:.04em}
+.bold{font-family:'Anton',Impact,sans-serif;font-size:clamp(1.45rem,6.8vw,6.4rem);letter-spacing:.01em;text-transform:uppercase}
 /* graded = finished edit, left of playhead */
 h1{clip-path:inset(-60% calc(100% - var(--x)) -60% -15%);color:var(--moss)}
 h1 .bold{background:linear-gradient(180deg,var(--moss) 0%,var(--deep) 55%,var(--ink) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 .05em .07em var(--shadow))}
@@ -114,13 +114,28 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 @keyframes rise{from{translate:0 26px;scale:.9;opacity:0}}
 @keyframes ring{from{scale:.2;opacity:1}to{scale:5;opacity:0}}
 @media (min-width:1440px){.stage{width:min(1200px,100%)}}
-@media (max-width:1100px){.orbs{zoom:.8}}
-@media (max-width:980px){.orbs{position:relative;left:auto;top:auto;order:-1;margin:24px 0 20px;zoom:.78}}
-@media (max-width:480px){
-  .brand h2{letter-spacing:.08em}
+@media (max-width:1100px){.orbs{transform:scale(.85);transform-origin:center center}}
+@media (max-width:980px){
+  .orbs{position:relative;left:auto;top:auto;order:-1;margin:10px auto 6px;transform:scale(.8);transform-origin:center center}
 }
-@media (max-width:340px){.orbs{zoom:.66}.script{font-size:3rem}.bold{font-size:2.3rem}}
-@media (max-height:520px) and (orientation:landscape){.hero{padding-block:16px}.stage{gap:18px}.panel{padding-top:52px}.orbs{zoom:.6;margin:10px 0}}
+@media (max-width:640px){
+  .hero{padding-block:clamp(12px,3vh,32px)}
+  .orbs{margin:6px auto 2px;transform:scale(.72)}
+  .panel{padding:clamp(4px,1.5vw,16px) var(--pad)}
+}
+@media (max-width:480px){
+  .stage{gap:14px}
+  .orbs{margin:2px auto 0;transform:scale(.65)}
+  .brand h2{font-size:clamp(1.35rem,5.2vw,1.9rem);letter-spacing:.08em}
+  .brand p{font-size:clamp(0.78rem,3.2vw,0.92rem);line-height:1.45;padding:0 4px}
+}
+@media (max-width:340px){
+  .stage{gap:10px}
+  .orbs{transform:scale(.56)}
+  .script{font-size:clamp(1.65rem,8vw,2.2rem)}
+  .bold{font-size:clamp(1.25rem,6.2vw,1.7rem)}
+}
+@media (max-height:680px) and (orientation:landscape){.hero{padding-block:12px}.stage{gap:12px}.panel{padding-top:16px}.orbs{transform:scale(.55);margin:4px auto}}
 @media (prefers-reduced-motion:reduce){.orbs,.orb,.panel,.script,.bold,.brand>*{animation:none}.cta,.orb,.head::after,.tc{transition:none}.ring{display:none}}`;
 
 const ORBS = [
