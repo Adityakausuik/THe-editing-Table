@@ -93,7 +93,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 
 .brand{text-align:center;max-width:60ch}
 .brand h2{margin:0 0 .5rem;font:600 clamp(1.7rem,3.6vw,2.6rem)/1.1 'Cormorant Garamond',Georgia,serif;letter-spacing:.14em;color:var(--deep)}
-.brand h2::after{content:'';display:block;width:56px;height:2px;margin:.8rem auto 0;background:var(--cut);border-radius:2px}
 .brand p{margin:.9rem auto 0;font-size:clamp(.95rem,1.5vw,1.08rem);line-height:1.55;color:var(--muted);text-wrap:balance}
 .cta{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.5rem;padding:.9rem 1.8rem;border-radius:999px;background:linear-gradient(180deg,var(--moss),var(--deep));color:var(--bg);
   text-decoration:none;font-weight:500;box-shadow:0 10px 20px -10px var(--shadow);transition:transform .2s}
@@ -119,7 +118,7 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 @media (max-width:1100px){.orbs{zoom:.8}}
 @media (max-width:980px){.orbs{position:relative;left:auto;top:auto;order:-1;margin:24px 0 20px;zoom:.78}}
 @media (max-width:480px){
-  .brand h2{letter-spacing:.08em}.brand h2::after{width:44px}
+  .brand h2{letter-spacing:.08em}
   .cta{padding:.8rem 1.4rem;margin-top:1.2rem}
 }
 @media (max-width:340px){.orbs{zoom:.66}.script{font-size:3rem}.bold{font-size:2.3rem}}
