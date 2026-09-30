@@ -1,13 +1,14 @@
 import fs from "node:fs";
-// Fix Windows junction / OneDrive symlink path mismatch so Vite's optimizer
-// paths match process.cwd() perfectly without throwing TypeError reading imports.
-try {
-  const realCwd = fs.realpathSync(process.cwd());
-  if (realCwd !== process.cwd()) {
-    process.chdir(realCwd);
+// Fix Windows junction / OneDrive symlink path mismatch strictly on Windows
+if (process.platform === "win32") {
+  try {
+    const realCwd = fs.realpathSync(process.cwd());
+    if (realCwd !== process.cwd()) {
+      process.chdir(realCwd);
+    }
+  } catch {
+    // Ignore in environments where realpath is unsupported
   }
-} catch {
-  // Ignore in environments where realpath is unsupported
 }
 
 import { defineConfig } from "vite";
