@@ -32,8 +32,8 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=
 .panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) 0;cursor:ew-resize;touch-action:pan-y;user-select:none;overflow:visible}
 .title{display:grid;justify-items:stretch}
 .title>*{grid-area:1/1}
-h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .12em;font-weight:400;line-height:1;text-align:center}
-.script{font-family:'Mrs Saint Delafield',cursive;font-size:clamp(3.4rem,10.5vw,8.6rem);margin-right:-.18em}
+h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;font-weight:400;line-height:1;text-align:center}
+.script{font-family:'Mrs Saint Delafield',cursive;font-size:clamp(3.4rem,10.5vw,8.6rem);margin-right:.05em}
 .bold{font-family:'Anton',Impact,sans-serif;font-size:clamp(2.6rem,8vw,6.4rem);letter-spacing:.01em;text-transform:uppercase}
 /* graded = finished edit, left of playhead */
 h1{clip-path:inset(-60% calc(100% - var(--x)) -60% -15%);color:var(--moss)}
