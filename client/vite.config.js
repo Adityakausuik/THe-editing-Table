@@ -1,7 +1,4 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 // Fix Windows junction / OneDrive symlink path mismatch so Vite's optimizer
 // paths match process.cwd() perfectly without throwing TypeError reading imports.
 try {
@@ -16,24 +13,12 @@ try {
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const clientDir = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(clientDir, "..");
-const animationDir = path.resolve(rootDir, "animation");
-
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@animations": animationDir
-    }
-  },
   server: {
     host: true,
     port: 5173,
     strictPort: true,
-    fs: {
-      allow: [clientDir, rootDir, animationDir]
-    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:5000",

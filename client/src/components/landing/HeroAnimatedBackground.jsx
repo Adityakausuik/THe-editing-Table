@@ -221,7 +221,7 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="hidden xl:block absolute top-[28%] 2xl:top-[32%] left-[3%] 2xl:left-[6%] w-14 h-14 2xl:w-20 2xl:h-20 pointer-events-auto cursor-pointer z-10 group"
+        className="absolute top-[18%] sm:top-[30%] lg:top-[34%] left-[6%] sm:left-[8%] lg:left-[12%] w-11 h-11 sm:w-16 sm:h-16 lg:w-20 lg:h-20 pointer-events-auto cursor-pointer z-10 group"
         title="Adobe Premiere Pro"
       >
         {/* Soft violet ambient back-glow aura */}
@@ -273,7 +273,7 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="hidden xl:block absolute top-[30%] 2xl:top-[34%] right-[3%] 2xl:right-[6%] w-14 h-14 2xl:w-20 2xl:h-20 pointer-events-auto cursor-pointer z-10 group"
+        className="absolute top-[18%] sm:top-[32%] lg:top-[36%] right-[6%] sm:right-[8%] lg:right-[12%] w-11 h-11 sm:w-16 sm:h-16 lg:w-20 lg:h-20 pointer-events-auto cursor-pointer z-10 group"
         title="Adobe"
       >
         {/* Soft crimson/coral ambient back-glow aura */}
@@ -329,7 +329,7 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="hidden xl:block absolute top-[48%] 2xl:top-[52%] left-[2%] 2xl:left-[5%] w-24 2xl:w-36 pointer-events-auto cursor-pointer z-10 group"
+        className="absolute bottom-[10%] sm:bottom-auto sm:top-[48%] lg:top-[52%] left-[5%] sm:left-[7%] lg:left-[10%] w-20 sm:w-28 lg:w-36 xl:w-40 pointer-events-auto cursor-pointer z-10 group"
         title="Lead Editor"
       >
         {/* Soft ambient back-glow aura */}
@@ -379,7 +379,7 @@ export default function HeroAnimatedBackground({ isIntroActive = false }) {
         style={{
           perspective: 1000
         }}
-        className="hidden xl:block absolute top-[50%] 2xl:top-[54%] right-[2%] 2xl:right-[5%] w-24 2xl:w-36 pointer-events-auto cursor-pointer z-10 group"
+        className="absolute bottom-[10%] sm:bottom-auto sm:top-[50%] lg:top-[54%] right-[5%] sm:right-[7%] lg:right-[10%] w-20 sm:w-28 lg:w-36 xl:w-40 pointer-events-auto cursor-pointer z-10 group"
         title="Creative Editor"
       >
         {/* Soft warm terracotta/amber ambient back-glow aura */}
