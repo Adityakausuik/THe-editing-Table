@@ -48,7 +48,7 @@ export default function HeroSection() {
       {!shouldReduceMotion ? (
         <m.video
           ref={videoRef}
-          src="/animation1.mp4"
+          src="/animation2.mp4"
           autoPlay
           muted
           loop
