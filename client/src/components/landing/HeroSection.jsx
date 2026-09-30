@@ -1,7 +1,5 @@
 import { m, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import logo from "../../assets/the-editing-table-logo.png";
-import Container from "../ui/Container.jsx";
 
 export default function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -44,6 +42,17 @@ export default function HeroSection() {
       className="relative w-full overflow-hidden select-none outline-none"
       style={{ height: "100svh", minHeight: "100svh" }}
     >
+      {/* ─── STATIC BG FALLBACK (base layer) ─── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(160deg,#F8FBF7 0%,#F2F7F0 60%,#E8F0E4 100%)",
+          zIndex: -1
+        }}
+      />
+
       {/* ─── VIDEO BACKGROUND ─── */}
       {!shouldReduceMotion ? (
         <m.video
@@ -69,7 +78,7 @@ export default function HeroSection() {
           }}
         />
       ) : (
-        /* Reduced-motion fallback: single frame poster or solid bg */
+        /* Reduced-motion fallback */
         <div
           aria-hidden="true"
           style={{
@@ -79,91 +88,6 @@ export default function HeroSection() {
           }}
         />
       )}
-
-      {/* Reduced-motion static bg (always rendered as base, video sits on top) */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(160deg,#F8FBF7 0%,#F2F7F0 60%,#E8F0E4 100%)",
-          zIndex: -1
-        }}
-      />
-
-      {/* ─── CINEMATIC OVERLAY — subtle gradient keeps text legible ─── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          /* Gentle dark bottom-to-top fade so logo/tagline stays readable */
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)",
-          zIndex: 1
-        }}
-      />
-
-      {/* ─── HERO CONTENT — logo + tagline ─── */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 2,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingTop: "5rem"    /* clear navbar */
-        }}
-      >
-        <Container className="flex flex-col items-center justify-center text-center px-4 sm:px-6 w-full max-w-5xl">
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.0, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col items-center"
-          >
-            {/* ── Logo ── */}
-            <m.img
-              src={logo}
-              alt="The Editing Table"
-              loading="eager"
-              decoding="sync"
-              fetchPriority="high"
-              animate={
-                shouldReduceMotion
-                  ? { scale: 1, opacity: 1, filter: "drop-shadow(0 10px 28px rgba(72,125,72,0.18))" }
-                  : {
-                      scale: [1.0, 1.05, 1.0, 1.05, 1.0],
-                      opacity: [0.95, 1, 0.95, 1, 0.95],
-                      filter: [
-                        "drop-shadow(0 10px 28px rgba(72,125,72,0.16))",
-                        "drop-shadow(0 18px 44px rgba(72,125,72,0.30))",
-                        "drop-shadow(0 10px 28px rgba(72,125,72,0.16))",
-                        "drop-shadow(0 18px 44px rgba(72,125,72,0.30))",
-                        "drop-shadow(0 10px 28px rgba(72,125,72,0.16))"
-                      ]
-                    }
-              }
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                times: [0, 0.4, 0.5, 0.9, 1.0]
-              }}
-              style={{
-                width: "clamp(220px, 38vw, 620px)",
-                maxHeight: "min(34vh, 340px)",
-                willChange: "transform, filter"
-              }}
-              className="h-auto object-contain max-w-[82vw] sm:max-w-[86vw]"
-            />
-
-
-          </m.div>
-        </Container>
-      </div>
     </section>
   );
 }
