@@ -2,9 +2,11 @@ import { ArrowRight, Loader2 } from "lucide-react";
 
 const variants = {
   primary:
-    "bg-[rgb(72,125,72)] text-white hover:bg-[#7C9B69] hover:shadow-sage focus-visible:ring-sage-light/50",
+    "relative backdrop-blur-xl bg-gradient-to-b from-[rgba(86,138,78,0.92)] to-[rgba(62,108,54,0.95)] text-white border border-white/35 shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.7),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_10px_28px_-4px_rgba(47,65,38,0.32)] hover:from-[rgba(98,154,89,0.95)] hover:to-[rgba(72,122,63,0.98)] hover:border-white/50 hover:shadow-[inset_0_1px_2px_0_rgba(255,255,255,0.85),0_14px_34px_-4px_rgba(47,65,38,0.4)] hover:scale-[1.02] focus-visible:ring-sage-light/60",
   secondary:
-    "border border-[rgb(72,125,72)]/30 bg-sage-card/80 text-forest hover:border-[rgb(72,125,72)] hover:bg-sage-card hover:text-site focus-visible:ring-[rgb(72,125,72)]/40",
+    "relative backdrop-blur-xl border border-[rgb(72,125,72)]/30 bg-sage-card/80 text-forest hover:border-[rgb(72,125,72)] hover:bg-sage-card hover:text-site focus-visible:ring-[rgb(72,125,72)]/40 hover:scale-[1.02]",
+  glass:
+    "relative backdrop-blur-2xl bg-white/55 text-forest border border-white/75 shadow-[inset_0_1px_2px_0_rgba(255,255,255,0.95),0_10px_25px_-5px_rgba(60,85,50,0.16)] hover:bg-white/75 hover:border-white/90 hover:shadow-[inset_0_1px_2px_0_rgba(255,255,255,1),0_14px_32px_-4px_rgba(60,85,50,0.22)] hover:scale-[1.02] focus-visible:ring-sage-light/60",
   gold:
     "bg-sage-light text-forest hover:bg-[rgb(72,125,72)] hover:text-white hover:shadow-sage focus-visible:ring-sage-light/60",
   ghost:
