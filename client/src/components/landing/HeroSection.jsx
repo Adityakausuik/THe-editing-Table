@@ -29,7 +29,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=
 .hero::before{content:'';position:absolute;width:min(70vw,720px);aspect-ratio:1;left:50%;top:38%;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--moss) 38%,transparent),transparent 68%);filter:blur(30px);pointer-events:none}
 .stage{z-index:1}
 /* the monitor: glass panel that doubles as a timeline */
-.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) clamp(24px,4vw,40px);cursor:ew-resize;touch-action:pan-y;user-select:none;overflow:visible}
+.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) clamp(24px,4vw,40px);cursor:default;touch-action:pan-y;user-select:none;overflow:visible}
 .title{display:grid;justify-items:stretch}
 .title>*{grid-area:1/1}
 h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;font-weight:400;line-height:1;text-align:center}
@@ -45,17 +45,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 .rawcopy{position:relative}
 
 
-/* playhead */
-.head{position:absolute;top:0;bottom:0;left:var(--x);width:44px;margin-left:-22px;display:flex;justify-content:center;outline:none}
-.head::before{content:"";width:2px;height:100%;background:var(--cut);box-shadow:0 0 16px var(--cut)}
-.head::after{content:"";position:absolute;top:0;width:18px;height:16px;background:var(--cut);
-  clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
-.tc{position:absolute;top:18px;left:50%;transform:translateX(8px);padding:.15rem .5rem;border-radius:6px;
-  background:var(--cut);color:var(--cutink);font:600 .72rem/1.4 'Inter',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
-.head[data-flip] .tc{transform:translateX(calc(-100% - 8px))}
-.head::after{transition:scale .2s cubic-bezier(.34,1.56,.64,1)}.tc{transition:scale .2s cubic-bezier(.34,1.56,.64,1)}
-.grab .head::after{scale:1.7}.grab .tc{scale:1.12}
-.head:focus-visible::after{scale:1.7}
 .state{position:absolute;top:14px;font:500 .72rem 'Inter',sans-serif;letter-spacing:.04em;color:var(--muted)}
 .s-l{left:16px;color:var(--deep)}
 .state{padding:.2rem .6rem;border-radius:999px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(8px)}.s-r{right:16px}
@@ -249,19 +238,7 @@ export default function HeroSection({
             </div>
 
 
-            <div
-              ref={headRef}
-              className="head"
-              role="slider"
-              tabIndex={0}
-              aria-label="Raw to edited"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={0}
-              onKeyDown={onKeyDown}
-            >
-              <span className="tc" ref={tcRef}>00:00:00:00</span>
-            </div>
+
 
             {rings.map((r) => (
               <span key={r.id} className="ring" style={{ left: r.x, top: r.y }} />
