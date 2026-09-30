@@ -108,7 +108,7 @@ const DEFAULT_VIDEOS = [
 const DEFAULT_SETTINGS = {
   heading: "We Turn Your Raw Footage Into Stories Worth Watching",
   subheading:
-    "From cinematic wedding films and emotional highlights to brand campaigns, reels, and professional post-production — The Editing Table transforms every frame into a polished visual experience designed to connect, engage, and leave a lasting impression.",
+    "From cinematic wedding films and brand campaigns to reels — The Editing Table transforms every frame into a polished visual story.",
   showSection: true,
   showSubheading: true,
   alignment: "center",
@@ -471,13 +471,14 @@ export default function VideoShowcaseSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="text-sm sm:text-base leading-relaxed font-normal max-w-2xl mx-auto"
+              className="text-sm sm:text-base leading-relaxed font-normal max-w-5xl mx-auto lg:whitespace-nowrap"
               style={{ color: "var(--site-text-color)" }}
             >
-              {(settings.subheading || DEFAULT_SETTINGS.subheading) === DEFAULT_SETTINGS.subheading ? (
+              {(settings.subheading || DEFAULT_SETTINGS.subheading) === DEFAULT_SETTINGS.subheading ||
+              (settings.subheading && settings.subheading.includes("From cinematic wedding films")) ? (
                 <>
-                  From cinematic wedding films and emotional highlights to brand campaigns, reels, and professional post-production —{" "}
-                  <strong className="font-semibold">The Editing Table</strong> transforms every frame into a polished visual experience designed to connect, engage, and leave a lasting impression.
+                  From cinematic wedding films and brand campaigns to reels —{" "}
+                  <strong className="font-semibold">The Editing Table</strong> transforms every frame into a polished visual story.
                 </>
               ) : (
                 settings.subheading

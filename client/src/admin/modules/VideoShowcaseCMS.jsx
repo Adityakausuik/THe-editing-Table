@@ -27,7 +27,7 @@ import MediaUploadDropzone from "../components/MediaUploadDropzone.jsx";
 const DEFAULT_SETTINGS = {
   heading: "We Turn Your Raw Footage Into Stories Worth Watching",
   subheading:
-    "From cinematic wedding films and emotional highlights to brand campaigns, reels, and professional post-production — The Editing Table transforms every frame into a polished visual experience designed to connect, engage, and leave a lasting impression.",
+    "From cinematic wedding films and brand campaigns to reels — The Editing Table transforms every frame into a polished visual story.",
   showSection: true,
   showSubheading: true,
   alignment: "center",
