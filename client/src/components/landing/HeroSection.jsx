@@ -29,7 +29,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=
 .hero::before{content:'';position:absolute;width:min(70vw,720px);aspect-ratio:1;left:50%;top:38%;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--moss) 38%,transparent),transparent 68%);filter:blur(30px);pointer-events:none}
 .stage{z-index:1}
 /* the monitor: glass panel that doubles as a timeline */
-.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(56px,7vw,80px) var(--pad) clamp(24px,4vw,40px);cursor:default;touch-action:pan-y;user-select:none;overflow:visible}
+.panel{position:relative;width:100%;background:none;border:0;box-shadow:none;  padding:clamp(16px,3vw,32px) var(--pad);cursor:default;touch-action:pan-y;user-select:none;overflow:visible}
 .title{display:grid;justify-items:stretch}
 .title>*{grid-area:1/1}
 h1,.rawcopy{margin:0 calc(-1*var(--pad));padding:0 var(--pad);display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;font-weight:400;line-height:1;text-align:center}
@@ -43,11 +43,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 .rawcopy{clip-path:inset(-60% -15% -60% var(--x));color:var(--raw);filter:grayscale(1) blur(.7px) contrast(.85);opacity:.8}
 .rawcopy .bold{letter-spacing:.05em}
 .rawcopy{position:relative}
-
-
-.state{position:absolute;top:14px;font:500 .72rem 'Inter',sans-serif;letter-spacing:.04em;color:var(--muted)}
-.s-l{left:16px;color:var(--deep)}
-.state{padding:.2rem .6rem;border-radius:999px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(8px)}.s-r{right:16px}
 
 /* orbs */
 .orbs{position:absolute;left:-4px;top:38%;width:150px;height:150px;z-index:2;animation:spin 22s linear infinite}
@@ -93,8 +88,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 @media (max-width:1100px){.orbs{zoom:.8}}
 @media (max-width:980px){.orbs{position:relative;left:auto;top:auto;order:-1;margin:24px 0 20px;zoom:.78}}
 @media (max-width:480px){
-  .state{font-size:.66rem;padding:.15rem .5rem}.s-l{left:10px}.s-r{right:10px}
-  .tc{font-size:.66rem;padding:.1rem .4rem}.ruler span{font-size:.64rem}
   .brand h2{letter-spacing:.08em}.brand h2::after{width:44px}
   .cta{padding:.8rem 1.4rem;margin-top:1.2rem}
 }
@@ -223,9 +216,6 @@ export default function HeroSection({
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
           >
-            <span className="state s-l">Edited</span>
-            <span className="state s-r">Raw</span>
-
             <div className="title">
               <div className="rawcopy" aria-hidden="true">
                 <span className="script">You Shoot,</span>
