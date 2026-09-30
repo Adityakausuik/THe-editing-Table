@@ -35,4 +35,5 @@ Thumbs.db
 *.local
 .vscode/
 .idea/
+.vercel/
 *.example
