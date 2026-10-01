@@ -38,13 +38,13 @@ const DEFAULT_SETTINGS = {
   sectionPaddingBottom: 80,
   maxWidth: 1440,
   autoplay: true,
-  autoplayDelay: 2800,
+  autoplayDelay: 1200,
   infiniteLoop: true,
   pauseOnHover: true,
   hoverPlayback: true,
   centerAutoplay: true,
   enableParallax: true,
-  animationDuration: 0.8,
+  animationDuration: 0.35,
   cardRadius: 24,
   cardGap: 20,
   shadowIntensity: 1,
@@ -770,7 +770,7 @@ export default function VideoShowcaseCMS() {
               </label>
               <input
                 type="number"
-                value={settings.autoplayDelay ?? 5000}
+                value={settings.autoplayDelay ?? 1200}
                 onChange={(e) => setSettings({ ...settings, autoplayDelay: Number(e.target.value) })}
                 className="field-luxury text-sm"
               />

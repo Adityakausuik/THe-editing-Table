@@ -119,13 +119,13 @@ const DEFAULT_SETTINGS = {
   sectionPaddingBottom: 80,
   maxWidth: 1440,
   autoplay: true,
-  autoplayDelay: 2800,
+  autoplayDelay: 1200,
   infiniteLoop: true,
   pauseOnHover: true,
   hoverPlayback: true,
   centerAutoplay: true,
   enableParallax: true,
-  animationDuration: 0.45,
+  animationDuration: 0.35,
   cardRadius: 24,
   cardGap: 20,
   shadowIntensity: 1,
@@ -167,9 +167,10 @@ export default function VideoShowcaseSection() {
   const isTabVisibleRef = useRef(true);
   const isManualSoundRef = useRef(false);
 
-  // Read autoplay values dynamically with safe defaults
+  // Read autoplay values dynamically with fast running-wheel defaults
   const autoplayEnabled = settings?.autoplay ?? true;
-  const autoplayDelay = Math.min(Number(settings?.autoplayDelay) || 2800, 2800);
+  const rawDelay = Number(settings?.autoplayDelay);
+  const autoplayDelay = (!rawDelay || rawDelay >= 2000) ? 1200 : Math.max(rawDelay, 600);
   const infiniteLoop = settings?.infiniteLoop ?? true;
   const pauseOnHover = settings?.pauseOnHover ?? true;
 
@@ -446,7 +447,7 @@ export default function VideoShowcaseSection() {
           >
             <m.span
               animate={shouldReduceMotion ? {} : { rotate: [0, 360] }}
-              transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
               className="inline-flex items-center justify-center"
             >
               <Film className="h-3.5 w-3.5 text-site" />
@@ -522,10 +523,11 @@ export default function VideoShowcaseSection() {
             </>
           )}
 
-          {/* Cards Flex Container with Symmetric 5-Slot Infinite Wrapping */}
+          {/* Cards Flex Container with Symmetric 5-Slot Infinite Wrapping & 3D Wheel Perspective */}
           <div
             onMouseEnter={handleMouseEnterContainer}
             onMouseLeave={handleMouseLeaveContainer}
+            style={{ perspective: "1200px" }}
             className="flex items-center justify-center gap-3 sm:gap-5 w-full overflow-visible py-4"
           >
             {slots.map((offset) => {
@@ -574,19 +576,20 @@ export default function VideoShowcaseSection() {
                       shouldReduceMotion
                         ? {}
                         : isCenter
-                        ? { y: [0, -8, 0] }
+                        ? { y: [0, -8, 0], rotateY: 0 }
                         : isMedium
-                        ? { y: [0, offset > 0 ? 6 : -6, 0] }
-                        : { y: [0, offset > 0 ? -5 : 5, 0] }
+                        ? { y: [0, offset > 0 ? 6 : -6, 0], rotateY: offset > 0 ? -10 : 10 }
+                        : { y: [0, offset > 0 ? -5 : 5, 0], rotateY: offset > 0 ? -18 : 18 }
                     }
                     transition={{
                       y: {
-                        duration: isCenter ? 3.4 : isMedium ? 4.0 : 4.6,
+                        duration: isCenter ? 1.8 : isMedium ? 2.2 : 2.6,
                         repeat: Infinity,
                         ease: "easeInOut",
-                        delay: Math.abs(offset) * 0.3
+                        delay: Math.abs(offset) * 0.15
                       },
-                      layout: { duration: 0.42, ease: [0.22, 1, 0.36, 1] }
+                      layout: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+                      rotateY: { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
                     }}
                     onMouseEnter={() => setHoveredIndex(videoIndex)}
                     onMouseLeave={() => setHoveredIndex(null)}
@@ -601,7 +604,7 @@ export default function VideoShowcaseSection() {
                     tabIndex={0}
                     aria-label={isCenter ? `Play or pause ${video.title || "video"}` : `Show ${video.title || "video"}`}
                     style={{ borderRadius: `${settings.cardRadius || 24}px` }}
-                    className={`group relative overflow-hidden bg-forest flex flex-col justify-between transition-all duration-500 shrink-0 ${cardHeightClass}`}
+                    className={`group relative overflow-hidden bg-forest flex flex-col justify-between shrink-0 ${cardHeightClass}`}
                   >
 
                   {/* Poster Image Thumbnail */}
@@ -660,8 +663,8 @@ export default function VideoShowcaseSection() {
                   {/* Center Play Button Overlay */}
                   <div className="relative z-10 my-auto flex items-center justify-center">
                     <m.div
-                      animate={shouldReduceMotion ? {} : isCenter ? { scale: [1, 1.06, 1] } : {}}
-                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      animate={shouldReduceMotion ? {} : isCenter ? { scale: [1, 1.08, 1] } : {}}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
                       className={`relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border border-white/40 bg-white/20 backdrop-blur-md text-white shadow-deep transition-all duration-300 ${
                         isCenter
                           ? "group-hover:scale-110 group-hover:bg-[rgb(72,125,72)] group-hover:border-[rgb(72,125,72)]"
@@ -672,7 +675,7 @@ export default function VideoShowcaseSection() {
                       {isCenter && !isPlaying && (
                         <m.div
                           animate={shouldReduceMotion ? {} : { scale: [1, 1.45, 1], opacity: [0.65, 0, 0.65] }}
-                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
                           className="absolute inset-0 rounded-full border-2 border-white/60 pointer-events-none"
                         />
                       )}
