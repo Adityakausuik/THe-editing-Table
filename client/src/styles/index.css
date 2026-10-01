@@ -781,7 +781,7 @@ svg.text-terracotta {
 }
 
 .animate-showcase-pulse {
-  animation: showcase-pulse-slow 4s ease-in-out infinite;
+  animation: showcase-pulse-slow 2.4s ease-in-out infinite;
   will-change: transform, opacity;
 }
 

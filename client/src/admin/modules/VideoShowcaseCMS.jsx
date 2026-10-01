@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS = {
   sectionPaddingBottom: 80,
   maxWidth: 1440,
   autoplay: true,
-  autoplayDelay: 5000,
+  autoplayDelay: 2800,
   infiniteLoop: true,
   pauseOnHover: true,
   hoverPlayback: true,

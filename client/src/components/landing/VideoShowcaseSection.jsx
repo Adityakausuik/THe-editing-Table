@@ -119,13 +119,13 @@ const DEFAULT_SETTINGS = {
   sectionPaddingBottom: 80,
   maxWidth: 1440,
   autoplay: true,
-  autoplayDelay: 4000,
+  autoplayDelay: 2800,
   infiniteLoop: true,
   pauseOnHover: true,
   hoverPlayback: true,
   centerAutoplay: true,
   enableParallax: true,
-  animationDuration: 0.8,
+  animationDuration: 0.45,
   cardRadius: 24,
   cardGap: 20,
   shadowIntensity: 1,
@@ -169,7 +169,7 @@ export default function VideoShowcaseSection() {
 
   // Read autoplay values dynamically with safe defaults
   const autoplayEnabled = settings?.autoplay ?? true;
-  const autoplayDelay = Number(settings?.autoplayDelay) || 5000;
+  const autoplayDelay = Math.min(Number(settings?.autoplayDelay) || 2800, 2800);
   const infiniteLoop = settings?.infiniteLoop ?? true;
   const pauseOnHover = settings?.pauseOnHover ?? true;
 
@@ -570,7 +570,24 @@ export default function VideoShowcaseSection() {
 
                   <m.div
                     layout
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    animate={
+                      shouldReduceMotion
+                        ? {}
+                        : isCenter
+                        ? { y: [0, -8, 0] }
+                        : isMedium
+                        ? { y: [0, offset > 0 ? 6 : -6, 0] }
+                        : { y: [0, offset > 0 ? -5 : 5, 0] }
+                    }
+                    transition={{
+                      y: {
+                        duration: isCenter ? 3.4 : isMedium ? 4.0 : 4.6,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: Math.abs(offset) * 0.3
+                      },
+                      layout: { duration: 0.42, ease: [0.22, 1, 0.36, 1] }
+                    }}
                     onMouseEnter={() => setHoveredIndex(videoIndex)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={() => handleCardClick(videoIndex, video)}
@@ -642,7 +659,9 @@ export default function VideoShowcaseSection() {
 
                   {/* Center Play Button Overlay */}
                   <div className="relative z-10 my-auto flex items-center justify-center">
-                    <div
+                    <m.div
+                      animate={shouldReduceMotion ? {} : isCenter ? { scale: [1, 1.06, 1] } : {}}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                       className={`relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border border-white/40 bg-white/20 backdrop-blur-md text-white shadow-deep transition-all duration-300 ${
                         isCenter
                           ? "group-hover:scale-110 group-hover:bg-[rgb(72,125,72)] group-hover:border-[rgb(72,125,72)]"
@@ -662,7 +681,7 @@ export default function VideoShowcaseSection() {
                       ) : (
                         <Play className="h-6 w-6 text-white fill-white ml-0.5" />
                       )}
-                    </div>
+                    </m.div>
                   </div>
 
                   {/* Bottom Video Metadata */}
