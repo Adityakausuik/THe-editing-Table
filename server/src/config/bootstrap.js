@@ -74,31 +74,14 @@ export async function bootstrapDatabase() {
           twoFactor: { enabled: false, required: false }
         });
         console.log(`[BOOTSTRAP] Default Super Admin account created: ${email}`);
-      } else {
-        user.passwordHash = passwordHash;
-        user.role = "superadmin";
-        user.isActive = true;
-        user.failedPasswordAttempts = 0;
-        user.accountLockUntil = undefined;
-        user.twoFactor = {
-          enabled: false,
-          required: false,
-          method: "",
-          secretEncrypted: "",
-          pendingSecretEncrypted: "",
-          recoveryCodeHashes: []
-        };
-        user.forceSecuritySetup = false;
-        await user.save();
-        console.log(`[BOOTSTRAP] Super Admin account synced and unlocked: ${email}`);
       }
     }
 
-    // Ensure 2FA is enabled in security policy as requested
+    // Seed policy defaults only for a new database. Existing production policy is source data.
     await SecurityPolicy.updateOne(
       { key: "global" },
       {
-        $set: {
+        $setOnInsert: {
           requireAdmin2FA: true,
           requireUser2FA: false
         }

@@ -58,12 +58,14 @@ export async function processAndSaveResume(file) {
   const filePath = path.join(targetDir, filename);
   const mimeType = file.mimetype || (ext === ".pdf" ? "application/pdf" : "application/msword");
 
-  fs.writeFileSync(filePath, file.buffer);
-
-  // Persist resume to MongoDB GridFS for permanent storage across serverless instances
-  await saveBufferToGridFS(filename, file.buffer, mimeType, "resumes").catch((err) => {
-    console.warn(`[GridFS] Resume sync note for ${filename}:`, err.message);
-  });
+  // GridFS is the durable store. A Vercel function's filesystem is temporary,
+  // so never report success unless the resume is persisted there first.
+  await saveBufferToGridFS(filename, file.buffer, mimeType, "resumes");
+  try {
+    fs.writeFileSync(filePath, file.buffer);
+  } catch (err) {
+    console.info(`[upload] Local resume cache unavailable for ${filename}: ${err.message}`);
+  }
 
   return {
     filename,
