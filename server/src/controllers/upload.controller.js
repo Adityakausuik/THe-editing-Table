@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
-import { processAndSaveFile } from "../middleware/upload.js";
+import { processAndSaveFile, UPLOAD_CHUNK_SIZE, validateUploadMetadata } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
-import { safeDeleteFile } from "../utils/fileUtils.js";
+import { ALLOWED_MODULE_FOLDERS, safeDeleteFile } from "../utils/fileUtils.js";
+import { cleanupExpiredUploadParts, deleteUploadParts, readUploadParts, saveUploadPart } from "../utils/gridfs.js";
+import { randomUUID } from "node:crypto";
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
@@ -117,4 +119,105 @@ export async function uploadPublicReviewImage(req, res, next) {
   }
   req.body.folder = "reviews";
   return uploadSingleMedia(req, res, next);
+}
+
+export async function beginChunkedUpload(req, res) {
+  try {
+    if (!await requireDb(res)) return;
+    await cleanupExpiredUploadParts().catch((error) => {
+      console.warn("[upload] Expired temporary upload cleanup failed:", error.message);
+    });
+    const { size } = validateUploadMetadata(req.body || {});
+    const folder = req.body.folder || "general";
+    if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
+      return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
+    }
+    return res.status(201).json({
+      success: true,
+      message: "Upload session created.",
+      data: { uploadId: randomUUID().replace(/-/g, ""), chunkSize: UPLOAD_CHUNK_SIZE, size }
+    });
+  } catch (error) {
+    return res.status(error.status || 400).json({ success: false, message: error.message, data: null });
+  }
+}
+
+export async function uploadChunk(req, res, next) {
+  try {
+    if (!await requireDb(res)) return;
+    const { uploadId, index, count } = req.body || {};
+    const chunkIndex = Number(index);
+    const chunkCount = Number(count);
+    if (!/^[a-f0-9]{32}$/.test(String(uploadId || "")) || !Number.isInteger(chunkIndex) ||
+        !Number.isInteger(chunkCount) || chunkCount < 1 || chunkCount > 20 ||
+        chunkIndex < 0 || chunkIndex >= chunkCount || !req.file) {
+      return res.status(400).json({ success: false, message: "Invalid upload chunk.", data: null });
+    }
+    await saveUploadPart(uploadId, chunkIndex, req.file.buffer);
+    return res.status(200).json({ success: true, message: "Upload chunk stored.", data: { index: chunkIndex } });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function finishChunkedUpload(req, res, next) {
+  const uploadId = String(req.body?.uploadId || "");
+  if (!/^[a-f0-9]{32}$/.test(uploadId)) {
+    return res.status(400).json({ success: false, message: "Invalid upload session.", data: null });
+  }
+  try {
+    if (!await requireDb(res)) return;
+    const { mimeType, originalName, size, folder = "general" } = req.body || {};
+    const validation = validateUploadMetadata({ mimeType, size });
+    if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
+      return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
+    }
+    const chunkCount = Math.ceil(validation.size / UPLOAD_CHUNK_SIZE);
+    const buffer = await readUploadParts(uploadId, chunkCount, validation.size);
+    const safeOriginalName = String(originalName || "upload").slice(0, 240);
+    const file = { originalname: safeOriginalName, mimetype: mimeType, size: buffer.length, buffer };
+    const saved = await processAndSaveFile(file, folder);
+    try {
+      await Media.create({
+        filename: saved.filename,
+        originalName: safeOriginalName,
+        mimeType: saved.mimeType,
+        size: saved.size,
+        url: saved.url,
+        path: saved.path,
+        category: folder,
+        altText: safeOriginalName,
+        uploadedBy: req.user?.id
+      });
+    } catch (dbErr) {
+      safeDeleteFile(saved.url);
+      throw dbErr;
+    }
+    console.info(`[upload] Completed ${validation.isVideo ? "video" : "image"} upload`, {
+      requestId: req.get("x-vercel-id") || undefined,
+      size: validation.size,
+      folder
+    });
+    return res.status(201).json({ success: true, message: "File uploaded and processed successfully.", data: saved });
+  } catch (error) {
+    next(error);
+  } finally {
+    await deleteUploadParts(uploadId).catch((error) => {
+      console.warn("[upload] Temporary chunk cleanup failed:", error.message);
+    });
+  }
+}
+
+export async function abortChunkedUpload(req, res, next) {
+  try {
+    if (!await requireDb(res)) return;
+    const { uploadId } = req.body || {};
+    if (!/^[a-f0-9]{32}$/.test(String(uploadId || ""))) {
+      return res.status(400).json({ success: false, message: "Invalid upload session.", data: null });
+    }
+    await deleteUploadParts(uploadId);
+    return res.status(200).json({ success: true, message: "Incomplete upload removed.", data: null });
+  } catch (error) {
+    next(error);
+  }
 }

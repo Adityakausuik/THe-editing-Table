@@ -29,7 +29,8 @@ export function errorHandler(error, req, res, next) {
       method: req.method,
       path: req.originalUrl,
       statusCode,
-      message
+      message,
+      requestId: req.get("x-vercel-id") || req.get("x-request-id") || undefined
     });
   }
 

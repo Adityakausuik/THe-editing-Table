@@ -3,6 +3,8 @@ import path from "path";
 import mongoose from "mongoose";
 
 const BUCKET_NAME = "media_uploads";
+const UPLOAD_PARTS_BUCKET_NAME = "media_upload_parts";
+let uploadPartsExpiryIndexPromise = null;
 
 export function getGridFSBucket() {
   if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
@@ -13,6 +15,77 @@ export function getGridFSBucket() {
   });
 }
 
+function getUploadPartsBucket() {
+  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) return null;
+  return new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: UPLOAD_PARTS_BUCKET_NAME });
+}
+
+export async function saveUploadPart(uploadId, index, buffer) {
+  const bucket = getUploadPartsBucket();
+  if (!bucket) throw new Error("MongoDB is unavailable for upload storage.");
+  const filename = `${uploadId}/${index}`;
+  const prior = await bucket.find({ filename }).toArray();
+  await Promise.all(prior.map((file) => bucket.delete(file._id)));
+  return new Promise((resolve, reject) => {
+    const stream = bucket.openUploadStream(filename, {
+      metadata: { uploadId, index, size: buffer.length, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) }
+    });
+    stream.once("finish", () => resolve());
+    stream.once("error", reject);
+    stream.end(buffer);
+  });
+}
+
+export async function readUploadParts(uploadId, expectedCount, expectedSize) {
+  const bucket = getUploadPartsBucket();
+  if (!bucket) throw new Error("MongoDB is unavailable for upload storage.");
+  const files = await bucket.find({ "metadata.uploadId": uploadId }).toArray();
+  files.sort((a, b) => a.metadata.index - b.metadata.index);
+  if (files.length !== expectedCount || files.some((file, index) => file.metadata.index !== index)) {
+    const error = new Error("Upload is incomplete. Please retry the upload.");
+    error.status = 400;
+    throw error;
+  }
+  const buffers = await Promise.all(files.map((file) => new Promise((resolve, reject) => {
+    const chunks = [];
+    const stream = bucket.openDownloadStream(file._id);
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.once("error", reject);
+    stream.once("end", () => resolve(Buffer.concat(chunks)));
+  })));
+  const buffer = Buffer.concat(buffers);
+  if (buffer.length !== expectedSize) {
+    const error = new Error("Upload size did not match the original file.");
+    error.status = 400;
+    throw error;
+  }
+  return buffer;
+}
+
+export async function deleteUploadParts(uploadId) {
+  const bucket = getUploadPartsBucket();
+  if (!bucket) return;
+  const files = await bucket.find({ "metadata.uploadId": uploadId }).toArray();
+  await Promise.all(files.map((file) => bucket.delete(file._id).catch(() => {})));
+}
+
+export async function cleanupExpiredUploadParts() {
+  const bucket = getUploadPartsBucket();
+  if (!bucket) return;
+  if (!uploadPartsExpiryIndexPromise) {
+    uploadPartsExpiryIndexPromise = mongoose.connection.db
+      .collection(`${UPLOAD_PARTS_BUCKET_NAME}.files`)
+      .createIndex({ "metadata.expiresAt": 1 })
+      .catch((error) => {
+        uploadPartsExpiryIndexPromise = null;
+        throw error;
+      });
+  }
+  await uploadPartsExpiryIndexPromise;
+  const expired = await bucket.find({ "metadata.expiresAt": { $lte: new Date() } }).toArray();
+  await Promise.all(expired.map((file) => bucket.delete(file._id).catch(() => {})));
+}
+
 /**
  * Save a buffer directly to MongoDB GridFS.
  * Stored with filename: `${folder}/${filename}` (e.g. `partners/atelier-123.webp`)
@@ -20,8 +93,7 @@ export function getGridFSBucket() {
 export async function saveBufferToGridFS(filename, buffer, mimeType, folder = "general") {
   const bucket = getGridFSBucket();
   if (!bucket) {
-    console.warn(`[GridFS] Cannot save ${filename}: MongoDB is not connected.`);
-    return null;
+    throw new Error("MongoDB is unavailable for persistent media storage.");
   }
 
   const targetPath = `${folder}/${filename}`.replace(/^\/+/, "");

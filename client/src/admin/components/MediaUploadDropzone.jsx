@@ -3,6 +3,57 @@ import { AlertCircle, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { useCallback, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const CHUNK_BYTES = 3 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4"]);
+
+async function uploadFileInChunks(file, folder, onProgress) {
+  if (!ALLOWED_TYPES.has(file.type)) {
+    throw new Error("Choose a JPG, PNG, WEBP, GIF, or MP4 file.");
+  }
+  const limit = file.type === "video/mp4" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (file.size > limit) {
+    throw new Error(file.type === "video/mp4" ? "Videos must be 50MB or smaller." : "Images must be 15MB or smaller.");
+  }
+
+  const started = await apiFetch("/api/v1/upload/chunked/start", {
+    method: "POST",
+    body: JSON.stringify({ folder, mimeType: file.type, size: file.size })
+  });
+  const { uploadId, chunkSize = CHUNK_BYTES } = started.data || {};
+  if (!uploadId) throw new Error("The server did not create an upload session.");
+  const count = Math.ceil(file.size / chunkSize);
+  let completed = false;
+
+  try {
+    for (let index = 0; index < count; index += 1) {
+      const body = new FormData();
+      body.append("uploadId", uploadId);
+      body.append("index", String(index));
+      body.append("count", String(count));
+      body.append("chunk", file.slice(index * chunkSize, Math.min((index + 1) * chunkSize, file.size)), file.name);
+      await apiFetch("/api/v1/upload/chunked/part", { method: "POST", body });
+      onProgress((index + 1) / count);
+    }
+
+    const result = await apiFetch("/api/v1/upload/chunked/finish", {
+      method: "POST",
+      body: JSON.stringify({ uploadId, originalName: file.name, mimeType: file.type, size: file.size, folder })
+    });
+    if (!result?.data?.url) throw new Error("The server did not return a stored media URL.");
+    completed = true;
+    return result.data;
+  } finally {
+    if (!completed) {
+      apiFetch("/api/v1/upload/chunked/abort", {
+        method: "POST",
+        body: JSON.stringify({ uploadId })
+      }).catch(() => {});
+    }
+  }
+}
+
 export default function MediaUploadDropzone({
   folder = "general",
   value = "",
@@ -11,7 +62,7 @@ export default function MediaUploadDropzone({
   maxFiles = 5,
   label = "Upload Media File",
   description = "Drag and drop image or video file here, or click to browse",
-  accept = "image/*,video/*"
+  accept = ".jpg,.jpeg,.png,.webp,.gif,.mp4"
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -23,53 +74,51 @@ export default function MediaUploadDropzone({
       if (!fileList || fileList.length === 0) return;
       setError("");
       setUploading(true);
-      setProgress(20);
+      setProgress(0);
 
       try {
         if (!multiple) {
           const file = fileList[0];
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", folder);
-
-          setProgress(40);
-          const data = await apiFetch("/api/v1/upload/single", {
-            method: "POST",
-            body: formData
-          });
-
-          setProgress(80);
-          if (data?.success && data?.data?.url) {
-            onChange(data.data.url);
-            setProgress(100);
-          } else {
-            setError(data?.message || "File upload failed. Please try again.");
-          }
+          const saved = await uploadFileInChunks(file, folder, (ratio) => setProgress(Math.round(ratio * 100)));
+          onChange(saved.url);
+          setProgress(100);
         } else {
-          const formData = new FormData();
-          const filesToUpload = Array.from(fileList).slice(0, maxFiles);
-          filesToUpload.forEach((f) => formData.append("files", f));
-          formData.append("folder", folder);
-
-          setProgress(40);
-          const data = await apiFetch("/api/v1/upload/multiple", {
-            method: "POST",
-            body: formData
-          });
-
-          setProgress(80);
-          if (data?.success && Array.isArray(data?.data)) {
-            const newUrls = data.data.map((item) => item.url);
-            const currentList = Array.isArray(value) ? value : [];
-            onChange([...currentList, ...newUrls].slice(0, maxFiles));
-            setProgress(100);
-          } else {
-            setError(data?.message || "Multiple files upload failed.");
+          const currentList = Array.isArray(value) ? value : [];
+          const remainingSlots = Math.max(0, maxFiles - currentList.length);
+          if (remainingSlots === 0) {
+            setError(`You can upload up to ${maxFiles} files.`);
+            return;
+          }
+          const selectedFiles = Array.from(fileList);
+          const filesToUpload = selectedFiles.slice(0, remainingSlots);
+          const savedFiles = [];
+          let firstFailure = null;
+          for (let fileIndex = 0; fileIndex < filesToUpload.length; fileIndex += 1) {
+            try {
+              const saved = await uploadFileInChunks(filesToUpload[fileIndex], folder, (ratio) => {
+                const progress = ((fileIndex + ratio) / filesToUpload.length) * 100;
+                setProgress(Math.round(progress));
+              });
+              savedFiles.push(saved);
+            } catch (err) {
+              firstFailure = err;
+              break;
+            }
+          }
+          if (savedFiles.length) {
+            onChange([...currentList, ...savedFiles.map((item) => item.url)].slice(0, maxFiles));
+          }
+          if (firstFailure) {
+            setError(savedFiles.length
+              ? `${savedFiles.length} file(s) uploaded. The next file failed: ${firstFailure.message}`
+              : firstFailure.message);
+          } else if (selectedFiles.length > filesToUpload.length) {
+            setError(`Only ${filesToUpload.length} file(s) were uploaded; the ${maxFiles}-file limit was reached.`);
           }
         }
       } catch (err) {
         console.error("Upload error:", err);
-        setError("Network error uploading file to server.");
+        setError(err.message || "Upload failed. Please try again.");
       } finally {
         setUploading(false);
         setTimeout(() => setProgress(0), 1000);
