@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install --include=dev",
-  "buildCommand": "npm run build --workspace=@the-editing-table/client",
+  "buildCommand": "npm run build",
   "outputDirectory": "client/dist",
   "headers": [
     {
