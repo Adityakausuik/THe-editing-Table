@@ -5,12 +5,31 @@ import Media from "../models/Media.model.js";
 import { ALLOWED_MODULE_FOLDERS, safeDeleteFile } from "../utils/fileUtils.js";
 import { cleanupExpiredUploadParts, deleteUploadParts, readUploadParts, saveUploadPart } from "../utils/gridfs.js";
 import { randomUUID } from "node:crypto";
+import { env } from "../config/env.js";
+import {
+  buildPostgresMediaUploadPartCount,
+  createPostgresMediaUploadSession,
+  deletePostgresMediaUploadSession,
+  readPostgresMediaUpload,
+  savePostgresMediaUploadPart
+} from "../db/mediaUploadRepository.js";
+import { createPostgresMediaRecord, createPostgresMediaRecords } from "../db/mediaRepository.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+
+function usesPostgres() {
+  return isPostgresSelected();
+}
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
 async function requireDb(res) {
+  if (usesPostgres()) return true;
+  if (env.VERCEL_ENV === "preview") {
+    res.status(503).json({ success: false, message: "Preview database is not configured.", data: null });
+    return false;
+  }
   if (isDbConnected()) return true;
   try {
     await connectDatabase();
@@ -37,7 +56,7 @@ export async function uploadSingleMedia(req, res, next) {
     const saved = await processAndSaveFile(req.file, folder);
 
     try {
-      await Media.create({
+      const payload = {
         filename: saved.filename,
         originalName: req.file.originalname,
         mimeType: saved.mimeType,
@@ -47,9 +66,13 @@ export async function uploadSingleMedia(req, res, next) {
         category: folder,
         altText: req.body.altText || req.file.originalname,
         uploadedBy: req.user?.id
-      });
+      };
+      const media = usesPostgres()
+        ? await createPostgresMediaRecord(Media, payload)
+        : await Media.create(payload);
+      Object.assign(saved, media.toObject?.() || media);
     } catch (dbErr) {
-      safeDeleteFile(saved.url);
+      safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true });
       throw dbErr;
     }
 
@@ -79,8 +102,7 @@ export async function uploadMultipleMedia(req, res, next) {
         savedResults.push({ saved, file });
       }
 
-      await Media.insertMany(
-        savedResults.map(({ saved, file }) => ({
+      const payloads = savedResults.map(({ saved, file }) => ({
           filename: saved.filename,
           originalName: file.originalname,
           mimeType: saved.mimeType,
@@ -90,10 +112,18 @@ export async function uploadMultipleMedia(req, res, next) {
           category: folder,
           altText: file.originalname,
           uploadedBy: req.user?.id
-        }))
-      );
+      }));
+      const mediaRecords = usesPostgres()
+        ? await createPostgresMediaRecords(Media, payloads)
+        : await Media.insertMany(payloads);
+      savedResults.forEach(({ saved }, index) => Object.assign(saved, mediaRecords[index].toObject?.() || mediaRecords[index]));
     } catch (error) {
-      savedResults.forEach(({ saved }) => safeDeleteFile(saved.url));
+      if (!usesPostgres() && savedResults.length) {
+        await Media.deleteMany({ url: { $in: savedResults.map(({ saved }) => saved.url) } }).catch((cleanupError) => {
+          console.warn("[upload] Partial media metadata rollback failed:", cleanupError.message);
+        });
+      }
+      savedResults.forEach(({ saved }) => safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true }));
       throw error;
     }
 
@@ -124,7 +154,7 @@ export async function uploadPublicReviewImage(req, res, next) {
 export async function beginChunkedUpload(req, res) {
   try {
     if (!await requireDb(res)) return;
-    await cleanupExpiredUploadParts().catch((error) => {
+    if (!usesPostgres()) await cleanupExpiredUploadParts().catch((error) => {
       console.warn("[upload] Expired temporary upload cleanup failed:", error.message);
     });
     const { size } = validateUploadMetadata(req.body || {});
@@ -132,10 +162,15 @@ export async function beginChunkedUpload(req, res) {
     if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
       return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
     }
+    const uploadId = randomUUID().replace(/-/g, "");
+    if (usesPostgres()) {
+      const partCount = buildPostgresMediaUploadPartCount(size, UPLOAD_CHUNK_SIZE);
+      await createPostgresMediaUploadSession({ uploadId, userId: req.user?.id, folder, mimeType: req.body.mimeType, totalSize: size, partCount });
+    }
     return res.status(201).json({
       success: true,
       message: "Upload session created.",
-      data: { uploadId: randomUUID().replace(/-/g, ""), chunkSize: UPLOAD_CHUNK_SIZE, size }
+      data: { uploadId, chunkSize: UPLOAD_CHUNK_SIZE, size }
     });
   } catch (error) {
     return res.status(error.status || 400).json({ success: false, message: error.message, data: null });
@@ -153,7 +188,8 @@ export async function uploadChunk(req, res, next) {
         chunkIndex < 0 || chunkIndex >= chunkCount || !req.file) {
       return res.status(400).json({ success: false, message: "Invalid upload chunk.", data: null });
     }
-    await saveUploadPart(uploadId, chunkIndex, req.file.buffer);
+    if (usesPostgres()) await savePostgresMediaUploadPart({ uploadId, userId: req.user?.id, index: chunkIndex, count: chunkCount, buffer: req.file.buffer });
+    else await saveUploadPart(uploadId, chunkIndex, req.file.buffer);
     return res.status(200).json({ success: true, message: "Upload chunk stored.", data: { index: chunkIndex } });
   } catch (error) {
     next(error);
@@ -173,12 +209,21 @@ export async function finishChunkedUpload(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
     }
     const chunkCount = Math.ceil(validation.size / UPLOAD_CHUNK_SIZE);
-    const buffer = await readUploadParts(uploadId, chunkCount, validation.size);
+    let buffer;
+    if (usesPostgres()) {
+      const upload = await readPostgresMediaUpload({ uploadId, userId: req.user?.id });
+      if (upload.folder !== folder || upload.mime_type !== mimeType || Number(upload.total_size) !== validation.size || Number(upload.part_count) !== chunkCount) {
+        const error = new Error("Upload metadata does not match the started upload session.");
+        error.status = 400;
+        throw error;
+      }
+      buffer = upload.buffer;
+    } else buffer = await readUploadParts(uploadId, chunkCount, validation.size);
     const safeOriginalName = String(originalName || "upload").slice(0, 240);
     const file = { originalname: safeOriginalName, mimetype: mimeType, size: buffer.length, buffer };
     const saved = await processAndSaveFile(file, folder);
     try {
-      await Media.create({
+      const payload = {
         filename: saved.filename,
         originalName: safeOriginalName,
         mimeType: saved.mimeType,
@@ -188,9 +233,13 @@ export async function finishChunkedUpload(req, res, next) {
         category: folder,
         altText: safeOriginalName,
         uploadedBy: req.user?.id
-      });
+      };
+      const media = usesPostgres()
+        ? await createPostgresMediaRecord(Media, payload)
+        : await Media.create(payload);
+      Object.assign(saved, media.toObject?.() || media);
     } catch (dbErr) {
-      safeDeleteFile(saved.url);
+      safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true });
       throw dbErr;
     }
     console.info(`[upload] Completed ${validation.isVideo ? "video" : "image"} upload`, {
@@ -202,7 +251,10 @@ export async function finishChunkedUpload(req, res, next) {
   } catch (error) {
     next(error);
   } finally {
-    await deleteUploadParts(uploadId).catch((error) => {
+    const cleanup = usesPostgres()
+      ? deletePostgresMediaUploadSession(uploadId, req.user?.id)
+      : deleteUploadParts(uploadId);
+    await cleanup.catch((error) => {
       console.warn("[upload] Temporary chunk cleanup failed:", error.message);
     });
   }
@@ -215,7 +267,8 @@ export async function abortChunkedUpload(req, res, next) {
     if (!/^[a-f0-9]{32}$/.test(String(uploadId || ""))) {
       return res.status(400).json({ success: false, message: "Invalid upload session.", data: null });
     }
-    await deleteUploadParts(uploadId);
+    if (usesPostgres()) await deletePostgresMediaUploadSession(uploadId, req.user?.id);
+    else await deleteUploadParts(uploadId);
     return res.status(200).json({ success: true, message: "Incomplete upload removed.", data: null });
   } catch (error) {
     next(error);

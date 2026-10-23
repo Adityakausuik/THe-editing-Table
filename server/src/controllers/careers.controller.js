@@ -1,13 +1,61 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
+import { env } from "../config/env.js";
+import {
+  createPostgresCmsRecord,
+  deletePostgresCmsRecord,
+  getPostgresCmsRecord,
+  listPostgresCmsRecords,
+  updatePostgresCmsRecord
+} from "../db/cmsRepository.js";
+import { getPostgresPool } from "../db/postgres.js";
+import {
+  getPostgresCareersStats,
+  getPostgresJobApplication,
+  listPostgresJobApplications
+} from "../db/careersRepository.js";
 import { processAndSaveResume } from "../middleware/careersUpload.js";
 import CareersContent from "../models/CareersContent.model.js";
 import Job from "../models/Job.model.js";
 import JobApplication from "../models/JobApplication.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
+import { deleteVercelBlob, getVercelBlob, isVercelBlobUrl } from "../utils/blobStorage.js";
+import { getFileStreamFromGridFS } from "../utils/gridfs.js";
+import { Readable } from "node:stream";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
+}
+
+function usesPostgres() {
+  return isPostgresSelected();
+}
+
+async function createPostgresRecord(Model, payload) {
+  const document = new Model(payload);
+  await document.validate();
+  return createPostgresCmsRecord(Model, document._id.toString(), document.toObject());
+}
+
+async function updatePostgresRecord(Model, id, payload) {
+  const existing = await getPostgresCmsRecord(Model, id);
+  if (!existing) return null;
+  const document = Model.hydrate(existing);
+  document.set(payload);
+  await document.validate({ validateModifiedOnly: true });
+  const updates = {};
+  const requestedPaths = Object.keys(payload);
+  for (const schemaPath of Object.keys(Model.schema.paths)) {
+    if (["_id", "__v", "createdAt", "updatedAt"].includes(schemaPath)) continue;
+    if (!requestedPaths.some((requested) => requested === schemaPath ||
+      schemaPath.startsWith(`${requested}.`) || requested.startsWith(`${schemaPath}.`))) continue;
+    let target = updates;
+    const parts = schemaPath.split(".");
+    for (const part of parts.slice(0, -1)) target = target[part] ||= {};
+    target[parts.at(-1)] = document.get(schemaPath);
+  }
+  return updatePostgresCmsRecord(Model, id, updates);
 }
 
 async function requireDb(res) {
@@ -30,8 +78,22 @@ async function requireDb(res) {
 // PUBLIC CONTROLLERS
 // ==========================================
 
-export async function getPublicJobs(req, res, next) {
+export async function getPublicJobs(req, res) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
+    if (usesPostgres()) {
+      if (!env.DATABASE_URL) {
+        return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+      }
+      const jobs = await listPostgresCmsRecords(Job, {
+        publicFilter: { status: "Active" },
+        orderField: "order"
+      });
+      return res.json({ success: true, data: jobs });
+    }
+
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -50,7 +112,10 @@ export async function getPublicJobs(req, res, next) {
       success: true,
       data: jobs
     });
-  } catch (error) {
+  } catch {
+    if (usesPostgres() || env.VERCEL_ENV === "preview") {
+      return res.status(503).json({ success: false, message: "Careers data is temporarily unavailable.", data: null });
+    }
     return res.json({
       success: true,
       data: []
@@ -61,11 +126,16 @@ export async function getPublicJobs(req, res, next) {
 export async function getPublicJobById(req, res, next) {
   try {
     const { id } = req.params;
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
 
-    const job = await Job.findOne({ _id: id, status: "Active" }).lean();
+    const job = usesPostgres()
+      ? await getPostgresCmsRecord(Job, id, { status: "Active" })
+      : await Job.findOne({ _id: id, status: "Active" }).lean();
     if (!job) {
       return res.status(404).json({ success: false, message: "Job vacancy not found or no longer active." });
     }
@@ -79,8 +149,24 @@ export async function getPublicJobById(req, res, next) {
   }
 }
 
-export async function getCareersContent(req, res, next) {
+export async function getCareersContent(req, res) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
+    if (usesPostgres()) {
+      if (!env.DATABASE_URL) {
+        return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+      }
+      const records = await listPostgresCmsRecords(CareersContent, {
+        publicFilter: { key: "careers_page_content" }
+      });
+      return res.json({
+        success: true,
+        data: records[0] || new CareersContent().toObject()
+      });
+    }
+
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -100,7 +186,10 @@ export async function getCareersContent(req, res, next) {
       success: true,
       data: content
     });
-  } catch (error) {
+  } catch {
+    if (usesPostgres() || env.VERCEL_ENV === "preview") {
+      return res.status(503).json({ success: false, message: "Careers data is temporarily unavailable.", data: null });
+    }
     return res.json({
       success: true,
       data: new CareersContent().toObject()
@@ -110,7 +199,7 @@ export async function getCareersContent(req, res, next) {
 
 export async function submitApplication(req, res, next) {
   try {
-    if (!await requireDb(res)) return;
+    if (!usesPostgres() && !await requireDb(res)) return;
     const {
       jobId,
       positionTitle,
@@ -143,7 +232,7 @@ export async function submitApplication(req, res, next) {
 
     const validJobId = jobId && mongoose.Types.ObjectId.isValid(jobId) ? jobId : null;
 
-    const application = await JobApplication.create({
+    const payload = {
       jobId: validJobId,
       positionTitle: positionTitle.trim(),
       applicantName: applicantName.trim(),
@@ -160,7 +249,16 @@ export async function submitApplication(req, res, next) {
         mimeType: savedResume.mimeType
       },
       status: "New"
-    });
+    };
+    let application;
+    try {
+      application = usesPostgres()
+        ? await createPostgresRecord(JobApplication, payload)
+        : await JobApplication.create(payload);
+    } catch (error) {
+      if (usesPostgres() && isVercelBlobUrl(savedResume.url)) await deleteVercelBlob(savedResume.url).catch(() => {});
+      throw error;
+    }
 
     return res.status(201).json({
       success: true,
@@ -178,7 +276,34 @@ export async function submitApplication(req, res, next) {
 
 export async function getAdminJobs(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { search = "", status = "all", department = "all" } = req.query;
+
+    if (usesPostgres()) {
+      const publicFilter = {};
+      if (status !== "all") publicFilter.status = status;
+      if (department !== "all") publicFilter.department = department;
+      const jobs = await listPostgresCmsRecords(Job, {
+        publicFilter,
+        search: search.trim(),
+        orderField: "order",
+        admin: true
+      });
+      const jobIds = jobs.map((job) => String(job._id));
+      const counts = jobIds.length
+        ? await getPostgresPool().query(
+          'SELECT "job_id", COUNT(*)::int AS "count" FROM "jobapplications" WHERE "job_id" = ANY($1::text[]) GROUP BY "job_id"',
+          [jobIds]
+        )
+        : { rows: [] };
+      const countMap = new Map(counts.rows.map((row) => [row.job_id, row.count]));
+      return res.json({
+        success: true,
+        data: jobs.map((job) => ({ ...job, applicationCount: countMap.get(String(job._id)) || 0 }))
+      });
+    }
 
     const filter = {};
 
@@ -222,6 +347,9 @@ export async function getAdminJobs(req, res, next) {
 
 export async function createJob(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const {
       title,
       department,
@@ -243,7 +371,7 @@ export async function createJob(req, res, next) {
       return res.status(400).json({ success: false, message: "Title, Department, and Description are required." });
     }
 
-    const job = await Job.create({
+    const jobData = {
       title: title.trim(),
       department: department.trim(),
       location: (location || "Mohali, Punjab • Onsite / Hybrid").trim(),
@@ -258,7 +386,10 @@ export async function createJob(req, res, next) {
       deadline: (deadline || "").trim(),
       status: status || "Active",
       order: Number(order) || 0
-    });
+    };
+    const job = usesPostgres()
+      ? await createPostgresRecord(Job, jobData)
+      : await Job.create(jobData);
 
     return res.status(201).json({
       success: true,
@@ -272,6 +403,9 @@ export async function createJob(req, res, next) {
 
 export async function updateJob(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
@@ -292,7 +426,9 @@ export async function updateJob(req, res, next) {
       updates.benefits = updates.benefits.split("\n").filter(Boolean);
     }
 
-    const job = await Job.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    const job = usesPostgres()
+      ? await updatePostgresRecord(Job, id, updates)
+      : await Job.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
     if (!job) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
@@ -309,12 +445,17 @@ export async function updateJob(req, res, next) {
 
 export async function deleteJob(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
 
-    const job = await Job.findByIdAndDelete(id);
+    const job = usesPostgres()
+      ? await deletePostgresCmsRecord(Job, id)
+      : await Job.findByIdAndDelete(id);
     if (!job) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
@@ -330,10 +471,15 @@ export async function deleteJob(req, res, next) {
 
 export async function toggleJobStatus(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
     const { status } = req.body;
 
-    const job = await Job.findById(id);
+    const job = usesPostgres()
+      ? await getPostgresCmsRecord(Job, id)
+      : await Job.findById(id);
     if (!job) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
@@ -344,7 +490,8 @@ export async function toggleJobStatus(req, res, next) {
       job.status = job.status === "Active" ? "Inactive" : "Active";
     }
 
-    await job.save();
+    if (usesPostgres()) await updatePostgresRecord(Job, id, { status: job.status });
+    else await job.save();
 
     return res.json({
       success: true,
@@ -358,8 +505,13 @@ export async function toggleJobStatus(req, res, next) {
 
 export async function duplicateJob(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
-    const original = await Job.findById(id).lean();
+    const original = usesPostgres()
+      ? await getPostgresCmsRecord(Job, id)
+      : await Job.findById(id).lean();
     if (!original) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
@@ -371,7 +523,9 @@ export async function duplicateJob(req, res, next) {
     original.title = `${original.title} (Copy)`;
     original.status = "Draft";
 
-    const duplicate = await Job.create(original);
+    const duplicate = usesPostgres()
+      ? await createPostgresRecord(Job, original)
+      : await Job.create(original);
 
     return res.status(201).json({
       success: true,
@@ -385,7 +539,23 @@ export async function duplicateJob(req, res, next) {
 
 export async function getAdminApplications(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { search = "", jobId = "all", status = "all", sort = "newest" } = req.query;
+
+    if (usesPostgres()) {
+      const applications = await listPostgresJobApplications({
+        jobId: jobId !== "all" && mongoose.Types.ObjectId.isValid(jobId) ? jobId : undefined,
+        status,
+        search: search.trim(),
+        sort
+      });
+      for (const application of applications) {
+        if (application.resume?.url) application.resume.url = `/api/v1/careers/admin/applications/${application._id}/resume`;
+      }
+      return res.json({ success: true, data: applications });
+    }
 
     const filter = {};
 
@@ -425,10 +595,19 @@ export async function getAdminApplications(req, res, next) {
 
 export async function getApplicationById(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
-    const application = await JobApplication.findById(id).populate("jobId", "title department location").lean();
+    const application = usesPostgres()
+      ? await getPostgresJobApplication(id)
+      : await JobApplication.findById(id).populate("jobId", "title department location").lean();
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found." });
+    }
+
+    if (usesPostgres() && application.resume?.url) {
+      application.resume.url = `/api/v1/careers/admin/applications/${application._id}/resume`;
     }
 
     return res.json({
@@ -440,8 +619,44 @@ export async function getApplicationById(req, res, next) {
   }
 }
 
+export async function downloadApplicationResume(req, res, next) {
+  try {
+    const application = usesPostgres()
+      ? await getPostgresJobApplication(req.params.id)
+      : await JobApplication.findById(req.params.id).lean();
+    if (!application?.resume?.url) return res.status(404).json({ success: false, message: "Resume not found." });
+
+    const filename = String(application.resume.originalName || application.resume.filename || "resume")
+      .replace(/[\r\n"\\]/g, "_").slice(0, 180);
+    res.set({
+      "Content-Type": application.resume.mimeType || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff"
+    });
+
+    if (isVercelBlobUrl(application.resume.url)) {
+      const blob = await getVercelBlob(application.resume.url, "private");
+      if (!blob || blob.status !== 200 || !blob.stream) return res.status(404).end();
+      const stream = typeof blob.stream.pipe === "function" ? blob.stream : Readable.fromWeb(blob.stream);
+      return stream.pipe(res);
+    }
+    let file = await getFileStreamFromGridFS(application.resume.path || application.resume.url);
+    if (!file && application.resume.url && application.resume.url !== application.resume.path) {
+      file = await getFileStreamFromGridFS(application.resume.url);
+    }
+    if (!file) return res.status(404).json({ success: false, message: "Resume file is unavailable." });
+    file.stream.pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function updateApplicationStatus(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
     const { status } = req.body;
 
@@ -450,7 +665,9 @@ export async function updateApplicationStatus(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid application status." });
     }
 
-    const application = await JobApplication.findByIdAndUpdate(id, { status }, { new: true });
+    const application = usesPostgres()
+      ? await updatePostgresRecord(JobApplication, id, { status })
+      : await JobApplication.findByIdAndUpdate(id, { status }, { new: true });
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found." });
     }
@@ -467,14 +684,15 @@ export async function updateApplicationStatus(req, res, next) {
 
 export async function updateApplicationNotes(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
     const { adminNotes } = req.body;
 
-    const application = await JobApplication.findByIdAndUpdate(
-      id,
-      { adminNotes: adminNotes || "" },
-      { new: true }
-    );
+    const application = usesPostgres()
+      ? await updatePostgresRecord(JobApplication, id, { adminNotes: adminNotes || "" })
+      : await JobApplication.findByIdAndUpdate(id, { adminNotes: adminNotes || "" }, { new: true });
 
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found." });
@@ -492,18 +710,24 @@ export async function updateApplicationNotes(req, res, next) {
 
 export async function deleteApplication(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { id } = req.params;
-    const application = await JobApplication.findById(id);
+    const application = usesPostgres()
+      ? await getPostgresCmsRecord(JobApplication, id)
+      : await JobApplication.findById(id);
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found." });
     }
 
     // Safely delete uploaded resume file
-    if (application.resume?.url) {
+    if (!usesPostgres() && application.resume?.url) {
       safeDeleteFile(application.resume.url);
     }
 
-    await JobApplication.findByIdAndDelete(id);
+    if (usesPostgres()) await deletePostgresCmsRecord(JobApplication, id);
+    else await JobApplication.findByIdAndDelete(id);
 
     return res.json({
       success: true,
@@ -516,6 +740,12 @@ export async function deleteApplication(req, res, next) {
 
 export async function getCareersStats(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
+    if (usesPostgres()) {
+      return res.json({ success: true, data: await getPostgresCareersStats() });
+    }
     const [
       totalJobs,
       activeJobs,
@@ -562,7 +792,22 @@ export async function getCareersStats(req, res, next) {
 
 export async function updateCareersContent(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
+    }
     const { hero, whyJoinUs, cta } = req.body;
+
+    if (usesPostgres()) {
+      const existingRows = await listPostgresCmsRecords(CareersContent, { publicFilter: { key: "careers_page_content" } });
+      const current = existingRows[0] || new CareersContent({ key: "careers_page_content" }).toObject();
+      if (hero) current.hero = { ...current.hero, ...hero };
+      if (Array.isArray(whyJoinUs)) current.whyJoinUs = whyJoinUs;
+      if (cta) current.cta = { ...current.cta, ...cta };
+      const content = existingRows[0]
+        ? await updatePostgresRecord(CareersContent, existingRows[0]._id, current)
+        : await createPostgresRecord(CareersContent, current);
+      return res.json({ success: true, message: "Careers page content updated successfully.", data: content });
+    }
 
     let content = await CareersContent.findOne({ key: "careers_page_content" });
     if (!content) {

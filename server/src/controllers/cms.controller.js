@@ -12,6 +12,30 @@ import SiteSetting from "../models/SiteSetting.model.js";
 import AuditLog from "../models/AuditLog.model.js";
 import User from "../models/User.model.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
+import { env } from "../config/env.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  listAllPostgresSiteSettings,
+  listPostgresCmsAuditLogs,
+  listPostgresSiteSettings,
+  savePostgresSiteSetting,
+  writePostgresCmsAudit
+} from "../db/siteSettingsRepository.js";
+import {
+  bulkDeletePostgresCmsRecords,
+  createPostgresCmsRecord,
+  deletePostgresCmsRecord,
+  getPostgresCmsRecord,
+  listPostgresCmsRecords,
+  reorderPostgresCmsRecords,
+  updatePostgresCmsRecord
+} from "../db/cmsRepository.js";
+import { getPostgresDashboardData } from "../db/dashboardRepository.js";
+import { createPostgresAuthUser, deletePostgresCmsUser, listPostgresCmsUsers } from "../db/authRepository.js";
+
+function usesPostgres() {
+  return isPostgresSelected();
+}
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
@@ -217,6 +241,31 @@ function toPlain(doc) {
   return { ...doc };
 }
 
+async function validatePostgresCreate(Model, payload) {
+  const document = new Model(payload);
+  await document.validate();
+  return { id: document._id.toString(), data: document.toObject() };
+}
+
+async function validatePostgresUpdate(Model, existing, payload) {
+  const document = Model.hydrate(existing);
+  document.set(payload);
+  await document.validate({ validateModifiedOnly: true });
+  const updates = {};
+  const requestedPaths = Object.keys(payload);
+  for (const [schemaPath] of Object.entries(Model.schema.paths)) {
+    if (["_id", "__v", "createdAt", "updatedAt"].includes(schemaPath)) continue;
+    const included = requestedPaths.some((requested) => requested === schemaPath ||
+      schemaPath.startsWith(`${requested}.`) || requested.startsWith(`${schemaPath}.`));
+    if (!included) continue;
+    let target = updates;
+    const parts = schemaPath.split(".");
+    for (const part of parts.slice(0, -1)) target = target[part] ||= {};
+    target[parts.at(-1)] = document.get(schemaPath);
+  }
+  return updates;
+}
+
 function normalizeDocForClient(doc, entityName) {
   const item = toPlain(doc);
   if (!item) return item;
@@ -267,6 +316,14 @@ function normalizeDocForClient(doc, entityName) {
 
 // Helper for generic audit logging
 async function logAudit(user, action, entity, entityId, details) {
+  if (usesPostgres()) {
+    try {
+      await writePostgresCmsAudit(user, action, entity, entityId, details);
+    } catch {
+      // Fail silently for audit logs
+    }
+    return;
+  }
   if (!isDbConnected()) return;
   try {
     await AuditLog.create({
@@ -285,6 +342,15 @@ async function logAudit(user, action, entity, entityId, details) {
 // --- CMS OVERVIEW STATS ---
 export async function getDashboardStats(req, res) {
   try {
+    if (usesPostgres()) {
+      const payload = await getPostgresDashboardData();
+      return res.json({
+        success: true,
+        message: "Dashboard stats fetched successfully",
+        data: payload
+      });
+    }
+
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -755,6 +821,15 @@ function createCRUDActions(Model, entityName) {
     // Public listing (active/published items)
     getAll: async (req, res) => {
       try {
+        if (usesPostgres()) {
+          const docs = await listPostgresCmsRecords(Model, {
+            publicFilter: config.publicFilter,
+            search: req.query.search,
+            category: req.query.category,
+            orderField: config.orderField
+          });
+          return res.json({ success: true, message: `${entityName} records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+        }
         if (!isDbConnected()) {
           await connectDatabase().catch(() => {});
         }
@@ -817,6 +892,15 @@ function createCRUDActions(Model, entityName) {
     // Admin listing (all items including drafts/inactive)
     getAdmin: async (req, res) => {
       try {
+        if (usesPostgres()) {
+          const docs = await listPostgresCmsRecords(Model, {
+            search: req.query.search,
+            category: req.query.category,
+            orderField: config.orderField,
+            admin: true
+          });
+          return res.json({ success: true, message: `${entityName} admin records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+        }
         if (!isDbConnected()) {
           await connectDatabase().catch(() => {});
         }
@@ -864,6 +948,12 @@ function createCRUDActions(Model, entityName) {
 
     getOne: async (req, res) => {
       try {
+        if (usesPostgres()) {
+          if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
+          const item = await getPostgresCmsRecord(Model, req.params.id, config.publicFilter);
+          if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          return res.json({ success: true, message: `${entityName} retrieved successfully`, data: normalizeDocForClient(item, entityName) });
+        }
         if (!isDbConnected()) {
           await connectDatabase().catch(() => {});
         }
@@ -894,8 +984,19 @@ function createCRUDActions(Model, entityName) {
 
     create: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const payload = sanitizeMutablePayload(config.normalizePayload(req.body));
+
+        if (usesPostgres()) {
+          if (payload[config.orderField] === undefined && config.orderField !== "publishedAt") {
+            const docs = await listPostgresCmsRecords(Model, { orderField: config.orderField, admin: true });
+            payload[config.orderField] = Math.max(0, ...docs.map((doc) => Number(doc[config.orderField]) || 0)) + 1;
+          }
+          const validated = await validatePostgresCreate(Model, payload);
+          const item = await createPostgresCmsRecord(Model, validated.id, validated.data);
+          await logAudit(req.user, `CREATE_${entityName.toUpperCase()}`, entityName, item._id, payload);
+          return res.status(201).json({ success: true, message: `${entityName} created successfully`, data: normalizeDocForClient(item, entityName) });
+        }
+        if (!await requireDb(res)) return;
 
         if (payload[config.orderField] === undefined && config.orderField !== "publishedAt") {
           const highest = await Model.findOne().sort({ [config.orderField]: -1 }).select(config.orderField).lean();
@@ -912,12 +1013,21 @@ function createCRUDActions(Model, entityName) {
 
     update: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const payload = sanitizeMutablePayload(config.normalizePayload(req.body));
         const id = req.params.id;
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
+
+        if (usesPostgres()) {
+          const existing = await getPostgresCmsRecord(Model, id);
+          if (!existing) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          const validated = await validatePostgresUpdate(Model, existing, payload);
+          const item = await updatePostgresCmsRecord(Model, id, validated);
+          await logAudit(req.user, `UPDATE_${entityName.toUpperCase()}`, entityName, item._id, payload);
+          return res.json({ success: true, message: `${entityName} updated successfully`, data: normalizeDocForClient(item, entityName) });
+        }
+        if (!await requireDb(res)) return;
 
         const existing = await Model.findById(id);
         if (!existing) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
@@ -941,7 +1051,6 @@ function createCRUDActions(Model, entityName) {
 
     updateStatus: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const id = req.params.id;
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
@@ -965,6 +1074,17 @@ function createCRUDActions(Model, entityName) {
           return res.status(400).json({ success: false, message: "A valid status value is required.", data: null });
         }
 
+        if (usesPostgres()) {
+          const existing = await getPostgresCmsRecord(Model, id);
+          if (!existing) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          const validated = await validatePostgresUpdate(Model, existing, updateData);
+          const item = await updatePostgresCmsRecord(Model, id, validated);
+          if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          await logAudit(req.user, `UPDATE_STATUS_${entityName.toUpperCase()}`, entityName, id, updateData);
+          return res.json({ success: true, message: `${entityName} status updated successfully`, data: normalizeDocForClient(item, entityName) });
+        }
+        if (!await requireDb(res)) return;
+
         const item = await Model.findByIdAndUpdate(id, { $set: updateData }, { new: true, runValidators: true });
         if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
 
@@ -977,7 +1097,6 @@ function createCRUDActions(Model, entityName) {
 
     reorder: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const items = req.body.items || req.body.slides || [];
         if (!Array.isArray(items)) {
           return res.status(400).json({ success: false, message: "Please provide an items array.", data: null });
@@ -991,6 +1110,14 @@ function createCRUDActions(Model, entityName) {
         if (validItems.length !== items.length || uniqueIds.size !== validItems.length) {
           return res.status(400).json({ success: false, message: "One or more record IDs are invalid.", data: null });
         }
+
+        if (usesPostgres()) {
+          const docs = await reorderPostgresCmsRecords(Model, config.orderField, validItems);
+          if (!docs) return res.status(404).json({ success: false, message: "One or more records no longer exist.", data: null });
+          await logAudit(req.user, `REORDER_${entityName.toUpperCase()}`, entityName, "bulk", { count: validItems.length });
+          return res.json({ success: true, message: `${entityName} reordered successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+        }
+        if (!await requireDb(res)) return;
 
         const existingCount = await Model.countDocuments({ _id: { $in: validItems.map((item) => item.id) } });
         if (existingCount !== validItems.length) {
@@ -1019,11 +1146,17 @@ function createCRUDActions(Model, entityName) {
 
     delete: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const id = req.params.id;
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
+        if (usesPostgres()) {
+          const deleted = await deletePostgresCmsRecord(Model, id);
+          if (!deleted) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          await logAudit(req.user, `DELETE_${entityName.toUpperCase()}`, entityName, id);
+          return res.json({ success: true, message: `${entityName} deleted successfully`, data: { id } });
+        }
+        if (!await requireDb(res)) return;
         const deleted = await Model.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
         const files = extractMediaPaths(deleted);
@@ -1037,7 +1170,6 @@ function createCRUDActions(Model, entityName) {
 
     bulkDelete: async (req, res) => {
       try {
-        if (!await requireDb(res)) return;
         const { ids } = req.body;
         if (!Array.isArray(ids)) {
           return res.status(400).json({ success: false, message: "Please provide an ids array.", data: null });
@@ -1046,6 +1178,14 @@ function createCRUDActions(Model, entityName) {
         if (validIds.length !== ids.length) {
           return res.status(400).json({ success: false, message: "One or more record IDs are invalid.", data: null });
         }
+
+        if (usesPostgres()) {
+          const result = await bulkDeletePostgresCmsRecords(Model, validIds.map(String));
+          if (!result) return res.status(404).json({ success: false, message: "One or more records no longer exist.", data: null });
+          await logAudit(req.user, `BULK_DELETE_${entityName.toUpperCase()}`, entityName, "bulk", { count: result.deletedCount });
+          return res.json({ success: true, message: `Selected ${entityName} items deleted successfully`, data: { deletedCount: result.deletedCount } });
+        }
+        if (!await requireDb(res)) return;
 
         const items = await Model.find({ _id: { $in: validIds } });
         const result = await Model.deleteMany({ _id: { $in: validIds } });
@@ -1077,6 +1217,21 @@ export const partnersCMS = createCRUDActions(Partner, "Partner");
 // --- ENQUIRIES MANAGEMENT ---
 export async function getEnquiries(req, res) {
   try {
+    if (usesPostgres()) {
+      if (!env.DATABASE_URL) {
+        return res.status(503).json({ success: false, message: "Enquiry database is not configured.", data: null });
+      }
+      const { status, search } = req.query;
+      const enquiries = await listPostgresCmsRecords(Enquiry, {
+        publicFilter: status && status !== "All" ? { status } : {},
+        search,
+        orderField: "createdAt",
+        admin: true,
+        direction: "DESC"
+      });
+      return res.json({ success: true, message: "Enquiries retrieved successfully", data: enquiries });
+    }
+
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -1104,13 +1259,19 @@ export async function getEnquiries(req, res) {
 
 export async function updateEnquiryStatus(req, res) {
   try {
-    if (!await requireDb(res)) return;
+    const postgres = usesPostgres();
+    if (!postgres && !await requireDb(res)) return;
     const { id } = req.params;
     const { status } = req.body;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry ID", data: null });
     }
-    const item = await Enquiry.findByIdAndUpdate(id, { $set: { status } }, { new: true, runValidators: true });
+    if (!Enquiry.schema.path("status").enumValues.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid enquiry status", data: null });
+    }
+    const item = postgres
+      ? await updatePostgresCmsRecord(Enquiry, id, { status })
+      : await Enquiry.findByIdAndUpdate(id, { $set: { status } }, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ success: false, message: "Enquiry not found", data: null });
     await logAudit(req.user, "UPDATE_ENQUIRY_STATUS", "Enquiry", id, { status });
     return res.json({ success: true, message: "Enquiry status updated successfully", data: item });
@@ -1121,12 +1282,15 @@ export async function updateEnquiryStatus(req, res) {
 
 export async function deleteEnquiry(req, res) {
   try {
-    if (!await requireDb(res)) return;
+    const postgres = usesPostgres();
+    if (!postgres && !await requireDb(res)) return;
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry ID", data: null });
     }
-    const deleted = await Enquiry.findByIdAndDelete(id);
+    const deleted = postgres
+      ? await deletePostgresCmsRecord(Enquiry, id)
+      : await Enquiry.findByIdAndDelete(id);
     if (!deleted) return res.status(404).json({ success: false, message: "Enquiry not found", data: null });
     return res.json({ success: true, message: "Enquiry deleted successfully", data: { id } });
   } catch (error) {
@@ -1137,11 +1301,12 @@ export async function deleteEnquiry(req, res) {
 // --- SITE SETTINGS ---
 export async function getSiteSettings(req, res) {
   try {
-    if (!isDbConnected()) {
+    const postgres = usesPostgres();
+    if (!postgres && !isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
 
-    if (!isDbConnected()) {
+    if (!postgres && !isDbConnected()) {
       return res.json({
         success: true,
         message: "Site settings retrieved (offline fallback)",
@@ -1150,7 +1315,9 @@ export async function getSiteSettings(req, res) {
     }
 
     const publicKeys = ["siteName", "metaTitle", "metaDescription", "maintenanceMode", "publicContent"];
-    const settings = await SiteSetting.find({ key: { $in: publicKeys } });
+    const settings = postgres
+      ? await listPostgresSiteSettings(publicKeys)
+      : await SiteSetting.find({ key: { $in: publicKeys } });
     const settingsMap = { ...DEFAULT_AUTHENTIC_SETTINGS };
     settings.forEach((s) => {
       settingsMap[s.key] = s.value;
@@ -1168,7 +1335,10 @@ export async function getSiteSettings(req, res) {
       settingsMap.publicContent.footer.linkedin = "https://www.linkedin.com/company/the-editing-table/";
     }
     return res.json({ success: true, message: "Site settings retrieved successfully", data: settingsMap });
-  } catch (error) {
+  } catch {
+    if (usesPostgres()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Site settings could not be retrieved.", data: null });
+    }
     return res.json({
       success: true,
       message: "Site settings retrieved (offline fallback)",
@@ -1179,11 +1349,12 @@ export async function getSiteSettings(req, res) {
 
 export async function getAdminSiteSettings(req, res) {
   try {
-    if (!isDbConnected()) {
+    const postgres = usesPostgres();
+    if (!postgres && !isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
 
-    if (!isDbConnected()) {
+    if (!postgres && !isDbConnected()) {
       return res.json({
         success: true,
         message: "Admin site settings retrieved (offline fallback)",
@@ -1191,7 +1362,9 @@ export async function getAdminSiteSettings(req, res) {
       });
     }
 
-    const settings = await SiteSetting.find();
+    const settings = postgres
+      ? await listAllPostgresSiteSettings()
+      : await SiteSetting.find();
     const settingsMap = { ...DEFAULT_AUTHENTIC_SETTINGS };
     settings.forEach((setting) => {
       settingsMap[setting.key] = setting.value;
@@ -1213,7 +1386,10 @@ export async function getAdminSiteSettings(req, res) {
       message: "Admin site settings retrieved successfully",
       data: settingsMap
     });
-  } catch (error) {
+  } catch {
+    if (usesPostgres()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Site settings could not be retrieved.", data: null });
+    }
     return res.json({
       success: true,
       message: "Admin site settings retrieved (offline fallback)",
@@ -1224,24 +1400,33 @@ export async function getAdminSiteSettings(req, res) {
 
 export async function updateSiteSetting(req, res) {
   try {
-    if (!await requireDb(res)) return;
+    const postgres = usesPostgres();
+    if (!postgres && !await requireDb(res)) return;
     const { key, value, group = "general", description = "" } = req.body;
     if (!key || !/^[a-zA-Z][a-zA-Z0-9_-]{1,79}$/.test(key)) {
       return res.status(400).json({ success: false, message: "Setting key is required", data: null });
     }
-    const setting = await SiteSetting.findOneAndUpdate(
-      { key },
-      {
-        $set: {
-          value,
-          group,
-          description,
-          updatedBy: req.user?.id
+    if (value === undefined) {
+      return res.status(400).json({ success: false, message: "Setting value is required", data: null });
+    }
+    if (!SiteSetting.schema.path("group").enumValues.includes(group)) {
+      return res.status(400).json({ success: false, message: "Invalid setting group", data: null });
+    }
+    const setting = postgres
+      ? await savePostgresSiteSetting({ key, value, group, description: String(description ?? ""), updatedBy: req.user?.id })
+      : await SiteSetting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            value,
+            group,
+            description,
+            updatedBy: req.user?.id
+          },
+          $setOnInsert: { key }
         },
-        $setOnInsert: { key }
-      },
-      { upsert: true, new: true, runValidators: true }
-    );
+        { upsert: true, new: true, runValidators: true }
+      );
     await logAudit(req.user, "UPDATE_SITE_SETTING", "SiteSetting", key, { value });
     return res.json({ success: true, message: `Setting "${key}" updated successfully`, data: setting });
   } catch (error) {
@@ -1252,6 +1437,10 @@ export async function updateSiteSetting(req, res) {
 // --- AUDIT LOGS & USERS ---
 export async function getAuditLogs(req, res) {
   try {
+    if (usesPostgres()) {
+      const logs = await listPostgresCmsAuditLogs(100);
+      return res.json({ success: true, message: "Audit logs retrieved successfully", data: logs });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -1267,6 +1456,10 @@ export async function getAuditLogs(req, res) {
 
 export async function getUsers(req, res) {
   try {
+    if (usesPostgres()) {
+      const users = await listPostgresCmsUsers();
+      return res.json({ success: true, message: "Users retrieved successfully", data: users });
+    }
     if (!await requireDb(res)) return;
     const users = await User.find({}, "-passwordHash").sort({ createdAt: -1 });
     return res.json({ success: true, message: "Users retrieved successfully", data: users });
@@ -1277,7 +1470,7 @@ export async function getUsers(req, res) {
 
 export async function createUser(req, res) {
   try {
-    if (!await requireDb(res)) return;
+    if (!usesPostgres() && !await requireDb(res)) return;
     const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -1297,6 +1490,24 @@ export async function createUser(req, res) {
       return res.status(400).json({ success: false, message: "Invalid administrator role.", data: null });
     }
     const passwordHash = await User.hashPassword(password);
+    if (usesPostgres()) {
+      const user = await createPostgresAuthUser({
+        name: String(name).trim(),
+        email: String(email).trim().toLowerCase(),
+        passwordHash,
+        role: role || "admin"
+      });
+      const safeUser = {
+        _id: String(user._id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt
+      };
+      await logAudit(req.user, "CREATE_USER", "User", user._id.toString(), { email: safeUser.email, role: safeUser.role });
+      return res.status(201).json({ success: true, message: "User created successfully", data: safeUser });
+    }
     const user = await User.create({
       name: String(name).trim(),
       email: String(email).trim().toLowerCase(),
@@ -1313,13 +1524,22 @@ export async function createUser(req, res) {
 
 export async function deleteUser(req, res) {
   try {
-    if (!await requireDb(res)) return;
+    if (!usesPostgres() && !await requireDb(res)) return;
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid user ID", data: null });
     }
     if (String(req.user?.id) === String(id)) {
       return res.status(409).json({ success: false, message: "You cannot delete your own account.", data: null });
+    }
+    if (usesPostgres()) {
+      const result = await deletePostgresCmsUser(id);
+      if (result.reason === "not_found") return res.status(404).json({ success: false, message: "User not found", data: null });
+      if (result.reason === "last_superadmin") {
+        return res.status(409).json({ success: false, message: "The final active super administrator cannot be deleted.", data: null });
+      }
+      await logAudit(req.user, "DELETE_USER", "User", id);
+      return res.json({ success: true, message: "User deleted successfully", data: { id } });
     }
     const target = await User.findById(id);
     if (!target) return res.status(404).json({ success: false, message: "User not found", data: null });

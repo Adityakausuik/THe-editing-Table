@@ -1,7 +1,10 @@
 /* global fetch */
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createApp } from "../app.js";
+
+// Keep this route-only test isolated from Atlas and startup bootstrap writes.
+process.env.NODE_ENV = "test";
+const { createApp } = await import("../app.js");
 
 test("chunked upload endpoints require authenticated admin access", async () => {
   const server = createApp().listen(0);

@@ -12,8 +12,10 @@ import { API_PREFIX } from "../../shared/constants.js";
 import { connectDatabase } from "./config/db.js";
 import { env } from "./config/env.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
+import migrationWriteFreeze from "./middleware/migrationWriteFreeze.js";
 import { rejectUnsafeInput } from "./middleware/requestSecurity.js";
 import healthRoutes from "./routes/health.routes.js";
+import maintenanceRoutes from "./routes/maintenance.routes.js";
 import enquiryRoutes from "./routes/enquiry.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import securityRoutes from "./routes/security.routes.js";
@@ -29,6 +31,7 @@ import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
 import { getFileStreamFromGridFS } from "./utils/gridfs.js";
+import { connectGridFs, isGridFsConnected } from "./config/gridfsDb.js";
 import {
   beginTwoFactorSetup,
   login,
@@ -144,11 +147,15 @@ export function createApp() {
     next();
   });
 
+  // Keep the live application read-only across the final source sync and database cutover.
+  // This runs before any database connection is opened for a write request.
+  app.use(migrationWriteFreeze);
+
   // Auto-connect to database in serverless runtime environments
   app.use(async (req, res, next) => {
     if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
       try {
-        await connectDatabase();
+        await connectDatabase({ bootstrap: false });
       } catch {
         // Non-blocking: individual controllers that require DB will handle 503 if DB is down
       }
@@ -183,6 +190,10 @@ export function createApp() {
     subPath = subPath.replace(/^\/+/, "").replace(/^uploads\//, "").replace(/^api\/uploads\//, "");
     if (!subPath) return next();
 
+    // Career resumes are private and must only be returned by the authenticated
+    // admin download route, never through the public static media endpoint.
+    if (subPath === "resumes" || subPath.startsWith("resumes/")) return res.sendStatus(404);
+
     // Prevent path traversal
     if (subPath.includes("..") || path.isAbsolute(subPath)) {
       return res.status(403).json({ success: false, message: "Forbidden media path." });
@@ -202,11 +213,15 @@ export function createApp() {
 
     // 2. Stream fallback from MongoDB GridFS
     try {
-      if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
-        await connectDatabase().catch(() => {});
+      if (!isGridFsConnected() && env.NODE_ENV !== "test") {
+        if (env.VERCEL_ENV === "preview" || env.DATABASE_BACKEND === "postgres") {
+          await connectGridFs().catch(() => {});
+        } else {
+          await connectDatabase().catch(() => {});
+        }
       }
 
-      if (mongoose.connection.readyState === 1) {
+      if (isGridFsConnected()) {
         const gridItem = await getFileStreamFromGridFS(subPath);
         if (gridItem) {
           const { stream, fileDoc } = gridItem;
@@ -366,6 +381,7 @@ export function createApp() {
 
   app.use("/health", healthRoutes);
   app.use(`${API_PREFIX}/health`, healthRoutes);
+  app.use(`${API_PREFIX}/v1/maintenance`, maintenanceRoutes);
   app.use(`${API_PREFIX}/v1/auth`, authRoutes);
   app.use(`${API_PREFIX}/auth`, authRoutes);
   app.use("/v1/auth", authRoutes);

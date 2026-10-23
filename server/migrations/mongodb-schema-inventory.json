@@ -1,0 +1,6486 @@
+[
+  {
+    "model": "AboutMe",
+    "collection": "aboutmes",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "key",
+        "sqlColumn": "key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "fullName",
+        "sqlColumn": "full_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "designation",
+        "sqlColumn": "designation",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "location",
+        "sqlColumn": "location",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "profileImage",
+        "sqlColumn": "profile_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "quote",
+        "sqlColumn": "quote",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "introBadge",
+        "sqlColumn": "intro_badge",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "introTitle",
+        "sqlColumn": "intro_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "introSubtitle",
+        "sqlColumn": "intro_subtitle",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "aboutHeading",
+        "sqlColumn": "about_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "aboutParagraphs",
+        "sqlColumn": "about_paragraphs",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "visionHeading",
+        "sqlColumn": "vision_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "visionText",
+        "sqlColumn": "vision_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "experienceYears",
+        "sqlColumn": "experience_years",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "experienceHeading",
+        "sqlColumn": "experience_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "experienceText",
+        "sqlColumn": "experience_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "skills",
+        "sqlColumn": "skills",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "whatIDo",
+        "sqlColumn": "what_ido",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "companyRoleHeading",
+        "sqlColumn": "company_role_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "companyRoleText",
+        "sqlColumn": "company_role_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "philosophyPillars",
+        "sqlColumn": "philosophy_pillars",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "key": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "AdminActivityLog",
+    "collection": "adminactivitylogs",
+    "timestamps": false,
+    "fields": [
+      {
+        "path": "adminId",
+        "sqlColumn": "admin_id",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "action",
+        "sqlColumn": "action",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "entityType",
+        "sqlColumn": "entity_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "entityId",
+        "sqlColumn": "entity_id",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "changes",
+        "sqlColumn": "changes",
+        "mongooseType": "Mixed",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "createdAt",
+        "sqlColumn": "created_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "createdAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "AuditLog",
+    "collection": "auditlogs",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "user",
+        "sqlColumn": "user",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "userEmail",
+        "sqlColumn": "user_email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "role",
+        "sqlColumn": "role",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "action",
+        "sqlColumn": "action",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "entity",
+        "sqlColumn": "entity",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "entityId",
+        "sqlColumn": "entity_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "details",
+        "sqlColumn": "details",
+        "mongooseType": "Mixed",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ipAddress",
+        "sqlColumn": "ip_address",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "userAgent",
+        "sqlColumn": "user_agent",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "result",
+        "sqlColumn": "result",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "metadata",
+        "sqlColumn": "metadata",
+        "mongooseType": "Mixed",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "role": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "action": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "entity": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "result": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "BlogPost",
+    "collection": "blogposts",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "excerpt",
+        "sqlColumn": "excerpt",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "content",
+        "sqlColumn": "content",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "coverImage",
+        "sqlColumn": "cover_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "author.name",
+        "sqlColumn": "author__name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "author.role",
+        "sqlColumn": "author__role",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "author.avatar",
+        "sqlColumn": "author__avatar",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "tags",
+        "sqlColumn": "tags",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "readTime",
+        "sqlColumn": "read_time",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "featured",
+        "sqlColumn": "featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "publishedAt",
+        "sqlColumn": "published_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "seoTitle",
+        "sqlColumn": "seo_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "seoDescription",
+        "sqlColumn": "seo_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "featured": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "publishedAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "BrandCollaboration",
+    "collection": "brandcollaborations",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "brandName",
+        "sqlColumn": "brand_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "brandLogo",
+        "sqlColumn": "brand_logo",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "shortDescription",
+        "sqlColumn": "short_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "fullDescription",
+        "sqlColumn": "full_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "services",
+        "sqlColumn": "services",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "coverImage",
+        "sqlColumn": "cover_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "gallery",
+        "sqlColumn": "gallery",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "videoUrl",
+        "sqlColumn": "video_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "projectDate",
+        "sqlColumn": "project_date",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "featured",
+        "sqlColumn": "featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "published",
+        "sqlColumn": "published",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "displayOrder",
+        "sqlColumn": "display_order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "featured": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "published": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "CareersContent",
+    "collection": "careerscontents",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "key",
+        "sqlColumn": "key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "hero.heading",
+        "sqlColumn": "hero__heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "hero.description",
+        "sqlColumn": "hero__description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "hero.badge",
+        "sqlColumn": "hero__badge",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "whyJoinUs",
+        "sqlColumn": "why_join_us",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cta.heading",
+        "sqlColumn": "cta__heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cta.description",
+        "sqlColumn": "cta__description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cta.buttonText",
+        "sqlColumn": "cta__button_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "key": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "ContactEmail",
+    "collection": "contactemails",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "label",
+        "sqlColumn": "label",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "primary",
+        "sqlColumn": "primary",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "ContactOffice",
+    "collection": "contactoffices",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "officeName",
+        "sqlColumn": "office_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "companyName",
+        "sqlColumn": "company_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "addressLine1",
+        "sqlColumn": "address_line1",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "addressLine2",
+        "sqlColumn": "address_line2",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "city",
+        "sqlColumn": "city",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "state",
+        "sqlColumn": "state",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "country",
+        "sqlColumn": "country",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "postalCode",
+        "sqlColumn": "postal_code",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "googleMapUrl",
+        "sqlColumn": "google_map_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "latitude",
+        "sqlColumn": "latitude",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "longitude",
+        "sqlColumn": "longitude",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "ContactPhone",
+    "collection": "contactphones",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "country",
+        "sqlColumn": "country",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "countryCode",
+        "sqlColumn": "country_code",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "phone",
+        "sqlColumn": "phone",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "displayPhone",
+        "sqlColumn": "display_phone",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "label",
+        "sqlColumn": "label",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "whatsappEnabled",
+        "sqlColumn": "whatsapp_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "callEnabled",
+        "sqlColumn": "call_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "ContactSettings",
+    "collection": "contactsettings",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "settingsKey",
+        "sqlColumn": "settings_key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionTitle",
+        "sqlColumn": "section_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "phoneHeading",
+        "sqlColumn": "phone_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "emailHeading",
+        "sqlColumn": "email_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "officeHeading",
+        "sqlColumn": "office_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "workingHoursHeading",
+        "sqlColumn": "working_hours_heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaLink",
+        "sqlColumn": "cta_link",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaNewTab",
+        "sqlColumn": "cta_new_tab",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionEnabled",
+        "sqlColumn": "section_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "phoneEnabled",
+        "sqlColumn": "phone_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "emailEnabled",
+        "sqlColumn": "email_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "officeEnabled",
+        "sqlColumn": "office_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "workingHoursEnabled",
+        "sqlColumn": "working_hours_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaEnabled",
+        "sqlColumn": "cta_enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "settingsKey": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "EmailOtp",
+    "collection": "emailotps",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "user",
+        "sqlColumn": "user",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "otpHash",
+        "sqlColumn": "otp_hash",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "salt",
+        "sqlColumn": "salt",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "expiresAt",
+        "sqlColumn": "expires_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "attempts",
+        "sqlColumn": "attempts",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "maxAttempts",
+        "sqlColumn": "max_attempts",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "resendAvailableAt",
+        "sqlColumn": "resend_available_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "consumedAt",
+        "sqlColumn": "consumed_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "user": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "email": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": 0,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Enquiry",
+    "collection": "enquiries",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "name",
+        "sqlColumn": "name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "phone",
+        "sqlColumn": "phone",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "service",
+        "sqlColumn": "service",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "budget",
+        "sqlColumn": "budget",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deliveryDate",
+        "sqlColumn": "delivery_date",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "referenceUrl",
+        "sqlColumn": "reference_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "source",
+        "sqlColumn": "source",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "assignedTo",
+        "sqlColumn": "assigned_to",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "internalNotes",
+        "sqlColumn": "internal_notes",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "HeroSlide",
+    "collection": "heroslides",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "slideNumber",
+        "sqlColumn": "slide_number",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "slideKey",
+        "sqlColumn": "slide_key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slideType",
+        "sqlColumn": "slide_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "layoutType",
+        "sqlColumn": "layout_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "label",
+        "sqlColumn": "label",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "eyebrow",
+        "sqlColumn": "eyebrow",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "headingLines",
+        "sqlColumn": "heading_lines",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "subtitle",
+        "sqlColumn": "subtitle",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "tag",
+        "sqlColumn": "tag",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "caption",
+        "sqlColumn": "caption",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "featureItems",
+        "sqlColumn": "feature_items",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "quote",
+        "sqlColumn": "quote",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaLink",
+        "sqlColumn": "cta_link",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "trustLabel",
+        "sqlColumn": "trust_label",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "mainImage",
+        "sqlColumn": "main_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "images",
+        "sqlColumn": "images",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "imageGrid",
+        "sqlColumn": "image_grid",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "featuredImageIndex",
+        "sqlColumn": "featured_image_index",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "active",
+        "sqlColumn": "active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "transitionDuration",
+        "sqlColumn": "transition_duration",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slideKey": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "active": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "active": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Job",
+    "collection": "jobs",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "department",
+        "sqlColumn": "department",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "location",
+        "sqlColumn": "location",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "employmentType",
+        "sqlColumn": "employment_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "experience",
+        "sqlColumn": "experience",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "salary",
+        "sqlColumn": "salary",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "responsibilities",
+        "sqlColumn": "responsibilities",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "requiredSkills",
+        "sqlColumn": "required_skills",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "preferredSkills",
+        "sqlColumn": "preferred_skills",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "benefits",
+        "sqlColumn": "benefits",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "deadline",
+        "sqlColumn": "deadline",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "order": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "JobApplication",
+    "collection": "jobapplications",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "jobId",
+        "sqlColumn": "job_id",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "Job",
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "positionTitle",
+        "sqlColumn": "position_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "applicantName",
+        "sqlColumn": "applicant_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "phone",
+        "sqlColumn": "phone",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "portfolio",
+        "sqlColumn": "portfolio",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "linkedin",
+        "sqlColumn": "linkedin",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "resume.url",
+        "sqlColumn": "resume__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "resume.filename",
+        "sqlColumn": "resume__filename",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "resume.originalName",
+        "sqlColumn": "resume__original_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "resume.size",
+        "sqlColumn": "resume__size",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "resume.mimeType",
+        "sqlColumn": "resume__mime_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "coverLetter",
+        "sqlColumn": "cover_letter",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "adminNotes",
+        "sqlColumn": "admin_notes",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "jobId": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Media",
+    "collection": "media",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "filename",
+        "sqlColumn": "filename",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "originalName",
+        "sqlColumn": "original_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mimeType",
+        "sqlColumn": "mime_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "size",
+        "sqlColumn": "size",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "url",
+        "sqlColumn": "url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "path",
+        "sqlColumn": "path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "altText",
+        "sqlColumn": "alt_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "uploadedBy",
+        "sqlColumn": "uploaded_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Partner",
+    "collection": "partners",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "name",
+        "sqlColumn": "name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "locationTag",
+        "sqlColumn": "location_tag",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "logo",
+        "sqlColumn": "logo",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "image",
+        "sqlColumn": "image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "website",
+        "sqlColumn": "website",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "active",
+        "sqlColumn": "active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "active": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "PhotoShowcaseItem",
+    "collection": "photoshowcaseitems",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "propertyName",
+        "sqlColumn": "property_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "location",
+        "sqlColumn": "location",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "tags",
+        "sqlColumn": "tags",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "image.publicId",
+        "sqlColumn": "image__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "image.url",
+        "sqlColumn": "image__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "image.path",
+        "sqlColumn": "image__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "image.altText",
+        "sqlColumn": "image__alt_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileImage.publicId",
+        "sqlColumn": "mobile_image__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileImage.url",
+        "sqlColumn": "mobile_image__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileImage.path",
+        "sqlColumn": "mobile_image__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileImage.altText",
+        "sqlColumn": "mobile_image__alt_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "badgeText",
+        "sqlColumn": "badge_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ctaUrl",
+        "sqlColumn": "cta_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "openInNewTab",
+        "sqlColumn": "open_in_new_tab",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isFeatured",
+        "sqlColumn": "is_featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isActive",
+        "sqlColumn": "is_active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "views",
+        "sqlColumn": "views",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "clicks",
+        "sqlColumn": "clicks",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "publishedAt",
+        "sqlColumn": "published_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "expiresAt",
+        "sqlColumn": "expires_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isFeatured": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isActive": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1,
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isFeatured": 1,
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "PhotoShowcaseSettings",
+    "collection": "photoshowcasesettings",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "settingsKey",
+        "sqlColumn": "settings_key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "heading",
+        "sqlColumn": "heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "subheading",
+        "sqlColumn": "subheading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showSection",
+        "sqlColumn": "show_section",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showSubheading",
+        "sqlColumn": "show_subheading",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "alignment",
+        "sqlColumn": "alignment",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "headingColor",
+        "sqlColumn": "heading_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "textColor",
+        "sqlColumn": "text_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "backgroundColor",
+        "sqlColumn": "background_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionPaddingTop",
+        "sqlColumn": "section_padding_top",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionPaddingBottom",
+        "sqlColumn": "section_padding_bottom",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "maxWidth",
+        "sqlColumn": "max_width",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "autoplay",
+        "sqlColumn": "autoplay",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "autoplayDelay",
+        "sqlColumn": "autoplay_delay",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "infiniteLoop",
+        "sqlColumn": "infinite_loop",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "pauseOnHover",
+        "sqlColumn": "pause_on_hover",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cardRadius",
+        "sqlColumn": "card_radius",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showArrows",
+        "sqlColumn": "show_arrows",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showPagination",
+        "sqlColumn": "show_pagination",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaUrl",
+        "sqlColumn": "cta_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaVisible",
+        "sqlColumn": "cta_visible",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaNewTab",
+        "sqlColumn": "cta_new_tab",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "anchorId",
+        "sqlColumn": "anchor_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "settingsKey": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "PortfolioItem",
+    "collection": "portfolioitems",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "client",
+        "sqlColumn": "client",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "date",
+        "sqlColumn": "date",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "metadata",
+        "sqlColumn": "metadata",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "image",
+        "sqlColumn": "image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "coverImage",
+        "sqlColumn": "cover_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "videoUrl",
+        "sqlColumn": "video_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deliverables",
+        "sqlColumn": "deliverables",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "isFeatured",
+        "sqlColumn": "is_featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isPublished",
+        "sqlColumn": "is_published",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isPublished": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Review",
+    "collection": "reviews",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "name",
+        "sqlColumn": "name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "phone",
+        "sqlColumn": "phone",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "company",
+        "sqlColumn": "company",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "projectType",
+        "sqlColumn": "project_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "rating",
+        "sqlColumn": "rating",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "message",
+        "sqlColumn": "message",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "profileImage",
+        "sqlColumn": "profile_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "projectImage",
+        "sqlColumn": "project_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "country",
+        "sqlColumn": "country",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "city",
+        "sqlColumn": "city",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "verified",
+        "sqlColumn": "verified",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "featured",
+        "sqlColumn": "featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "adminReply.message",
+        "sqlColumn": "admin_reply__message",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "adminReply.repliedAt",
+        "sqlColumn": "admin_reply__replied_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "adminReply.repliedBy",
+        "sqlColumn": "admin_reply__replied_by",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ipAddress",
+        "sqlColumn": "ip_address",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "projectType": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "rating": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "verified": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "featured": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "featured": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "email": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "SecurityPolicy",
+    "collection": "securitypolicies",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "key",
+        "sqlColumn": "key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "requireAdmin2FA",
+        "sqlColumn": "require_admin2_fa",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "requireUser2FA",
+        "sqlColumn": "require_user2_fa",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "allowedMethods",
+        "sqlColumn": "allowed_methods",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "trustedDeviceDays",
+        "sqlColumn": "trusted_device_days",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "maxFailedAttempts",
+        "sqlColumn": "max_failed_attempts",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "lockMinutes",
+        "sqlColumn": "lock_minutes",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sessionExpiryHours",
+        "sqlColumn": "session_expiry_hours",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "recoveryCodeCount",
+        "sqlColumn": "recovery_code_count",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "key": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Service",
+    "collection": "services",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "fullDescription",
+        "sqlColumn": "full_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "tagline",
+        "sqlColumn": "tagline",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "image",
+        "sqlColumn": "image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "price",
+        "sqlColumn": "price",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "turnaround",
+        "sqlColumn": "turnaround",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "features",
+        "sqlColumn": "features",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "deliverables",
+        "sqlColumn": "deliverables",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "icon",
+        "sqlColumn": "icon",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isPublished",
+        "sqlColumn": "is_published",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isPublished": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "Session",
+    "collection": "sessions",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "user",
+        "sqlColumn": "user",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "expiresAt",
+        "sqlColumn": "expires_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "revokedAt",
+        "sqlColumn": "revoked_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "revokeReason",
+        "sqlColumn": "revoke_reason",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ipAddress",
+        "sqlColumn": "ip_address",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "userAgent",
+        "sqlColumn": "user_agent",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "lastSeenAt",
+        "sqlColumn": "last_seen_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactorVerified",
+        "sqlColumn": "two_factor_verified",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "trustedDeviceUsed",
+        "sqlColumn": "trusted_device_used",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "user": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": 0,
+        "name": null
+      },
+      {
+        "keys": {
+          "user": 1,
+          "revokedAt": 1,
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "SiteSetting",
+    "collection": "sitesettings",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "key",
+        "sqlColumn": "key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "value",
+        "sqlColumn": "value",
+        "mongooseType": "Mixed",
+        "postgresType": "JSONB",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "group",
+        "sqlColumn": "group",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "key": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "group": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "TeamMember",
+    "collection": "teammembers",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "fullName",
+        "sqlColumn": "full_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "designation",
+        "sqlColumn": "designation",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "shortBio",
+        "sqlColumn": "short_bio",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "fullBio",
+        "sqlColumn": "full_bio",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "profileImage",
+        "sqlColumn": "profile_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "skills",
+        "sqlColumn": "skills",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "experience",
+        "sqlColumn": "experience",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "socialLinks.instagram",
+        "sqlColumn": "social_links__instagram",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "socialLinks.linkedin",
+        "sqlColumn": "social_links__linkedin",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "socialLinks.vimeo",
+        "sqlColumn": "social_links__vimeo",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "featured",
+        "sqlColumn": "featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "active",
+        "sqlColumn": "active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "displayOrder",
+        "sqlColumn": "display_order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "active": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "TrustedDevice",
+    "collection": "trusteddevices",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "user",
+        "sqlColumn": "user",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "tokenHash",
+        "sqlColumn": "token_hash",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "name",
+        "sqlColumn": "name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ipAddress",
+        "sqlColumn": "ip_address",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "userAgent",
+        "sqlColumn": "user_agent",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "lastUsedAt",
+        "sqlColumn": "last_used_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "expiresAt",
+        "sqlColumn": "expires_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "revokedAt",
+        "sqlColumn": "revoked_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "user": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": 0,
+        "name": null
+      },
+      {
+        "keys": {
+          "user": 1,
+          "revokedAt": 1,
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "User",
+    "collection": "users",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "name",
+        "sqlColumn": "name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "email",
+        "sqlColumn": "email",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "passwordHash",
+        "sqlColumn": "password_hash",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "role",
+        "sqlColumn": "role",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "avatar",
+        "sqlColumn": "avatar",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isActive",
+        "sqlColumn": "is_active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "lastLoginAt",
+        "sqlColumn": "last_login_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "lastLoginIp",
+        "sqlColumn": "last_login_ip",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "forceSecuritySetup",
+        "sqlColumn": "force_security_setup",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.enabled",
+        "sqlColumn": "two_factor__enabled",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.required",
+        "sqlColumn": "two_factor__required",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.method",
+        "sqlColumn": "two_factor__method",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.secretEncrypted",
+        "sqlColumn": "two_factor__secret_encrypted",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.pendingSecretEncrypted",
+        "sqlColumn": "two_factor__pending_secret_encrypted",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.recoveryCodeHashes",
+        "sqlColumn": "two_factor__recovery_code_hashes",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.activatedAt",
+        "sqlColumn": "two_factor__activated_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "twoFactor.lastAuthenticatedAt",
+        "sqlColumn": "two_factor__last_authenticated_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "twoFactor.lastUsedCounter",
+        "sqlColumn": "two_factor__last_used_counter",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.failedAttempts",
+        "sqlColumn": "two_factor__failed_attempts",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "twoFactor.lockUntil",
+        "sqlColumn": "two_factor__lock_until",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "twoFactor.resetAt",
+        "sqlColumn": "two_factor__reset_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "failedPasswordAttempts",
+        "sqlColumn": "failed_password_attempts",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "accountLockUntil",
+        "sqlColumn": "account_lock_until",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "preAuthNonceHash",
+        "sqlColumn": "pre_auth_nonce_hash",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "email": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "role": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "VideoAnalytics",
+    "collection": "videoanalytics",
+    "timestamps": false,
+    "fields": [
+      {
+        "path": "videoId",
+        "sqlColumn": "video_id",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": "VideoShowcaseItem",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "eventType",
+        "sqlColumn": "event_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "sessionId",
+        "sqlColumn": "session_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "deviceType",
+        "sqlColumn": "device_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "browser",
+        "sqlColumn": "browser",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "operatingSystem",
+        "sqlColumn": "operating_system",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "referrer",
+        "sqlColumn": "referrer",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ipHash",
+        "sqlColumn": "ip_hash",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "createdAt",
+        "sqlColumn": "created_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "videoId": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "eventType": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "createdAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "videoId": 1,
+          "eventType": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "eventType": 1,
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "sessionId": 1,
+          "videoId": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "VideoShowcaseItem",
+    "collection": "videoshowcaseitems",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "slug",
+        "sqlColumn": "slug",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "description",
+        "sqlColumn": "description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "propertyName",
+        "sqlColumn": "property_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "location",
+        "sqlColumn": "location",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "tags",
+        "sqlColumn": "tags",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "sourceType",
+        "sqlColumn": "source_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "videoUrl",
+        "sqlColumn": "video_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.publicId",
+        "sqlColumn": "video_file__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.url",
+        "sqlColumn": "video_file__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.path",
+        "sqlColumn": "video_file__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.mimeType",
+        "sqlColumn": "video_file__mime_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.size",
+        "sqlColumn": "video_file__size",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "videoFile.originalName",
+        "sqlColumn": "video_file__original_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.publicId",
+        "sqlColumn": "mobile_video_file__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.url",
+        "sqlColumn": "mobile_video_file__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.path",
+        "sqlColumn": "mobile_video_file__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.mimeType",
+        "sqlColumn": "mobile_video_file__mime_type",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.size",
+        "sqlColumn": "mobile_video_file__size",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileVideoFile.originalName",
+        "sqlColumn": "mobile_video_file__original_name",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "thumbnail.publicId",
+        "sqlColumn": "thumbnail__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "thumbnail.url",
+        "sqlColumn": "thumbnail__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "thumbnail.path",
+        "sqlColumn": "thumbnail__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "thumbnail.altText",
+        "sqlColumn": "thumbnail__alt_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileThumbnail.publicId",
+        "sqlColumn": "mobile_thumbnail__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileThumbnail.url",
+        "sqlColumn": "mobile_thumbnail__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileThumbnail.path",
+        "sqlColumn": "mobile_thumbnail__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "mobileThumbnail.altText",
+        "sqlColumn": "mobile_thumbnail__alt_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "captionUrl",
+        "sqlColumn": "caption_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "duration",
+        "sqlColumn": "duration",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "badgeText",
+        "sqlColumn": "badge_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ctaUrl",
+        "sqlColumn": "cta_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "openInNewTab",
+        "sqlColumn": "open_in_new_tab",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isFeatured",
+        "sqlColumn": "is_featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isActive",
+        "sqlColumn": "is_active",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "autoplay",
+        "sqlColumn": "autoplay",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "loop",
+        "sqlColumn": "loop",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "muted",
+        "sqlColumn": "muted",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showControls",
+        "sqlColumn": "show_controls",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "views",
+        "sqlColumn": "views",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "playClicks",
+        "sqlColumn": "play_clicks",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "completedViews",
+        "sqlColumn": "completed_views",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaClicks",
+        "sqlColumn": "cta_clicks",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "publishedAt",
+        "sqlColumn": "published_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "expiresAt",
+        "sqlColumn": "expires_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "seoTitle",
+        "sqlColumn": "seo_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "seoDescription",
+        "sqlColumn": "seo_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ogImage.publicId",
+        "sqlColumn": "og_image__public_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ogImage.url",
+        "sqlColumn": "og_image__url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "ogImage.path",
+        "sqlColumn": "og_image__path",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "slug": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isFeatured": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isActive": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "category": 1,
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isFeatured": 1,
+          "isActive": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "publishedAt": 1,
+          "expiresAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "createdAt": -1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "VideoShowcaseSettings",
+    "collection": "videoshowcasesettings",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "settingsKey",
+        "sqlColumn": "settings_key",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "heading",
+        "sqlColumn": "heading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "subheading",
+        "sqlColumn": "subheading",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showSection",
+        "sqlColumn": "show_section",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showSubheading",
+        "sqlColumn": "show_subheading",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "alignment",
+        "sqlColumn": "alignment",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "headingColor",
+        "sqlColumn": "heading_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "textColor",
+        "sqlColumn": "text_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "backgroundColor",
+        "sqlColumn": "background_color",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionPaddingTop",
+        "sqlColumn": "section_padding_top",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "sectionPaddingBottom",
+        "sqlColumn": "section_padding_bottom",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "maxWidth",
+        "sqlColumn": "max_width",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "autoplay",
+        "sqlColumn": "autoplay",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "autoplayDelay",
+        "sqlColumn": "autoplay_delay",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "infiniteLoop",
+        "sqlColumn": "infinite_loop",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "pauseOnHover",
+        "sqlColumn": "pause_on_hover",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "hoverPlayback",
+        "sqlColumn": "hover_playback",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "centerAutoplay",
+        "sqlColumn": "center_autoplay",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "enableParallax",
+        "sqlColumn": "enable_parallax",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "animationDuration",
+        "sqlColumn": "animation_duration",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cardRadius",
+        "sqlColumn": "card_radius",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "cardGap",
+        "sqlColumn": "card_gap",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "shadowIntensity",
+        "sqlColumn": "shadow_intensity",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showArrows",
+        "sqlColumn": "show_arrows",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "showPagination",
+        "sqlColumn": "show_pagination",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "desktopSlides",
+        "sqlColumn": "desktop_slides",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "tabletSlides",
+        "sqlColumn": "tablet_slides",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "mobileSlides",
+        "sqlColumn": "mobile_slides",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaText",
+        "sqlColumn": "cta_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaUrl",
+        "sqlColumn": "cta_url",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaVisible",
+        "sqlColumn": "cta_visible",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "ctaNewTab",
+        "sqlColumn": "cta_new_tab",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "seoTitle",
+        "sqlColumn": "seo_title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "seoDescription",
+        "sqlColumn": "seo_description",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "anchorId",
+        "sqlColumn": "anchor_id",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "settingsKey": 1
+        },
+        "unique": true,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "WeddingGalleryItem",
+    "collection": "weddinggalleryitems",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "title",
+        "sqlColumn": "title",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "category",
+        "sqlColumn": "category",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "location",
+        "sqlColumn": "location",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "coupleNames",
+        "sqlColumn": "couple_names",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "caption",
+        "sqlColumn": "caption",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "image",
+        "sqlColumn": "image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": true,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "coverImage",
+        "sqlColumn": "cover_image",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "gallery",
+        "sqlColumn": "gallery",
+        "mongooseType": "Array",
+        "postgresType": "JSONB",
+        "required": false,
+        "ref": null,
+        "arrayElementType": "String",
+        "hasDefault": false
+      },
+      {
+        "path": "storySummary",
+        "sqlColumn": "story_summary",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isFeatured",
+        "sqlColumn": "is_featured",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "isPublished",
+        "sqlColumn": "is_published",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "category": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "isPublished": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  },
+  {
+    "model": "WorkingHours",
+    "collection": "workinghours",
+    "timestamps": true,
+    "fields": [
+      {
+        "path": "dayFrom",
+        "sqlColumn": "day_from",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "dayTo",
+        "sqlColumn": "day_to",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "openingTime",
+        "sqlColumn": "opening_time",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "closingTime",
+        "sqlColumn": "closing_time",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "customText",
+        "sqlColumn": "custom_text",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "closed",
+        "sqlColumn": "closed",
+        "mongooseType": "Boolean",
+        "postgresType": "BOOLEAN",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "order",
+        "sqlColumn": "order",
+        "mongooseType": "Number",
+        "postgresType": "DOUBLE PRECISION",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "status",
+        "sqlColumn": "status",
+        "mongooseType": "String",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "deletedAt",
+        "sqlColumn": "deleted_at",
+        "mongooseType": "Date",
+        "postgresType": "TIMESTAMPTZ",
+        "required": false,
+        "ref": null,
+        "arrayElementType": null,
+        "hasDefault": true
+      },
+      {
+        "path": "createdBy",
+        "sqlColumn": "created_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      },
+      {
+        "path": "updatedBy",
+        "sqlColumn": "updated_by",
+        "mongooseType": "ObjectId",
+        "postgresType": "TEXT",
+        "required": false,
+        "ref": "User",
+        "arrayElementType": null,
+        "hasDefault": false
+      }
+    ],
+    "indexes": [
+      {
+        "keys": {
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "deletedAt": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      },
+      {
+        "keys": {
+          "status": 1,
+          "deletedAt": 1,
+          "order": 1
+        },
+        "unique": false,
+        "sparse": false,
+        "expireAfterSeconds": null,
+        "name": null
+      }
+    ]
+  }
+]

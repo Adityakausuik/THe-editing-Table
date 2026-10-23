@@ -50,31 +50,26 @@ export async function bootstrapDatabase() {
   hasBootstrapped = true;
 
   try {
-    const adminEmails = Array.from(new Set([
-      "admin@theeditingtable.com",
-      "admin@example.com",
-      (env.ADMIN_EMAIL || "").trim().toLowerCase()
-    ].filter(Boolean)));
-
-    const targetPassword = "AdminPassword123!";
+    const adminEmail = (env.ADMIN_EMAIL || "").trim().toLowerCase();
+    const targetPassword = env.ADMIN_PASSWORD;
+    if (!adminEmail || !targetPassword) {
+      throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be configured before bootstrap can create an administrator.");
+    }
     const passwordHash = await User.hashPassword(targetPassword);
 
-    for (const email of adminEmails) {
-      let user = await User.findOne({ email });
-
-      if (!user) {
-        user = await User.create({
-          name: "Administrator",
-          email,
-          passwordHash,
-          role: "superadmin",
-          isActive: true,
-          failedPasswordAttempts: 0,
-          accountLockUntil: undefined,
-          twoFactor: { enabled: false, required: false }
-        });
-        console.log(`[BOOTSTRAP] Default Super Admin account created: ${email}`);
-      }
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      await User.create({
+        name: "Administrator",
+        email: adminEmail,
+        passwordHash,
+        role: "superadmin",
+        isActive: true,
+        failedPasswordAttempts: 0,
+        accountLockUntil: undefined,
+        twoFactor: { enabled: false, required: false }
+      });
+      console.log(`[BOOTSTRAP] Administrator created: ${adminEmail}`);
     }
 
     // Seed policy defaults only for a new database. Existing production policy is source data.

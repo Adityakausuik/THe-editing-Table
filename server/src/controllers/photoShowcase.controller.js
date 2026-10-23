@@ -2,6 +2,25 @@ import mongoose from "mongoose";
 import AdminActivityLog from "../models/AdminActivityLog.model.js";
 import PhotoShowcaseItem from "../models/PhotoShowcaseItem.model.js";
 import PhotoShowcaseSettings from "../models/PhotoShowcaseSettings.model.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  countPostgresPhotoShowcaseItems,
+  createPostgresPhotoShowcaseItem,
+  deletePostgresPhotoShowcaseItem,
+  findPostgresPhotoShowcaseById,
+  findPostgresPhotoShowcaseBySlug,
+  getOrCreatePostgresPhotoShowcaseSettings,
+  getPostgresOrderedPhotoShowcaseItems,
+  getPostgresPhotoShowcaseAnalytics,
+  listPostgresPhotoShowcaseActivity,
+  listPostgresPhotoShowcaseItems,
+  listPostgresPublicPhotoShowcaseItems,
+  photoShowcaseSlugExists,
+  reorderPostgresPhotoShowcaseItems,
+  updatePostgresPhotoShowcaseItem,
+  updatePostgresPhotoShowcaseSettings,
+  writePostgresPhotoShowcaseActivity
+} from "../db/photoShowcaseRepository.js";
 
 const DEFAULT_PHOTO_SHOWCASE_ITEMS = [
   {
@@ -105,6 +124,10 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
+function usesPostgres() {
+  return isPostgresSelected();
+}
+
 function slugify(text = "") {
   return String(text)
     .toLowerCase()
@@ -115,6 +138,11 @@ function slugify(text = "") {
 
 async function logAdminActivity(adminId, action, entityId, changes = {}) {
   try {
+    if (!adminId) return;
+    if (usesPostgres()) {
+      await writePostgresPhotoShowcaseActivity(adminId, action, entityId, changes);
+      return;
+    }
     if (!adminId || !isDbConnected()) return;
     await AdminActivityLog.create({
       adminId,
@@ -134,6 +162,10 @@ async function logAdminActivity(adminId, action, entityId, changes = {}) {
 
 export async function getPublicPhotos(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const items = await listPostgresPublicPhotoShowcaseItems();
+      return res.status(200).json({ success: true, data: items.length ? items : DEFAULT_PHOTO_SHOWCASE_ITEMS });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({ success: true, data: DEFAULT_PHOTO_SHOWCASE_ITEMS });
     }
@@ -154,6 +186,10 @@ export async function getPublicPhotos(req, res, next) {
 
 export async function getPublicSettings(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const settings = await getOrCreatePostgresPhotoShowcaseSettings();
+      return res.status(200).json({ success: true, data: settings });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({
         success: true,
@@ -200,6 +236,11 @@ export async function getPublicSettings(req, res, next) {
 export async function getPublicPhotoBySlug(req, res, next) {
   try {
     const { slug } = req.params;
+    if (usesPostgres()) {
+      const item = await findPostgresPhotoShowcaseBySlug(slug);
+      if (!item) return res.status(404).json({ success: false, message: "Photo not found", data: null });
+      return res.status(200).json({ success: true, data: item });
+    }
     if (!isDbConnected()) {
       const found = DEFAULT_PHOTO_SHOWCASE_ITEMS.find((p) => p.slug === slug);
       if (!found) return res.status(404).json({ success: false, message: "Photo not found", data: null });
@@ -223,10 +264,19 @@ export async function getPublicPhotoBySlug(req, res, next) {
 
 export async function getAdminPhotos(req, res, next) {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 50;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(250, Math.max(1, parseInt(req.query.limit, 10) || 50));
     const skip = (page - 1) * limit;
     const { search, status, category, isTrash } = req.query;
+
+    if (usesPostgres()) {
+      const result = await listPostgresPhotoShowcaseItems({ search, status, category, isTrash: isTrash === "true", page, limit });
+      return res.status(200).json({
+        success: true,
+        data: result.items,
+        meta: { page, limit, total: result.total, totalPages: Math.ceil(result.total / limit) }
+      });
+    }
 
     const query = {};
     if (isTrash === "true") query.deletedAt = { $ne: null };
@@ -268,19 +318,26 @@ export async function createAdminPhoto(req, res, next) {
     let baseSlug = slugify(payload.slug || payload.title);
     let uniqueSlug = baseSlug;
     let count = 1;
-    while (await PhotoShowcaseItem.findOne({ slug: uniqueSlug })) {
+    while (usesPostgres()
+      ? await photoShowcaseSlugExists(uniqueSlug)
+      : await PhotoShowcaseItem.findOne({ slug: uniqueSlug })) {
       uniqueSlug = `${baseSlug}-${count++}`;
     }
 
-    const nextOrder = payload.order ?? ((await PhotoShowcaseItem.countDocuments({ deletedAt: null })) + 1);
+    const nextOrder = payload.order ?? ((usesPostgres()
+      ? await countPostgresPhotoShowcaseItems()
+      : await PhotoShowcaseItem.countDocuments({ deletedAt: null })) + 1);
 
-    const item = await PhotoShowcaseItem.create({
+    const photoPayload = {
       ...payload,
       slug: uniqueSlug,
       order: nextOrder,
       createdBy: req.user?.id,
       updatedBy: req.user?.id
-    });
+    };
+    const item = usesPostgres()
+      ? await createPostgresPhotoShowcaseItem(photoPayload)
+      : await PhotoShowcaseItem.create(photoPayload);
 
     await logAdminActivity(req.user?.id, "CREATE_PHOTO", item._id, { title: item.title });
 
@@ -297,21 +354,30 @@ export async function createAdminPhoto(req, res, next) {
 export async function duplicateAdminPhoto(req, res, next) {
   try {
     const { id } = req.params;
-    const source = await PhotoShowcaseItem.findById(id);
+    const source = usesPostgres() ? await findPostgresPhotoShowcaseById(id) : await PhotoShowcaseItem.findById(id);
     if (!source) return res.status(404).json({ success: false, message: "Source photo not found" });
 
-    const obj = source.toObject();
+    const obj = source.toObject?.() || { ...source };
     delete obj._id;
     delete obj.createdAt;
     delete obj.updatedAt;
 
     obj.title = `${obj.title} (Copy)`;
     obj.slug = slugify(obj.title);
-    obj.order = (await PhotoShowcaseItem.countDocuments({ deletedAt: null })) + 1;
+    obj.order = (usesPostgres() ? await countPostgresPhotoShowcaseItems() : await PhotoShowcaseItem.countDocuments({ deletedAt: null })) + 1;
     obj.createdBy = req.user?.id;
     obj.updatedBy = req.user?.id;
 
-    const duplicate = await PhotoShowcaseItem.create(obj);
+    let baseSlug = obj.slug;
+    let uniqueSlug = baseSlug;
+    let suffix = 1;
+    while (usesPostgres()
+      ? await photoShowcaseSlugExists(uniqueSlug)
+      : await PhotoShowcaseItem.findOne({ slug: uniqueSlug })) {
+      uniqueSlug = `${baseSlug}-${suffix++}`;
+    }
+    obj.slug = uniqueSlug;
+    const duplicate = usesPostgres() ? await createPostgresPhotoShowcaseItem(obj) : await PhotoShowcaseItem.create(obj);
     await logAdminActivity(req.user?.id, "DUPLICATE_PHOTO", duplicate._id, { sourceId: id });
 
     return res.status(201).json({ success: true, message: "Photo duplicated successfully", data: duplicate });
@@ -330,7 +396,9 @@ export async function updateAdminPhoto(req, res, next) {
     const payload = req.body;
     payload.updatedBy = req.user?.id;
 
-    const updated = await PhotoShowcaseItem.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
+    const updated = usesPostgres()
+      ? await updatePostgresPhotoShowcaseItem(id, payload)
+      : await PhotoShowcaseItem.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
     if (!updated) {
       return res.status(404).json({ success: false, message: "Photo not found", data: null });
     }
@@ -354,11 +422,10 @@ export async function softDeleteAdminPhoto(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await PhotoShowcaseItem.findByIdAndUpdate(
-      id,
-      { deletedAt: new Date(), isActive: false, updatedBy: req.user?.id },
-      { new: true }
-    );
+    const update = { deletedAt: new Date(), isActive: false, updatedBy: req.user?.id };
+    const item = usesPostgres()
+      ? await updatePostgresPhotoShowcaseItem(id, update)
+      : await PhotoShowcaseItem.findByIdAndUpdate(id, update, { new: true });
 
     if (!item) {
       return res.status(404).json({ success: false, message: "Photo not found", data: null });
@@ -379,11 +446,10 @@ export async function softDeleteAdminPhoto(req, res, next) {
 export async function restoreAdminPhoto(req, res, next) {
   try {
     const { id } = req.params;
-    const item = await PhotoShowcaseItem.findByIdAndUpdate(
-      id,
-      { deletedAt: null, isActive: true, updatedBy: req.user?.id },
-      { new: true }
-    );
+    const update = { deletedAt: null, isActive: true, updatedBy: req.user?.id };
+    const item = usesPostgres()
+      ? await updatePostgresPhotoShowcaseItem(id, update)
+      : await PhotoShowcaseItem.findByIdAndUpdate(id, update, { new: true });
 
     if (!item) return res.status(404).json({ success: false, message: "Photo not found" });
 
@@ -398,7 +464,9 @@ export async function restoreAdminPhoto(req, res, next) {
 export async function permanentDeleteAdminPhoto(req, res, next) {
   try {
     const { id } = req.params;
-    const item = await PhotoShowcaseItem.findByIdAndDelete(id);
+    const item = usesPostgres()
+      ? await deletePostgresPhotoShowcaseItem(id)
+      : await PhotoShowcaseItem.findByIdAndDelete(id);
     if (!item) return res.status(404).json({ success: false, message: "Photo not found" });
 
     await logAdminActivity(req.user?.id, "PERMANENT_DELETE_PHOTO", id, { title: item.title });
@@ -412,11 +480,15 @@ export async function permanentDeleteAdminPhoto(req, res, next) {
 export async function toggleAdminStatus(req, res, next) {
   try {
     const { id } = req.params;
-    const item = await PhotoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresPhotoShowcaseById(id) : await PhotoShowcaseItem.findById(id);
     if (!item) return res.status(404).json({ success: false, message: "Photo not found" });
 
-    item.isActive = !item.isActive;
-    await item.save();
+    if (usesPostgres()) {
+      Object.assign(item, await updatePostgresPhotoShowcaseItem(id, { isActive: !item.isActive }));
+    } else {
+      item.isActive = !item.isActive;
+      await item.save();
+    }
 
     return res.status(200).json({ success: true, data: item });
   } catch (err) {
@@ -427,11 +499,15 @@ export async function toggleAdminStatus(req, res, next) {
 export async function toggleAdminFeatured(req, res, next) {
   try {
     const { id } = req.params;
-    const item = await PhotoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresPhotoShowcaseById(id) : await PhotoShowcaseItem.findById(id);
     if (!item) return res.status(404).json({ success: false, message: "Photo not found" });
 
-    item.isFeatured = !item.isFeatured;
-    await item.save();
+    if (usesPostgres()) {
+      Object.assign(item, await updatePostgresPhotoShowcaseItem(id, { isFeatured: !item.isFeatured }));
+    } else {
+      item.isFeatured = !item.isFeatured;
+      await item.save();
+    }
 
     return res.status(200).json({ success: true, data: item });
   } catch (err) {
@@ -443,6 +519,13 @@ export async function reorderAdminPhotos(req, res, next) {
   try {
     const { items } = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
+
+    if (usesPostgres()) {
+      const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+      await reorderPostgresPhotoShowcaseItems(validItems.map((item) => ({ id: item.id, order: Number(item.order) })));
+      const updated = await getPostgresOrderedPhotoShowcaseItems();
+      return res.status(200).json({ success: true, data: updated });
+    }
 
     const bulkOps = items
       .filter((i) => mongoose.isValidObjectId(i.id))
@@ -466,6 +549,10 @@ export async function reorderAdminPhotos(req, res, next) {
 
 export async function getAdminSettings(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const settings = await getOrCreatePostgresPhotoShowcaseSettings();
+      return res.status(200).json({ success: true, data: settings });
+    }
     let settings = await PhotoShowcaseSettings.findOne({ settingsKey: "photo-showcase" });
     if (!settings) {
       settings = await PhotoShowcaseSettings.create({ settingsKey: "photo-showcase" });
@@ -481,11 +568,13 @@ export async function updateAdminSettings(req, res, next) {
     const payload = req.body;
     payload.updatedBy = req.user?.id;
 
-    const settings = await PhotoShowcaseSettings.findOneAndUpdate(
-      { settingsKey: "photo-showcase" },
-      { $set: payload },
-      { new: true, upsert: true, runValidators: true }
-    );
+    const settings = usesPostgres()
+      ? await updatePostgresPhotoShowcaseSettings(payload)
+      : await PhotoShowcaseSettings.findOneAndUpdate(
+        { settingsKey: "photo-showcase" },
+        { $set: payload },
+        { new: true, upsert: true, runValidators: true }
+      );
 
     return res.status(200).json({ success: true, message: "Photo settings updated", data: settings });
   } catch (err) {
@@ -495,6 +584,9 @@ export async function updateAdminSettings(req, res, next) {
 
 export async function getAdminAnalytics(req, res, next) {
   try {
+    if (usesPostgres()) {
+      return res.status(200).json({ success: true, data: await getPostgresPhotoShowcaseAnalytics() });
+    }
     const items = await PhotoShowcaseItem.find({ deletedAt: null });
     const totalPhotos = items.length;
     const totalViews = items.reduce((acc, i) => acc + (i.views || 0), 0);
@@ -520,6 +612,9 @@ export async function getAdminAnalytics(req, res, next) {
 
 export async function getAdminLogs(req, res, next) {
   try {
+    if (usesPostgres()) {
+      return res.status(200).json({ success: true, data: await listPostgresPhotoShowcaseActivity() });
+    }
     const logs = await AdminActivityLog.find({ entityType: "PhotoShowcase" })
       .populate("adminId", "name email role")
       .sort({ createdAt: -1 })

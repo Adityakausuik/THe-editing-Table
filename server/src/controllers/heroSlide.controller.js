@@ -1,8 +1,22 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
-import AuditLog from "../models/AuditLog.model.js";
 import HeroSlide from "../models/HeroSlide.model.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import { writeSecurityAudit } from "../utils/audit.js";
+import {
+  createPostgresHeroSlide,
+  deletePostgresHeroSlide,
+  getPostgresHeroSlide,
+  listPostgresHeroSlides,
+  listPublishedHeroSlides,
+  reorderPostgresHeroSlides,
+  updatePostgresHeroSlide
+} from "../db/heroSlideRepository.js";
+
+function usesPostgres() {
+  return isPostgresSelected();
+}
 
 const HERO_STRING_FIELDS = [
   "slideKey",
@@ -34,10 +48,11 @@ function sanitize(value = "") {
 }
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return usesPostgres() || mongoose.connection.readyState === 1;
 }
 
 async function requireDb(res) {
+  if (usesPostgres()) return true;
   if (isDbConnected()) return true;
   try {
     await connectDatabase();
@@ -127,10 +142,31 @@ function buildHeroPayload(payload = {}) {
     next.status = next.active ? "published" : "inactive";
   }
 
+  if (next.slideKey !== undefined && !next.slideKey) {
+    const error = new Error("Slide key is required.");
+    error.status = 400;
+    throw error;
+  }
+  if (next.title !== undefined && !next.title) {
+    const error = new Error("Title is required.");
+    error.status = 400;
+    throw error;
+  }
+  if (next.title?.length > 150 || next.subtitle?.length > 300 || next.description?.length > 1000) {
+    const error = new Error("Hero slide text exceeds the allowed length.");
+    error.status = 400;
+    throw error;
+  }
+
   return next;
 }
 
 async function normalizeAllHeroSlideOrders() {
+  if (usesPostgres()) {
+    const slides = await listPostgresHeroSlides();
+    if (slides.length) await reorderPostgresHeroSlides(slides.map((slide) => slide._id));
+    return;
+  }
   const slides = await HeroSlide.find().sort({ order: 1, createdAt: 1 }).select("_id");
   if (slides.length === 0) return;
 
@@ -145,18 +181,26 @@ async function normalizeAllHeroSlideOrders() {
 }
 
 async function writeAudit(req, action, entityId) {
-  await AuditLog.create({
+  await writeSecurityAudit({
+    req,
+    user: req.user,
     action,
     entity: "HeroSlide",
-    entityId: String(entityId),
-    user: req.user?.id,
-    userEmail: req.user?.email,
-    ipAddress: req.ip || ""
-  }).catch(() => null);
+    entityId: String(entityId)
+  });
 }
 
 export async function getPublicHeroSlides(req, res) {
   try {
+    if (usesPostgres()) {
+      const slides = await listPublishedHeroSlides();
+      return res.json({
+        success: true,
+        message: "Public hero slides retrieved successfully",
+        data: slides.map(normalizeHeroForClient)
+      });
+    }
+
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -177,7 +221,10 @@ export async function getPublicHeroSlides(req, res) {
       message: "Public hero slides retrieved successfully",
       data: slides.map(normalizeHeroForClient)
     });
-  } catch (error) {
+  } catch {
+    if (usesPostgres()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Hero slide data cannot be retrieved.", data: null });
+    }
     return res.json({
       success: true,
       message: "Public hero slides retrieved (offline fallback)",
@@ -199,13 +246,18 @@ export async function getAdminHeroSlides(req, res) {
       });
     }
 
-    const slides = await HeroSlide.find().sort({ order: 1, createdAt: 1 }).lean();
+    const slides = usesPostgres()
+      ? await listPostgresHeroSlides()
+      : await HeroSlide.find().sort({ order: 1, createdAt: 1 }).lean();
     return res.json({
       success: true,
       message: "Admin hero slides retrieved successfully",
       data: slides.map(normalizeHeroForClient)
     });
-  } catch (error) {
+  } catch {
+    if (usesPostgres()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Hero slide data cannot be retrieved.", data: null });
+    }
     return res.json({
       success: true,
       message: "Admin hero slides retrieved (offline fallback)",
@@ -226,9 +278,11 @@ export async function createHeroSlide(req, res) {
       });
     }
 
-    const highest = await HeroSlide.findOne().sort({ order: -1 }).select("order").lean();
-    const order = payload.order || Number(highest?.order || 0) + 1;
-    const slide = await HeroSlide.create({
+    const highest = usesPostgres()
+      ? Math.max(0, ...(await listPostgresHeroSlides()).map((item) => Number(item.order) || 0))
+      : Number((await HeroSlide.findOne().sort({ order: -1 }).select("order").lean())?.order || 0);
+    const order = payload.order || highest + 1;
+    const slideData = {
       ...payload,
       order,
       slideNumber: payload.slideNumber || order,
@@ -236,19 +290,23 @@ export async function createHeroSlide(req, res) {
       layoutType: payload.layoutType || "ceo_editorial",
       active: payload.active ?? true,
       status: payload.status || "published"
-    });
+    };
+    const slide = usesPostgres()
+      ? await createPostgresHeroSlide(new mongoose.Types.ObjectId().toString(), slideData)
+      : await HeroSlide.create(slideData);
 
     await normalizeAllHeroSlideOrders();
     await writeAudit(req, "HERO_SLIDE_CREATE", slide._id);
-    const saved = await HeroSlide.findById(slide._id).lean();
+    const saved = usesPostgres() ? await getPostgresHeroSlide(slide._id) : await HeroSlide.findById(slide._id).lean();
     return res.status(201).json({
       success: true,
       message: "Hero slide created successfully",
       data: normalizeHeroForClient(saved)
     });
   } catch (error) {
-    const status = error?.code === 11000 ? 409 : Number(error.status || 400);
-    const message = error?.code === 11000 ? "Slide key must be unique." : error.message;
+    const duplicate = error?.code === 11000 || error?.code === "23505";
+    const status = duplicate ? 409 : Number(error.status || 400);
+    const message = duplicate ? "Slide key must be unique." : error.message;
     return res.status(status).json({ success: false, message: message || "Hero slide create failed", data: null });
   }
 }
@@ -261,17 +319,15 @@ export async function updateHeroSlide(req, res) {
       return res.status(400).json({ success: false, message: "Invalid slide ID.", data: null });
     }
 
-    const existing = await HeroSlide.findById(id);
+    const existing = usesPostgres() ? await getPostgresHeroSlide(id) : await HeroSlide.findById(id);
     if (!existing) {
       return res.status(404).json({ success: false, message: "Hero slide not found.", data: null });
     }
 
     const payload = buildHeroPayload(req.body);
-    const updated = await HeroSlide.findByIdAndUpdate(
-      id,
-      { $set: payload },
-      { new: true, runValidators: true }
-    );
+    const updated = usesPostgres()
+      ? await updatePostgresHeroSlide(id, payload)
+      : await HeroSlide.findByIdAndUpdate(id, { $set: payload }, { new: true, runValidators: true });
 
     if (payload.order !== undefined || payload.slideNumber !== undefined) {
       await normalizeAllHeroSlideOrders();
@@ -282,15 +338,16 @@ export async function updateHeroSlide(req, res) {
     await deleteUnreferencedMedia(oldMedia.filter((url) => !currentMedia.has(url)));
     await writeAudit(req, "HERO_SLIDE_UPDATE", id);
 
-    const saved = await HeroSlide.findById(id).lean();
+    const saved = usesPostgres() ? updated : await HeroSlide.findById(id).lean();
     return res.json({
       success: true,
       message: "Hero slide updated successfully",
       data: normalizeHeroForClient(saved)
     });
   } catch (error) {
-    const status = error?.code === 11000 ? 409 : Number(error.status || 400);
-    const message = error?.code === 11000 ? "Slide key must be unique." : error.message;
+    const duplicate = error?.code === 11000 || error?.code === "23505";
+    const status = duplicate ? 409 : Number(error.status || 400);
+    const message = duplicate ? "Slide key must be unique." : error.message;
     return res.status(status).json({ success: false, message: message || "Hero slide update failed", data: null });
   }
 }
@@ -303,7 +360,7 @@ export async function deleteHeroSlide(req, res) {
       return res.status(400).json({ success: false, message: "Invalid slide ID.", data: null });
     }
 
-    const deleted = await HeroSlide.findByIdAndDelete(id);
+    const deleted = usesPostgres() ? await deletePostgresHeroSlide(id) : await HeroSlide.findByIdAndDelete(id);
     if (!deleted) {
       return res.status(404).json({ success: false, message: "Hero slide not found.", data: null });
     }
@@ -336,7 +393,7 @@ export async function reorderHeroSlides(req, res) {
     }
 
     const validIds = orderedIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
-    const totalSlides = await HeroSlide.countDocuments();
+    const totalSlides = usesPostgres() ? (await listPostgresHeroSlides()).length : await HeroSlide.countDocuments();
     if (
       validIds.length !== orderedIds.length ||
       new Set(validIds.map(String)).size !== validIds.length ||
@@ -349,7 +406,9 @@ export async function reorderHeroSlides(req, res) {
       });
     }
 
-    const existingCount = await HeroSlide.countDocuments({ _id: { $in: validIds } });
+    const existingCount = usesPostgres()
+      ? (await Promise.all(validIds.map((id) => getPostgresHeroSlide(id)))).filter(Boolean).length
+      : await HeroSlide.countDocuments({ _id: { $in: validIds } });
     if (existingCount !== validIds.length) {
       return res.status(404).json({
         success: false,
@@ -358,17 +417,18 @@ export async function reorderHeroSlides(req, res) {
       });
     }
 
-    await HeroSlide.bulkWrite(
-      validIds.map((id, index) => ({
-        updateOne: {
-          filter: { _id: id },
-          update: { $set: { order: index + 1, slideNumber: index + 1 } }
-        }
-      }))
-    );
+    if (usesPostgres()) {
+      await reorderPostgresHeroSlides(validIds);
+    } else {
+      await HeroSlide.bulkWrite(validIds.map((id, index) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { order: index + 1, slideNumber: index + 1 } } }
+      })));
+    }
     await writeAudit(req, "HERO_SLIDE_REORDER", "bulk");
 
-    const slides = await HeroSlide.find().sort({ order: 1, createdAt: 1 }).lean();
+    const slides = usesPostgres()
+      ? await listPostgresHeroSlides()
+      : await HeroSlide.find().sort({ order: 1, createdAt: 1 }).lean();
     return res.json({
       success: true,
       message: "Hero slides reordered successfully",

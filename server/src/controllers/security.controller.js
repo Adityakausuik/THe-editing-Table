@@ -12,12 +12,32 @@ import {
   verifyTotp
 } from "../utils/security.js";
 import { writeSecurityAudit } from "../utils/audit.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  findPostgresAuthUserById,
+  getPostgresGlobalSecurityPolicy,
+  listPostgresAuthSessions,
+  listPostgresManagedAuthUsers,
+  listPostgresSecurityAuditLogs,
+  listPostgresTrustedDevices,
+  revokePostgresAuthSessionForUser,
+  revokePostgresAuthSessions,
+  revokePostgresTrustedDevice,
+  revokePostgresTrustedDevices,
+  updatePostgresGlobalSecurityPolicy
+} from "../db/authRepository.js";
 
 const SECRET_SELECT = "+twoFactor.secretEncrypted +twoFactor.pendingSecretEncrypted +twoFactor.recoveryCodeHashes";
 
 function objectId(value) {
+  if (isPostgresSelected()) {
+    return /^[a-f\d]{24}$|^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(String(value || "")) ? value : null;
+  }
   return mongoose.Types.ObjectId.isValid(value) ? value : null;
 }
+
+const isPostgresPreview = () => isPostgresSelected();
+const getPolicy = () => isPostgresPreview() ? getPostgresGlobalSecurityPolicy() : SecurityPolicy.getGlobal();
 
 function roleRequiresTwoFactor(user, policy) {
   if (user.twoFactor?.required || user.forceSecuritySetup) return true;
@@ -50,7 +70,9 @@ function securityStatus(user) {
 }
 
 async function verifySecurityCredential(userId, password, code) {
-  const user = await User.findById(userId).select(SECRET_SELECT);
+  const user = isPostgresPreview()
+    ? await findPostgresAuthUserById(userId, { includeSecrets: true, includePassword: true })
+    : await User.findById(userId).select(SECRET_SELECT);
   if (!user || !(await user.comparePassword(String(password || "")))) return { valid: false, user };
   if (!user.twoFactor?.enabled) return { valid: true, user };
   const secret = decryptSecret(user.twoFactor.secretEncrypted);
@@ -87,14 +109,22 @@ function canManage(actor, target) {
 }
 
 export async function getOwnSecurity(req, res) {
-  const user = await User.findById(req.user.id).select("+twoFactor.recoveryCodeHashes");
-  const policy = await SecurityPolicy.getGlobal();
+  const user = isPostgresPreview()
+    ? await findPostgresAuthUserById(req.user.id, { includeSecrets: true })
+    : await User.findById(req.user.id).select("+twoFactor.recoveryCodeHashes");
+  const policy = await getPolicy();
   const now = new Date();
-  const [devices, sessions, activity] = await Promise.all([
-    TrustedDevice.find({ user: user._id, revokedAt: null, expiresAt: { $gt: now } }).sort({ lastUsedAt: -1 }),
-    Session.find({ user: user._id, revokedAt: null, expiresAt: { $gt: now } }).sort({ lastSeenAt: -1 }),
-    AuditLog.find({ user: user._id, entity: { $in: ["Security", "Session", "TrustedDevice", "User"] } }).sort({ createdAt: -1 }).limit(20)
-  ]);
+  const [devices, sessions, activity] = isPostgresPreview()
+    ? await Promise.all([
+      listPostgresTrustedDevices(user._id, now),
+      listPostgresAuthSessions(user._id, now),
+      listPostgresSecurityAuditLogs({ userId: user._id, securityEntitiesOnly: true })
+    ])
+    : await Promise.all([
+      TrustedDevice.find({ user: user._id, revokedAt: null, expiresAt: { $gt: now } }).sort({ lastUsedAt: -1 }),
+      Session.find({ user: user._id, revokedAt: null, expiresAt: { $gt: now } }).sort({ lastSeenAt: -1 }),
+      AuditLog.find({ user: user._id, entity: { $in: ["Security", "Session", "TrustedDevice", "User"] } }).sort({ createdAt: -1 }).limit(20)
+    ]);
   return res.json({
     success: true,
     message: "Security overview retrieved",
@@ -107,7 +137,7 @@ export async function getOwnSecurity(req, res) {
         sessionExpiryHours: policy.sessionExpiryHours
       },
       trustedDevices: devices,
-      sessions: sessions.map((session) => ({ ...session.toObject(), current: String(session._id) === req.user.sessionId })),
+      sessions: sessions.map((session) => ({ ...(session.toObject?.() || session), current: String(session._id) === req.user.sessionId })),
       recentActivity: activity
     }
   });
@@ -117,7 +147,7 @@ export async function regenerateRecoveryCodes(req, res) {
   const user = await requireCredential(req, res);
   if (!user) return;
   if (!user.twoFactor?.enabled) return res.status(409).json({ success: false, message: "Two-factor authentication is not enabled.", data: null });
-  const policy = await SecurityPolicy.getGlobal();
+  const policy = await getPolicy();
   const codes = generateRecoveryCodes(policy.recoveryCodeCount);
   user.twoFactor.recoveryCodeHashes = await hashRecoveryCodes(codes);
   await user.save();
@@ -128,7 +158,7 @@ export async function regenerateRecoveryCodes(req, res) {
 export async function disableOwnTwoFactor(req, res) {
   const user = await requireCredential(req, res);
   if (!user) return;
-  const policy = await SecurityPolicy.getGlobal();
+  const policy = await getPolicy();
   if (roleRequiresTwoFactor(user, policy)) {
     return res.status(409).json({ success: false, message: "Two-factor authentication is mandatory for this account.", data: null });
   }
@@ -139,7 +169,8 @@ export async function disableOwnTwoFactor(req, res) {
   user.twoFactor.recoveryCodeHashes = [];
   user.twoFactor.lastUsedCounter = -1;
   await user.save();
-  await TrustedDevice.updateMany({ user: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+  if (isPostgresPreview()) await revokePostgresTrustedDevices({ userId: user._id });
+  else await TrustedDevice.updateMany({ user: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
   await writeSecurityAudit({ req, user, action: "TWO_FACTOR_DISABLED" });
   return res.json({ success: true, message: "Two-factor authentication disabled", data: null });
 }
@@ -149,13 +180,16 @@ export async function changePassword(req, res) {
   if (String(newPassword || "").length < 12) {
     return res.status(400).json({ success: false, message: "New password must be at least 12 characters.", data: null });
   }
-  const user = await User.findById(req.user.id);
+  const user = isPostgresPreview()
+    ? await findPostgresAuthUserById(req.user.id, { includePassword: true })
+    : await User.findById(req.user.id);
   if (!user || !(await user.comparePassword(String(currentPassword || "")))) {
     return res.status(403).json({ success: false, message: "Current password is incorrect.", data: null });
   }
   user.passwordHash = await User.hashPassword(newPassword);
   await user.save();
-  await Session.updateMany({ user: user._id, _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "password_changed" } });
+  if (isPostgresPreview()) await revokePostgresAuthSessions({ userId: user._id, exceptSessionId: req.user.sessionId, reason: "password_changed" });
+  else await Session.updateMany({ user: user._id, _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "password_changed" } });
   await writeSecurityAudit({ req, user, action: "PASSWORD_CHANGED" });
   return res.json({ success: true, message: "Password updated. Other sessions were signed out.", data: null });
 }
@@ -163,7 +197,9 @@ export async function changePassword(req, res) {
 export async function revokeDevice(req, res) {
   const id = objectId(req.params.id);
   if (!id) return res.status(400).json({ success: false, message: "Invalid device ID", data: null });
-  const device = await TrustedDevice.findOneAndUpdate({ _id: id, user: req.user.id, revokedAt: null }, { $set: { revokedAt: new Date() } }, { new: true });
+  const device = isPostgresPreview()
+    ? await revokePostgresTrustedDevice({ id, userId: req.user.id })
+    : await TrustedDevice.findOneAndUpdate({ _id: id, user: req.user.id, revokedAt: null }, { $set: { revokedAt: new Date() } }, { new: true });
   if (!device) return res.status(404).json({ success: false, message: "Trusted device not found", data: null });
   if (String(req.cookies?.trustedDevice || "").startsWith(`${id}.`)) res.clearCookie("trustedDevice", { path: "/" });
   await writeSecurityAudit({ req, user: req.userDocument, action: "TRUSTED_DEVICE_REMOVED", entity: "TrustedDevice", entityId: String(id) });
@@ -174,7 +210,9 @@ export async function revokeSession(req, res) {
   const id = objectId(req.params.id);
   if (!id) return res.status(400).json({ success: false, message: "Invalid session ID", data: null });
   if (String(id) === req.user.sessionId) return res.status(409).json({ success: false, message: "Use Sign Out to end the current session.", data: null });
-  const session = await Session.findOneAndUpdate({ _id: id, user: req.user.id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "user_revoked" } }, { new: true });
+  const session = isPostgresPreview()
+    ? await revokePostgresAuthSessionForUser(id, req.user.id, "user_revoked")
+    : await Session.findOneAndUpdate({ _id: id, user: req.user.id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "user_revoked" } }, { new: true });
   if (!session) return res.status(404).json({ success: false, message: "Session not found", data: null });
   await writeSecurityAudit({ req, user: req.userDocument, action: "SESSION_REVOKED", entity: "Session", entityId: String(id) });
   return res.json({ success: true, message: "Session revoked", data: null });
@@ -183,13 +221,19 @@ export async function revokeSession(req, res) {
 export async function revokeOtherSessions(req, res) {
   const user = await requireCredential(req, res);
   if (!user) return;
-  const result = await Session.updateMany({ user: user._id, _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "user_revoked_others" } });
+  const result = isPostgresPreview()
+    ? await revokePostgresAuthSessions({ userId: user._id, exceptSessionId: req.user.sessionId, reason: "user_revoked_others" })
+    : await Session.updateMany({ user: user._id, _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "user_revoked_others" } });
   await writeSecurityAudit({ req, user, action: "SESSIONS_REVOKED", metadata: { count: result.modifiedCount } });
   return res.json({ success: true, message: "Other sessions signed out", data: { revoked: result.modifiedCount } });
 }
 
 export async function getManagedUsers(req, res) {
   const { search = "", role = "", status = "" } = req.query;
+  if (isPostgresPreview()) {
+    const users = await listPostgresManagedAuthUsers({ search, role, status, actorRole: req.user.role });
+    return res.json({ success: true, message: "Security status retrieved", data: users.map(securityStatus) });
+  }
   const query = {};
   if (role) query.role = role;
   if (status === "enabled") query["twoFactor.enabled"] = true;
@@ -205,7 +249,11 @@ export async function getManagedUsers(req, res) {
 
 async function managedTarget(req, res) {
   const id = objectId(req.params.id);
-  const target = id ? await User.findById(id).select(SECRET_SELECT) : null;
+  const target = id
+    ? isPostgresPreview()
+      ? await findPostgresAuthUserById(id, { includeSecrets: true })
+      : await User.findById(id).select(SECRET_SELECT)
+    : null;
   if (!target) {
     res.status(404).json({ success: false, message: "Account not found", data: null });
     return null;
@@ -234,7 +282,7 @@ export async function resetUserTwoFactor(req, res) {
   if (!actor) return;
   const target = await managedTarget(req, res);
   if (!target) return;
-  const policy = await SecurityPolicy.getGlobal();
+  const policy = await getPolicy();
   target.twoFactor.enabled = false;
   target.twoFactor.method = "";
   target.twoFactor.secretEncrypted = "";
@@ -246,10 +294,17 @@ export async function resetUserTwoFactor(req, res) {
   target.twoFactor.resetAt = new Date();
   target.forceSecuritySetup = roleRequiresTwoFactor(target, policy);
   await target.save();
-  await Promise.all([
-    Session.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "admin_2fa_reset" } }),
-    TrustedDevice.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date() } })
-  ]);
+  if (isPostgresPreview()) {
+    await Promise.all([
+      revokePostgresAuthSessions({ userId: target._id, reason: "admin_2fa_reset" }),
+      revokePostgresTrustedDevices({ userId: target._id })
+    ]);
+  } else {
+    await Promise.all([
+      Session.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "admin_2fa_reset" } }),
+      TrustedDevice.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date() } })
+    ]);
+  }
   await writeSecurityAudit({ req, user: actor, action: "TWO_FACTOR_RESET", entity: "User", entityId: target._id.toString(), metadata: { targetEmail: target.email, mandatorySetup: target.forceSecuritySetup } });
   return res.json({ success: true, message: target.forceSecuritySetup ? "2FA reset. Mandatory setup will run at next login." : "2FA reset.", data: securityStatus(target) });
 }
@@ -259,8 +314,11 @@ export async function revokeUserSessions(req, res) {
   if (!actor) return;
   const target = await managedTarget(req, res);
   if (!target) return;
-  const result = await Session.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "admin_revoked" } });
-  await TrustedDevice.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+  const result = isPostgresPreview()
+    ? await revokePostgresAuthSessions({ userId: target._id, reason: "admin_revoked" })
+    : await Session.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "admin_revoked" } });
+  if (isPostgresPreview()) await revokePostgresTrustedDevices({ userId: target._id });
+  else await TrustedDevice.updateMany({ user: target._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
   await writeSecurityAudit({ req, user: actor, action: "SESSIONS_REVOKED", entity: "User", entityId: target._id.toString(), metadata: { targetEmail: target.email, count: result.modifiedCount } });
   return res.json({ success: true, message: "Sessions and trusted devices revoked", data: { revoked: result.modifiedCount } });
 }
@@ -280,7 +338,7 @@ export async function unlockUser(req, res) {
 }
 
 export async function getSecurityPolicy(req, res) {
-  const policy = await SecurityPolicy.getGlobal();
+  const policy = await getPolicy();
   return res.json({ success: true, message: "Security policy retrieved", data: policy });
 }
 
@@ -290,11 +348,30 @@ export async function updateSecurityPolicy(req, res) {
   const allowed = ["requireAdmin2FA", "requireUser2FA", "allowedMethods", "trustedDeviceDays", "maxFailedAttempts", "lockMinutes", "sessionExpiryHours", "recoveryCodeCount"];
   const updates = {};
   for (const key of allowed) if (req.body[key] !== undefined) updates[key] = req.body[key];
+  if (isPostgresPreview()) {
+    const ranges = {
+      trustedDeviceDays: [0, 365],
+      maxFailedAttempts: [3, 20],
+      lockMinutes: [1, 1440],
+      sessionExpiryHours: [1, 720],
+      recoveryCodeCount: [5, 20]
+    };
+    const invalidBoolean = ["requireAdmin2FA", "requireUser2FA"].some((key) => updates[key] !== undefined && typeof updates[key] !== "boolean");
+    const invalidMethods = updates.allowedMethods !== undefined && (!Array.isArray(updates.allowedMethods) || updates.allowedMethods.some((method) => !["email", "totp"].includes(method)));
+    const invalidRange = Object.entries(ranges).some(([key, [minimum, maximum]]) => updates[key] !== undefined && (!Number.isFinite(Number(updates[key])) || Number(updates[key]) < minimum || Number(updates[key]) > maximum));
+    if (invalidBoolean || invalidMethods || invalidRange) {
+      return res.status(400).json({ success: false, message: "Security policy contains invalid values.", data: null });
+    }
+  }
   updates.updatedBy = actor._id;
-  const policy = await SecurityPolicy.findOneAndUpdate({ key: "global" }, { $set: updates }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true });
+  const policy = isPostgresPreview()
+    ? await updatePostgresGlobalSecurityPolicy(updates)
+    : await SecurityPolicy.findOneAndUpdate({ key: "global" }, { $set: updates }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true });
   let revoked = 0;
   if (req.body.forceLogoutAll === true) {
-    const result = await Session.updateMany({ _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "global_policy_logout" } });
+    const result = isPostgresPreview()
+      ? await revokePostgresAuthSessions({ exceptSessionId: req.user.sessionId, reason: "global_policy_logout" })
+      : await Session.updateMany({ _id: { $ne: req.user.sessionId }, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: "global_policy_logout" } });
     revoked = result.modifiedCount;
   }
   await writeSecurityAudit({ req, user: actor, action: "SECURITY_POLICY_CHANGED", entity: "SecurityPolicy", entityId: policy._id.toString(), metadata: { updates: Object.keys(updates), forceLogoutAll: req.body.forceLogoutAll === true, revoked } });
@@ -303,6 +380,10 @@ export async function updateSecurityPolicy(req, res) {
 
 export async function getSecurityAuditLogs(req, res) {
   const { search = "", role = "", action = "", result = "", from = "", to = "" } = req.query;
+  if (isPostgresPreview()) {
+    const logs = await listPostgresSecurityAuditLogs({ search, role, action, result, from, to });
+    return res.json({ success: true, message: "Security audit logs retrieved", data: logs });
+  }
   const query = {};
   if (role) query.role = role;
   if (action) query.action = action;

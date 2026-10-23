@@ -165,6 +165,7 @@ export default function HeroSection({
     const v = Math.max(0, Math.min(100, p));
     pct.current = v;
     rootRef.current?.style.setProperty("--x", v + "%");
+    panelRef.current?.setAttribute("aria-valuenow", String(Math.round(v)));
     headRef.current?.setAttribute("aria-valuenow", String(Math.round(v)));
     const w = panelRef.current?.clientWidth || 0;
     headRef.current?.toggleAttribute("data-flip", w > 0 && ((100 - v) / 100) * w < 120);
@@ -195,7 +196,7 @@ export default function HeroSection({
       if (k < 1) raf.current = requestAnimationFrame(step);
     };
     const id = setTimeout(() => (raf.current = requestAnimationFrame(step)), 1100);
-    return () => { clearTimeout(id); stop(); };
+    return () => { window.clearTimeout(id); stop(); };
   }, [setPos]);
 
   const fromEvent = (e) => {
@@ -250,11 +251,17 @@ export default function HeroSection({
           <section
             ref={panelRef}
             className={"panel" + (grab ? " grab" : "")}
+            role="slider"
+            tabIndex={0}
             aria-label="Before and after preview. Drag the playhead to compare raw and edited."
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={0}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
+            onKeyDown={onKeyDown}
           >
             <div className="title">
               <div className="rawcopy" aria-hidden="true">

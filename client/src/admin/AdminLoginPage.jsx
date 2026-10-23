@@ -85,31 +85,6 @@ export default function AdminLoginPage() {
     setSuccessMsg("");
   };
 
-  const performReset = async () => {
-    const endpoints = [
-      "/api/v1/auth/reset-admin",
-      "/api/auth/reset-admin",
-      "/v1/auth/reset-admin",
-      "/auth/reset-admin",
-      "/reset-admin",
-      "/api/v1/auth/reset"
-    ];
-    let lastError = null;
-    for (const ep of endpoints) {
-      try {
-        const res = await apiFetch(ep, { method: "POST" });
-        if (res?.success) return res;
-      } catch (err) {
-        lastError = err;
-        // Don't retry other endpoints if it's a fundamental network disconnect
-        if (err.isNetworkError || /failed to fetch/i.test(err.message)) {
-          break;
-        }
-      }
-    }
-    throw lastError || new Error("Failed to reset admin access.");
-  };
-
   const performLogin = async (credentials) => {
     const endpoints = [
       "/api/v1/auth/login",
@@ -191,35 +166,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setErrorMsg("");
     try {
-      let response;
-      try {
-        response = await performLogin({ email: email.trim(), password });
-      } catch (loginErr) {
-        if (email.trim().toLowerCase() === "admin@theeditingtable.com" || email.includes("admin")) {
-          // If server is unreachable or offline, allow fallback login with default password
-          if (
-            (loginErr.isNetworkError || /failed to fetch/i.test(loginErr.message) || loginErr.status === 503) &&
-            (password === "AdminPassword123!" || password === "AdminPassword123" || !password)
-          ) {
-            loginUser(
-              { id: "fallback-admin", name: "Administrator", email: email.trim() || "admin@theeditingtable.com", role: "superadmin" },
-              "fallback-csrf-token",
-              "fallback-access-token"
-            );
-            navigate("/admin/dashboard");
-            return;
-          }
-
-          const syncRes = await performReset().catch(() => null);
-          if (syncRes?.success) {
-            response = await performLogin({ email: email.trim(), password: password || "AdminPassword123!" });
-          } else {
-            throw loginErr;
-          }
-        } else {
-          throw loginErr;
-        }
-      }
+      const response = await performLogin({ email: email.trim(), password });
 
       if (response.data?.status === "authenticated") {
         finishLogin(response);

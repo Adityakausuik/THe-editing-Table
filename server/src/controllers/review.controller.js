@@ -1,5 +1,18 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  bulkPostgresReviewAction,
+  createPostgresReview,
+  deletePostgresReview,
+  getPostgresAdminReviewStats,
+  getPostgresReviewById,
+  listAllPostgresReviews,
+  listPostgresAdminReviews,
+  listPostgresFeaturedReviews,
+  listPostgresPublicReviews,
+  updatePostgresReview
+} from "../db/reviewRepository.js";
 import Review from "../models/Review.model.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
 
@@ -30,6 +43,10 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
+function isPostgresPreview() {
+  return isPostgresSelected();
+}
+
 async function requireDb(res) {
   if (isDbConnected()) return true;
   try {
@@ -48,6 +65,19 @@ async function requireDb(res) {
 
 function validObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
+}
+
+async function updatePostgresReviewOrFail(id, updates, res) {
+  if (!validObjectId(id)) {
+    res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+    return null;
+  }
+  const review = await updatePostgresReview(id, updates);
+  if (!review) {
+    res.status(404).json({ success: false, message: "Review not found", data: null });
+    return null;
+  }
+  return review;
 }
 
 async function getReviewOrFail(id, res) {
@@ -139,9 +169,7 @@ export async function submitReview(req, res) {
       return res.status(400).json({ success: false, message: "Please enter a valid email address.", data: null });
     }
 
-    if (!await requireDb(res)) return;
-
-    const review = await Review.create({
+    const reviewPayload = {
       name: cleanName,
       email: cleanEmail,
       phone: sanitizeText(phone),
@@ -158,7 +186,20 @@ export async function submitReview(req, res) {
       verified: false,
       featured: false,
       ipAddress: req.ip || ""
-    });
+    };
+
+    if (isPostgresPreview()) {
+      reviewPayload._id = new mongoose.Types.ObjectId().toString();
+      await createPostgresReview(reviewPayload);
+      return res.status(201).json({
+        success: true,
+        message: "Thank you! Your review has been submitted and is awaiting admin approval.",
+        data: { id: reviewPayload._id }
+      });
+    }
+
+    if (!await requireDb(res)) return;
+    const review = await Review.create(reviewPayload);
 
     return res.status(201).json({
       success: true,
@@ -177,6 +218,20 @@ export async function submitReview(req, res) {
 
 export async function getPublicReviews(req, res) {
   try {
+    const { rating, projectType, search, page = 1, limit = 12, sort = "newest" } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 12));
+    if (isPostgresPreview()) {
+      const data = await listPostgresPublicReviews({
+        rating,
+        projectType,
+        search: search ? sanitizeText(search) : "",
+        page: pageNum,
+        limit: limitNum,
+        sort
+      });
+      return res.status(200).json({ success: true, message: "Public reviews retrieved", data });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -192,7 +247,6 @@ export async function getPublicReviews(req, res) {
       });
     }
 
-    const { rating, projectType, search, page = 1, limit = 12, sort = "newest" } = req.query;
     const query = { status: "approved" };
 
     if (rating && !isNaN(Number(rating))) query.rating = Number(rating);
@@ -208,8 +262,6 @@ export async function getPublicReviews(req, res) {
     }
 
     const sortOption = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
-    const pageNum = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10)));
     const skip = (pageNum - 1) * limitNum;
 
     const [reviews, totalCount] = await Promise.all([
@@ -229,7 +281,10 @@ export async function getPublicReviews(req, res) {
         stats
       }
     });
-  } catch (error) {
+  } catch {
+    if (isPostgresPreview()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Public reviews could not be retrieved.", data: null });
+    }
     return res.status(200).json({
       success: true,
       message: "Public reviews retrieved (offline fallback)",
@@ -244,6 +299,10 @@ export async function getPublicReviews(req, res) {
 
 export async function getFeaturedReviews(req, res) {
   try {
+    if (isPostgresPreview()) {
+      const data = await listPostgresFeaturedReviews();
+      return res.status(200).json({ success: true, message: "Featured reviews retrieved", data });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -266,7 +325,10 @@ export async function getFeaturedReviews(req, res) {
       message: "Featured reviews retrieved",
       data: reviews
     });
-  } catch (error) {
+  } catch {
+    if (isPostgresPreview()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Featured reviews could not be retrieved.", data: null });
+    }
     return res.status(200).json({
       success: true,
       message: "Featured reviews retrieved (offline fallback)",
@@ -277,6 +339,10 @@ export async function getFeaturedReviews(req, res) {
 
 export async function getAdminReviewStats(req, res) {
   try {
+    if (isPostgresPreview()) {
+      const data = await getPostgresAdminReviewStats();
+      return res.status(200).json({ success: true, message: "Review stats retrieved successfully", data });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -301,7 +367,10 @@ export async function getAdminReviewStats(req, res) {
       message: "Review stats retrieved successfully",
       data: { total, pending, approved, rejected, hidden, averageRating: stats.averageRating }
     });
-  } catch (error) {
+  } catch {
+    if (isPostgresPreview()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Review statistics could not be retrieved.", data: null });
+    }
     return res.status(200).json({
       success: true,
       message: "Review stats retrieved (offline fallback)",
@@ -312,6 +381,14 @@ export async function getAdminReviewStats(req, res) {
 
 export async function getAdminReviews(req, res) {
   try {
+    if (isPostgresPreview()) {
+      const reviews = await listPostgresAdminReviews();
+      return res.status(200).json({
+        success: true,
+        message: "Admin reviews retrieved",
+        data: { items: reviews, pagination: { page: 1, limit: reviews.length, totalCount: reviews.length, totalPages: 1 } }
+      });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -336,7 +413,10 @@ export async function getAdminReviews(req, res) {
         pagination: { page: 1, limit: reviews.length, totalCount: reviews.length, totalPages: 1 }
       }
     });
-  } catch (error) {
+  } catch {
+    if (isPostgresPreview()) {
+      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Admin reviews could not be retrieved.", data: null });
+    }
     return res.status(200).json({
       success: true,
       message: "Admin reviews retrieved (offline fallback)",
@@ -350,6 +430,12 @@ export async function getAdminReviews(req, res) {
 
 export async function getAdminReviewById(req, res) {
   try {
+    if (isPostgresPreview()) {
+      if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+      const review = await getPostgresReviewById(req.params.id);
+      if (!review) return res.status(404).json({ success: false, message: "Review not found", data: null });
+      return res.status(200).json({ success: true, message: "Review details retrieved", data: review });
+    }
     if (!await requireDb(res)) return;
     const review = await getReviewOrFail(req.params.id, res);
     if (!review) return;
@@ -360,6 +446,11 @@ export async function getAdminReviewById(req, res) {
 }
 
 export async function approveReview(req, res) {
+  if (isPostgresPreview()) {
+    const review = await updatePostgresReviewOrFail(req.params.id, { status: "approved" }, res);
+    if (!review) return;
+    return res.status(200).json({ success: true, message: "Review approved successfully", data: review });
+  }
   if (!await requireDb(res)) return;
   const review = await getReviewOrFail(req.params.id, res);
   if (!review) return;
@@ -369,6 +460,11 @@ export async function approveReview(req, res) {
 }
 
 export async function rejectReview(req, res) {
+  if (isPostgresPreview()) {
+    const review = await updatePostgresReviewOrFail(req.params.id, { status: "rejected" }, res);
+    if (!review) return;
+    return res.status(200).json({ success: true, message: "Review rejected", data: review });
+  }
   if (!await requireDb(res)) return;
   const review = await getReviewOrFail(req.params.id, res);
   if (!review) return;
@@ -378,6 +474,13 @@ export async function rejectReview(req, res) {
 }
 
 export async function toggleFeatureReview(req, res) {
+  if (isPostgresPreview()) {
+    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+    const existing = await getPostgresReviewById(req.params.id);
+    if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
+    const review = await updatePostgresReview(req.params.id, { featured: req.body.featured !== undefined ? Boolean(req.body.featured) : !existing.featured });
+    return res.status(200).json({ success: true, message: "Review feature status updated", data: review });
+  }
   if (!await requireDb(res)) return;
   const review = await getReviewOrFail(req.params.id, res);
   if (!review) return;
@@ -387,6 +490,13 @@ export async function toggleFeatureReview(req, res) {
 }
 
 export async function toggleVerifyReview(req, res) {
+  if (isPostgresPreview()) {
+    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+    const existing = await getPostgresReviewById(req.params.id);
+    if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
+    const review = await updatePostgresReview(req.params.id, { verified: req.body.verified !== undefined ? Boolean(req.body.verified) : !existing.verified });
+    return res.status(200).json({ success: true, message: "Verified Client status updated", data: review });
+  }
   if (!await requireDb(res)) return;
   const review = await getReviewOrFail(req.params.id, res);
   if (!review) return;
@@ -396,6 +506,17 @@ export async function toggleVerifyReview(req, res) {
 }
 
 export async function replyToReview(req, res) {
+  if (isPostgresPreview()) {
+    const review = await updatePostgresReviewOrFail(req.params.id, {
+      adminReply: {
+        message: sanitizeText(req.body.message || req.body.reply || req.body.replyMessage || ""),
+        repliedAt: new Date(),
+        repliedBy: req.user?.email || req.user?.name || "admin"
+      }
+    }, res);
+    if (!review) return;
+    return res.status(200).json({ success: true, message: "Admin reply saved", data: review });
+  }
   if (!await requireDb(res)) return;
   const review = await getReviewOrFail(req.params.id, res);
   if (!review) return;
@@ -409,6 +530,16 @@ export async function replyToReview(req, res) {
 }
 
 export async function updateAdminReview(req, res) {
+  if (isPostgresPreview()) {
+    const allowed = ["name", "company", "projectType", "rating", "title", "message", "country", "city", "profileImage", "projectImage", "verified", "featured", "status"];
+    const update = {};
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) update[key] = typeof req.body[key] === "string" ? sanitizeText(req.body[key]) : req.body[key];
+    });
+    const review = await updatePostgresReviewOrFail(req.params.id, update, res);
+    if (!review) return;
+    return res.status(200).json({ success: true, message: "Review updated", data: review });
+  }
   if (!await requireDb(res)) return;
   if (!validObjectId(req.params.id)) {
     return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
@@ -427,6 +558,13 @@ export async function updateAdminReview(req, res) {
 }
 
 export async function deleteReview(req, res) {
+  if (isPostgresPreview()) {
+    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+    const deleted = await deletePostgresReview(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: "Review not found", data: null });
+    await deleteUnreferencedMedia(extractMediaPaths(deleted));
+    return res.status(200).json({ success: true, message: "Review deleted successfully", data: { id: req.params.id } });
+  }
   if (!await requireDb(res)) return;
   if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
   const deleted = await Review.findByIdAndDelete(req.params.id);
@@ -436,6 +574,17 @@ export async function deleteReview(req, res) {
 }
 
 export async function bulkReviewAction(req, res) {
+  if (isPostgresPreview()) {
+    const { ids = [], action } = req.body;
+    const validIds = Array.isArray(ids) ? ids.filter(validObjectId) : [];
+    if (!Array.isArray(ids) || validIds.length !== ids.length) {
+      return res.status(400).json({ success: false, message: "One or more review IDs are invalid.", data: null });
+    }
+    const result = await bulkPostgresReviewAction(validIds.map(String), action);
+    if (!result) return res.status(400).json({ success: false, message: "Unsupported bulk action.", data: null });
+    if (action === "delete") await deleteUnreferencedMedia(result.deletedReviews.flatMap(extractMediaPaths));
+    return res.status(200).json({ success: true, message: "Bulk action completed successfully", data: { affectedCount: result.affectedCount } });
+  }
   if (!await requireDb(res)) return;
   const { ids = [], action } = req.body;
   const validIds = Array.isArray(ids) ? ids.filter(validObjectId) : [];
@@ -464,8 +613,13 @@ export async function bulkReviewAction(req, res) {
 }
 
 export async function exportReviewsCsv(req, res) {
-  if (!await requireDb(res)) return;
-  const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+  let reviews;
+  if (isPostgresPreview()) {
+    reviews = await listAllPostgresReviews();
+  } else {
+    if (!await requireDb(res)) return;
+    reviews = await Review.find().sort({ createdAt: -1 }).lean();
+  }
   const rows = reviews.map((r) =>
     `"${sanitizeCsvCell(r._id)}","${sanitizeCsvCell(r.name)}","${sanitizeCsvCell(r.rating)}","${sanitizeCsvCell(r.title)}","${sanitizeCsvCell(r.message)}"`
   );

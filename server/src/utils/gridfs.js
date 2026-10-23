@@ -1,23 +1,27 @@
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
+import { connectGridFs, getGridFsConnection } from "../config/gridfsDb.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 const BUCKET_NAME = "media_uploads";
 const UPLOAD_PARTS_BUCKET_NAME = "media_upload_parts";
 let uploadPartsExpiryIndexPromise = null;
 
 export function getGridFSBucket() {
-  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+  const connection = getGridFsConnection();
+  if (connection?.readyState !== 1 || !connection.db) {
     return null;
   }
-  return new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+  return new mongoose.mongo.GridFSBucket(connection.db, {
     bucketName: BUCKET_NAME
   });
 }
 
 function getUploadPartsBucket() {
-  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) return null;
-  return new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: UPLOAD_PARTS_BUCKET_NAME });
+  const connection = getGridFsConnection();
+  if (connection?.readyState !== 1 || !connection.db) return null;
+  return new mongoose.mongo.GridFSBucket(connection.db, { bucketName: UPLOAD_PARTS_BUCKET_NAME });
 }
 
 export async function saveUploadPart(uploadId, index, buffer) {
@@ -73,7 +77,7 @@ export async function cleanupExpiredUploadParts() {
   const bucket = getUploadPartsBucket();
   if (!bucket) return;
   if (!uploadPartsExpiryIndexPromise) {
-    uploadPartsExpiryIndexPromise = mongoose.connection.db
+    uploadPartsExpiryIndexPromise = getGridFsConnection().db
       .collection(`${UPLOAD_PARTS_BUCKET_NAME}.files`)
       .createIndex({ "metadata.expiresAt": 1 })
       .catch((error) => {
@@ -91,6 +95,7 @@ export async function cleanupExpiredUploadParts() {
  * Stored with filename: `${folder}/${filename}` (e.g. `partners/atelier-123.webp`)
  */
 export async function saveBufferToGridFS(filename, buffer, mimeType, folder = "general") {
+  await connectGridFs();
   const bucket = getGridFSBucket();
   if (!bucket) {
     throw new Error("MongoDB is unavailable for persistent media storage.");
@@ -99,8 +104,16 @@ export async function saveBufferToGridFS(filename, buffer, mimeType, folder = "g
   const targetPath = `${folder}/${filename}`.replace(/^\/+/, "");
 
   // Safely remove any existing file with identical path
+  let existing = [];
   try {
-    const existing = await bucket.find({ filename: targetPath }).toArray();
+    existing = await bucket.find({ filename: targetPath }).toArray();
+  } catch {
+    // Non-fatal if index query fails
+  }
+  if (existing.length && isPostgresSelected()) {
+    throw new Error("A GridFS file with this path already exists; existing rollback media was preserved.");
+  }
+  try {
     for (const f of existing) {
       await bucket.delete(f._id).catch(() => {});
     }
@@ -142,6 +155,7 @@ export async function saveBufferToGridFS(filename, buffer, mimeType, folder = "g
  * @param {string} filePath - e.g. "partners/photo.webp" or "resumes/candidate.pdf"
  */
 export async function getFileStreamFromGridFS(filePath) {
+  await connectGridFs();
   const bucket = getGridFSBucket();
   if (!bucket) return null;
 
@@ -170,6 +184,7 @@ export async function getFileStreamFromGridFS(filePath) {
  * Delete a file by path from GridFS.
  */
 export async function deleteFromGridFS(filePath) {
+  await connectGridFs();
   const bucket = getGridFSBucket();
   if (!bucket) return false;
 
@@ -198,6 +213,7 @@ export async function deleteFromGridFS(filePath) {
  * Runs non-blockingly during server boot to ensure any existing disk assets exist in GridFS.
  */
 export async function syncLocalUploadsToGridFS(baseUploadsDir) {
+  await connectGridFs();
   const bucket = getGridFSBucket();
   if (!bucket || !fs.existsSync(baseUploadsDir)) return;
 

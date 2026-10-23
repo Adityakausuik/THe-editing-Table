@@ -3,6 +3,8 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { deleteFromGridFS } from "./gridfs.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import { deleteVercelBlob, isVercelBlobUrl } from "./blobStorage.js";
 
 // Comprehensive detection for Vercel and AWS Lambda serverless runtime environments
 export function isServerlessEnvironment() {
@@ -106,8 +108,22 @@ export function sanitizeFilename(originalName = "file") {
   return { cleanName: cleanName || "media", uniqueSuffix, ext };
 }
 
-export function safeDeleteFile(relativePathOrUrl) {
+export function shouldDeleteManagedBlob({ postgresSelected, allowPostgresDeletion = false }) {
+  return !postgresSelected || allowPostgresDeletion;
+}
+
+export function safeDeleteFile(relativePathOrUrl, { allowPostgresBlobDeletion = false } = {}) {
   if (!relativePathOrUrl || typeof relativePathOrUrl !== "string") return false;
+
+  if (isVercelBlobUrl(relativePathOrUrl)) {
+    // PostgreSQL writes can introduce or remove references while Atlas remains
+    // the rollback source. Keep its Blob objects until cutover is finalized.
+    if (!shouldDeleteManagedBlob({ postgresSelected: isPostgresSelected(), allowPostgresDeletion: allowPostgresBlobDeletion })) return false;
+    deleteVercelBlob(relativePathOrUrl).catch((error) => {
+      console.warn(`[Uploads Notice] Vercel Blob deletion failed: ${error.message}`);
+    });
+    return true;
+  }
 
   // Don't delete remote unsplash/external URLs
   if (relativePathOrUrl.startsWith("http://") || relativePathOrUrl.startsWith("https://")) {
@@ -144,12 +160,15 @@ export function safeDeleteFile(relativePathOrUrl) {
       }
     }
 
-    // Always delete from MongoDB GridFS to clean up persistent cloud storage
-    deleteFromGridFS(uploadsRelativePath).catch(() => {});
-    const ext = path.extname(uploadsRelativePath);
-    if (ext) {
-      const thumbRelative = uploadsRelativePath.replace(ext, `-thumb${ext}`);
-      deleteFromGridFS(thumbRelative).catch(() => {});
+    // Keep the Atlas copy intact while PostgreSQL is active so rollback still
+    // has the original media objects available.
+    if (!isPostgresSelected()) {
+      deleteFromGridFS(uploadsRelativePath).catch(() => {});
+      const ext = path.extname(uploadsRelativePath);
+      if (ext) {
+        const thumbRelative = uploadsRelativePath.replace(ext, `-thumb${ext}`);
+        deleteFromGridFS(thumbRelative).catch(() => {});
+      }
     }
 
     return deletedFromDisk;

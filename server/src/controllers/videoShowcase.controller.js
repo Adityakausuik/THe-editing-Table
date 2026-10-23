@@ -4,6 +4,27 @@ import AdminActivityLog from "../models/AdminActivityLog.model.js";
 import VideoAnalytics from "../models/VideoAnalytics.model.js";
 import VideoShowcaseItem from "../models/VideoShowcaseItem.model.js";
 import VideoShowcaseSettings from "../models/VideoShowcaseSettings.model.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  bulkUpdatePostgresVideoShowcaseItems,
+  countPostgresVideoShowcaseItems,
+  createPostgresVideoShowcaseItem,
+  deletePostgresVideoShowcaseItem,
+  findPostgresVideoShowcaseById,
+  findPostgresVideoShowcaseBySlug,
+  getOrCreatePostgresVideoShowcaseSettings,
+  getPostgresOrderedVideoShowcaseItems,
+  getPostgresVideoShowcaseAnalytics,
+  listPostgresPublicVideoShowcaseItems,
+  listPostgresVideoShowcaseActivity,
+  listPostgresVideoShowcaseItems,
+  recordPostgresVideoEvent,
+  reorderPostgresVideoShowcaseItems,
+  updatePostgresVideoShowcaseItem,
+  updatePostgresVideoShowcaseSettings,
+  videoShowcaseSlugExists,
+  writePostgresVideoShowcaseActivity
+} from "../db/videoShowcaseRepository.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
 
 const VIDEO_SHOWCASE_HEADING = "We Turn Your Raw Footage Into Stories Worth Watching";
@@ -162,6 +183,10 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
+function usesPostgres() {
+  return isPostgresSelected();
+}
+
 function slugify(text = "") {
   return String(text)
     .toLowerCase()
@@ -209,7 +234,12 @@ function extractClientInfo(req) {
 
 async function logAdminActivity(adminId, action, entityId, changes = {}) {
   try {
-    if (!adminId || !isDbConnected()) return;
+    if (!adminId) return;
+    if (usesPostgres()) {
+      await writePostgresVideoShowcaseActivity(adminId, action, entityId, changes);
+      return;
+    }
+    if (!isDbConnected()) return;
     await AdminActivityLog.create({
       adminId,
       action,
@@ -228,6 +258,12 @@ async function logAdminActivity(adminId, action, entityId, changes = {}) {
 
 export async function getPublicVideos(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const items = await listPostgresPublicVideoShowcaseItems();
+      return res.status(200).json(items.length
+        ? { success: true, data: items }
+        : { success: true, message: "Serving default showcase items (No items found)", data: DEFAULT_VIDEO_SHOWCASE_ITEMS });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({
         success: true,
@@ -267,6 +303,10 @@ export async function getPublicVideos(req, res, next) {
 
 export async function getPublicSettings(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const settings = await getOrCreatePostgresVideoShowcaseSettings();
+      return res.status(200).json({ success: true, data: normalizeVideoShowcaseCopy(settings) });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({
         success: true,
@@ -320,6 +360,11 @@ export async function getPublicSettings(req, res, next) {
 export async function getPublicVideoBySlug(req, res, next) {
   try {
     const { slug } = req.params;
+    if (usesPostgres()) {
+      const item = await findPostgresVideoShowcaseBySlug(slug);
+      if (!item) return res.status(404).json({ success: false, message: "Video not found", data: null });
+      return res.status(200).json({ success: true, data: item });
+    }
     if (!isDbConnected()) {
       const found = DEFAULT_VIDEO_SHOWCASE_ITEMS.find((v) => v.slug === slug);
       if (!found) return res.status(404).json({ success: false, message: "Video not found", data: null });
@@ -340,6 +385,10 @@ export async function getPublicVideoBySlug(req, res, next) {
 export async function trackImpression(req, res, next) {
   try {
     const { id } = req.params;
+    if (usesPostgres()) {
+      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "impression", clientInfo: extractClientInfo(req) });
+      return res.status(200).json({ success: true, message: "Impression recorded" });
+    }
     if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
@@ -357,6 +406,10 @@ export async function trackImpression(req, res, next) {
 export async function trackPlay(req, res, next) {
   try {
     const { id } = req.params;
+    if (usesPostgres()) {
+      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "play", clientInfo: extractClientInfo(req) });
+      return res.status(200).json({ success: true, message: "Play recorded" });
+    }
     if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
@@ -374,6 +427,10 @@ export async function trackPlay(req, res, next) {
 export async function trackComplete(req, res, next) {
   try {
     const { id } = req.params;
+    if (usesPostgres()) {
+      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "complete", clientInfo: extractClientInfo(req) });
+      return res.status(200).json({ success: true, message: "Completion recorded" });
+    }
     if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
@@ -391,6 +448,10 @@ export async function trackComplete(req, res, next) {
 export async function trackCtaClick(req, res, next) {
   try {
     const { id } = req.params;
+    if (usesPostgres()) {
+      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "cta_click", clientInfo: extractClientInfo(req) });
+      return res.status(200).json({ success: true, message: "CTA click recorded" });
+    }
     if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
@@ -416,6 +477,10 @@ export async function getAdminVideos(req, res, next) {
     const skip = (page - 1) * limit;
 
     const { search, status, category, sourceType, featured, isTrash, sort } = req.query;
+    if (usesPostgres()) {
+      const result = await listPostgresVideoShowcaseItems({ search, status, category, sourceType, featured, isTrash: isTrash === "true", sort, page, limit });
+      return res.status(200).json({ success: true, data: result.items, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: Math.ceil(result.total / result.limit) } });
+    }
 
     const query = {};
 
@@ -476,6 +541,13 @@ export async function createAdminVideo(req, res, next) {
     let baseSlug = slugify(payload.slug || payload.title);
     let uniqueSlug = baseSlug;
     let count = 1;
+    if (usesPostgres()) {
+      while (await videoShowcaseSlugExists(uniqueSlug)) uniqueSlug = `${baseSlug}-${count++}`;
+      const nextOrder = payload.order ?? ((await countPostgresVideoShowcaseItems()) + 1);
+      const item = await createPostgresVideoShowcaseItem({ ...payload, slug: uniqueSlug, order: nextOrder, createdBy: req.user?.id, updatedBy: req.user?.id });
+      await logAdminActivity(req.user?.id, "CREATE_VIDEO", item._id, { title: item.title });
+      return res.status(201).json({ success: true, message: "Video showcase item created successfully", data: item });
+    }
     while (await VideoShowcaseItem.findOne({ slug: uniqueSlug })) {
       uniqueSlug = `${baseSlug}-${count++}`;
     }
@@ -509,7 +581,7 @@ export async function getAdminVideoById(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await VideoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!item) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
@@ -527,7 +599,7 @@ export async function updateAdminVideo(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const existing = await VideoShowcaseItem.findById(id);
+    const existing = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!existing) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
@@ -537,7 +609,7 @@ export async function updateAdminVideo(req, res, next) {
       let baseSlug = slugify(payload.slug);
       let uniqueSlug = baseSlug;
       let count = 1;
-      while (await VideoShowcaseItem.findOne({ slug: uniqueSlug, _id: { $ne: id } })) {
+      while (usesPostgres() ? await videoShowcaseSlugExists(uniqueSlug, id) : await VideoShowcaseItem.findOne({ slug: uniqueSlug, _id: { $ne: id } })) {
         uniqueSlug = `${baseSlug}-${count++}`;
       }
       payload.slug = uniqueSlug;
@@ -545,7 +617,7 @@ export async function updateAdminVideo(req, res, next) {
 
     payload.updatedBy = req.user?.id;
 
-    const updated = await VideoShowcaseItem.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
+    const updated = usesPostgres() ? await updatePostgresVideoShowcaseItem(id, payload) : await VideoShowcaseItem.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
 
     await logAdminActivity(req.user?.id, "UPDATE_VIDEO", id, { title: updated.title });
 
@@ -566,11 +638,9 @@ export async function softDeleteAdminVideo(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await VideoShowcaseItem.findByIdAndUpdate(
-      id,
-      { deletedAt: new Date(), isActive: false, updatedBy: req.user?.id },
-      { new: true }
-    );
+    const item = usesPostgres()
+      ? await updatePostgresVideoShowcaseItem(id, { deletedAt: new Date(), isActive: false, updatedBy: req.user?.id })
+      : await VideoShowcaseItem.findByIdAndUpdate(id, { deletedAt: new Date(), isActive: false, updatedBy: req.user?.id }, { new: true });
 
     if (!item) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
@@ -595,20 +665,23 @@ export async function permanentDeleteAdminVideo(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await VideoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!item) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
 
-    // Safe media cleanup
-    if (item.videoFile?.url) safeDeleteFile(item.videoFile.url);
-    if (item.mobileVideoFile?.url) safeDeleteFile(item.mobileVideoFile.url);
-    if (item.thumbnail?.url) safeDeleteFile(item.thumbnail.url);
-    if (item.mobileThumbnail?.url) safeDeleteFile(item.mobileThumbnail.url);
-    if (item.captionUrl) safeDeleteFile(item.captionUrl);
-
-    await VideoAnalytics.deleteMany({ videoId: id });
-    await VideoShowcaseItem.findByIdAndDelete(id);
+    if (usesPostgres()) {
+      // Preserve shared media during the Preview migration; production Mongo remains the rollback source.
+      await deletePostgresVideoShowcaseItem(id);
+    } else {
+      if (item.videoFile?.url) safeDeleteFile(item.videoFile.url);
+      if (item.mobileVideoFile?.url) safeDeleteFile(item.mobileVideoFile.url);
+      if (item.thumbnail?.url) safeDeleteFile(item.thumbnail.url);
+      if (item.mobileThumbnail?.url) safeDeleteFile(item.mobileThumbnail.url);
+      if (item.captionUrl) safeDeleteFile(item.captionUrl);
+      await VideoAnalytics.deleteMany({ videoId: id });
+      await VideoShowcaseItem.findByIdAndDelete(id);
+    }
 
     await logAdminActivity(req.user?.id, "PERMANENT_DELETE_VIDEO", id, { title: item.title });
 
@@ -629,22 +702,22 @@ export async function toggleAdminStatus(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await VideoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!item) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
 
     const nextActive = req.body.active !== undefined ? req.body.active : !item.isActive;
-    item.isActive = nextActive;
-    item.updatedBy = req.user?.id;
-    await item.save();
+    const updatedItem = usesPostgres()
+      ? await updatePostgresVideoShowcaseItem(id, { isActive: nextActive, updatedBy: req.user?.id })
+      : (item.isActive = nextActive, item.updatedBy = req.user?.id, await item.save());
 
     await logAdminActivity(req.user?.id, "CHANGE_STATUS", id, { isActive: nextActive });
 
     return res.status(200).json({
       success: true,
       message: `Video ${nextActive ? "activated" : "deactivated"} successfully`,
-      data: item
+      data: updatedItem
     });
   } catch (err) {
     next(err);
@@ -658,22 +731,22 @@ export async function toggleAdminFeatured(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const item = await VideoShowcaseItem.findById(id);
+    const item = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!item) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
 
     const nextFeatured = req.body.isFeatured !== undefined ? req.body.isFeatured : !item.isFeatured;
-    item.isFeatured = nextFeatured;
-    item.updatedBy = req.user?.id;
-    await item.save();
+    const updatedItem = usesPostgres()
+      ? await updatePostgresVideoShowcaseItem(id, { isFeatured: nextFeatured, updatedBy: req.user?.id })
+      : (item.isFeatured = nextFeatured, item.updatedBy = req.user?.id, await item.save());
 
     await logAdminActivity(req.user?.id, "CHANGE_FEATURED", id, { isFeatured: nextFeatured });
 
     return res.status(200).json({
       success: true,
       message: `Video ${nextFeatured ? "featured" : "unfeatured"} successfully`,
-      data: item
+      data: updatedItem
     });
   } catch (err) {
     next(err);
@@ -685,6 +758,15 @@ export async function reorderAdminVideos(req, res, next) {
     const { items } = req.body;
     if (!Array.isArray(items)) {
       return res.status(400).json({ success: false, message: "Items array is required for reordering", data: null });
+    }
+
+    if (usesPostgres()) {
+      const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+      if (validItems.length) {
+        await reorderPostgresVideoShowcaseItems(validItems.map((item) => ({ id: item.id, order: Number(item.order) })));
+        await logAdminActivity(req.user?.id, "REORDER_VIDEOS", null, { count: validItems.length });
+      }
+      return res.status(200).json({ success: true, message: "Videos reordered successfully", data: await getPostgresOrderedVideoShowcaseItems() });
     }
 
     const bulkOps = items
@@ -720,12 +802,12 @@ export async function duplicateAdminVideo(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const original = await VideoShowcaseItem.findById(id);
+    const original = usesPostgres() ? await findPostgresVideoShowcaseById(id) : await VideoShowcaseItem.findById(id);
     if (!original) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
     }
 
-    const plain = original.toObject();
+    const plain = original.toObject?.() || { ...original };
     delete plain._id;
     delete plain.createdAt;
     delete plain.updatedAt;
@@ -740,7 +822,7 @@ export async function duplicateAdminVideo(req, res, next) {
     plain.createdBy = req.user?.id;
     plain.updatedBy = req.user?.id;
 
-    const copy = await VideoShowcaseItem.create(plain);
+    const copy = usesPostgres() ? await createPostgresVideoShowcaseItem(plain) : await VideoShowcaseItem.create(plain);
     await logAdminActivity(req.user?.id, "CREATE_VIDEO", copy._id, { title: copy.title, duplicatedFrom: id });
 
     return res.status(201).json({
@@ -760,11 +842,9 @@ export async function restoreAdminVideo(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const restored = await VideoShowcaseItem.findByIdAndUpdate(
-      id,
-      { deletedAt: null, isActive: true, updatedBy: req.user?.id },
-      { new: true }
-    );
+    const restored = usesPostgres()
+      ? await updatePostgresVideoShowcaseItem(id, { deletedAt: null, isActive: true, updatedBy: req.user?.id })
+      : await VideoShowcaseItem.findByIdAndUpdate(id, { deletedAt: null, isActive: true, updatedBy: req.user?.id }, { new: true });
 
     if (!restored) {
       return res.status(404).json({ success: false, message: "Video not found", data: null });
@@ -807,7 +887,9 @@ export async function bulkAdminAction(req, res, next) {
 
     update.updatedBy = req.user?.id;
 
-    const result = await VideoShowcaseItem.updateMany({ _id: { $in: validIds } }, { $set: update });
+    const result = usesPostgres()
+      ? await bulkUpdatePostgresVideoShowcaseItems(validIds, update)
+      : await VideoShowcaseItem.updateMany({ _id: { $in: validIds } }, { $set: update });
     await logAdminActivity(req.user?.id, "BULK_ACTION", null, { action, count: validIds.length });
 
     return res.status(200).json({
@@ -822,6 +904,10 @@ export async function bulkAdminAction(req, res, next) {
 
 export async function getAdminSettings(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const settings = await getOrCreatePostgresVideoShowcaseSettings();
+      return res.status(200).json({ success: true, data: normalizeVideoShowcaseCopy(settings) });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({
         success: true,
@@ -881,6 +967,12 @@ export async function updateAdminSettings(req, res, next) {
     const payload = req.body;
     payload.updatedBy = req.user?.id;
 
+    if (usesPostgres()) {
+      const settings = await updatePostgresVideoShowcaseSettings(payload);
+      await logAdminActivity(req.user?.id, "UPDATE_SETTINGS", settings?._id, payload);
+      return res.status(200).json({ success: true, message: "Video showcase settings updated successfully", data: settings });
+    }
+
     const settings = await VideoShowcaseSettings.findOneAndUpdate(
       { settingsKey: "video-showcase" },
       { $set: payload },
@@ -904,6 +996,10 @@ export async function getAdminAnalytics(req, res, next) {
     const days = parseInt(req.query.days, 10) || 30;
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - days);
+
+    if (usesPostgres()) {
+      return res.status(200).json({ success: true, data: await getPostgresVideoShowcaseAnalytics(sinceDate) });
+    }
 
     const totalVideos = await VideoShowcaseItem.countDocuments({ deletedAt: null });
     const activeVideos = await VideoShowcaseItem.countDocuments({ deletedAt: null, isActive: true });
@@ -979,6 +1075,11 @@ export async function getAdminActivityLogs(req, res, next) {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
+
+    if (usesPostgres()) {
+      const result = await listPostgresVideoShowcaseActivity({ page, limit });
+      return res.status(200).json({ success: true, data: result.logs, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: Math.ceil(result.total / result.limit) } });
+    }
 
     const total = await AdminActivityLog.countDocuments({ entityType: "VideoShowcase" });
     const logs = await AdminActivityLog.find({ entityType: "VideoShowcase" })

@@ -1,4 +1,15 @@
 import mongoose from "mongoose";
+import { connectDatabase } from "../config/db.js";
+import { env } from "../config/env.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import {
+  createPostgresCmsRecord,
+  getPostgresCmsRecord,
+  listPostgresCmsRecords,
+  reorderPostgresCmsRecords,
+  updatePostgresCmsRecord
+} from "../db/cmsRepository.js";
+import { getPostgresPool } from "../db/postgres.js";
 import ContactEmail from "../models/ContactEmail.model.js";
 import ContactOffice from "../models/ContactOffice.model.js";
 import ContactPhone from "../models/ContactPhone.model.js";
@@ -124,6 +135,99 @@ function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
+function usesPostgres() {
+  return isPostgresSelected();
+}
+
+async function requireContactStore(res) {
+  if (usesPostgres()) return true;
+  if (env.VERCEL_ENV === "preview") {
+    res.status(503).json({ success: false, message: "Contact database is not configured.", data: null });
+    return false;
+  }
+  if (!isDbConnected()) await connectDatabase().catch(() => {});
+  if (isDbConnected()) return true;
+  res.status(503).json({ success: false, message: "Contact database is unavailable.", data: null });
+  return false;
+}
+
+async function listContactRecords(Model, filter = {}) {
+  if (usesPostgres()) {
+    return listPostgresCmsRecords(Model, {
+      publicFilter: filter,
+      orderField: "order"
+    });
+  }
+  return Model.find(filter).sort({ order: 1, createdAt: 1 });
+}
+
+async function createContactRecord(Model, payload) {
+  if (!usesPostgres()) return Model.create(payload);
+  const document = new Model(payload);
+  await document.validate();
+  return createPostgresCmsRecord(Model, document._id.toString(), document.toObject());
+}
+
+async function updateContactRecord(Model, id, payload) {
+  if (!usesPostgres()) return Model.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
+  const existing = await getPostgresCmsRecord(Model, id);
+  if (!existing) return null;
+  const document = Model.hydrate(existing);
+  document.set(payload);
+  await document.validate({ validateModifiedOnly: true });
+  const updates = {};
+  const requestedPaths = Object.keys(payload);
+  for (const schemaPath of Object.keys(Model.schema.paths)) {
+    if (["_id", "__v", "createdAt", "updatedAt"].includes(schemaPath)) continue;
+    if (!requestedPaths.some((requested) => requested === schemaPath ||
+      schemaPath.startsWith(`${requested}.`) || requested.startsWith(`${schemaPath}.`))) continue;
+    let target = updates;
+    const parts = schemaPath.split(".");
+    for (const part of parts.slice(0, -1)) target = target[part] ||= {};
+    target[parts.at(-1)] = document.get(schemaPath);
+  }
+  return updatePostgresCmsRecord(Model, id, updates);
+}
+
+async function deleteContactRecord(Model, id) {
+  if (usesPostgres()) return updateContactRecord(Model, id, { deletedAt: new Date(), status: "inactive" });
+  return Model.findByIdAndUpdate(id, { deletedAt: new Date(), status: "inactive" }, { new: true });
+}
+
+async function reorderContactRecords(Model, items) {
+  const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+  if (usesPostgres()) {
+    const reordered = validItems.length
+      ? await reorderPostgresCmsRecords(Model, "order", validItems.map(({ id, order }) => ({ id: String(id), order: Number(order) })))
+      : [];
+    if (!reordered) return null;
+    return listContactRecords(Model, { deletedAt: null });
+  }
+  const operations = validItems.map((item) => ({
+    updateOne: { filter: { _id: item.id }, update: { $set: { order: Number(item.order) } } }
+  }));
+  if (operations.length) await Model.bulkWrite(operations);
+  return listContactRecords(Model, { deletedAt: null });
+}
+
+async function clearPrimaryContactEmails(exceptId = null) {
+  if (usesPostgres()) {
+    if (exceptId) {
+      await getPostgresPool().query(
+        'UPDATE "contactemails" SET "primary" = FALSE, "updated_at" = now(), "__v" = "__v" + 1 WHERE "deleted_at" IS NULL AND "_id" <> $1',
+        [String(exceptId)]
+      );
+    } else {
+      await getPostgresPool().query(
+        'UPDATE "contactemails" SET "primary" = FALSE, "updated_at" = now(), "__v" = "__v" + 1 WHERE "deleted_at" IS NULL'
+      );
+    }
+    return;
+  }
+  const filter = { deletedAt: null, ...(exceptId ? { _id: { $ne: exceptId } } : {}) };
+  await ContactEmail.updateMany(filter, { $set: { primary: false } });
+}
+
 // Helper to seed initial data if DB is empty
 async function ensureInitialData() {
   if (!isDbConnected()) return;
@@ -183,6 +287,29 @@ async function ensureInitialData() {
 // ----------------------------------------------------
 export async function getPublicContactInfo(req, res, next) {
   try {
+    if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
+      return res.status(503).json({ success: false, message: "Contact database is not configured.", data: null });
+    }
+    if (usesPostgres()) {
+      const [settingsRows, phones, emails, offices, workingHours] = await Promise.all([
+        listPostgresCmsRecords(ContactSettings, { publicFilter: { settingsKey: "contact-settings" } }),
+        listPostgresCmsRecords(ContactPhone, { publicFilter: { status: "active", deletedAt: null }, orderField: "order" }),
+        listPostgresCmsRecords(ContactEmail, { publicFilter: { status: "active", deletedAt: null }, orderField: "order" }),
+        listPostgresCmsRecords(ContactOffice, { publicFilter: { status: "active", deletedAt: null }, orderField: "order" }),
+        listPostgresCmsRecords(WorkingHours, { publicFilter: { status: "active", deletedAt: null }, orderField: "order" })
+      ]);
+      return res.status(200).json({
+        success: true,
+        data: {
+          settings: settingsRows[0] || DEFAULT_SETTINGS,
+          phones: phones.length ? phones : DEFAULT_PHONES,
+          emails: emails.length ? emails : DEFAULT_EMAILS,
+          offices: offices.length ? offices : DEFAULT_OFFICES,
+          workingHours: workingHours.length ? workingHours : DEFAULT_HOURS
+        }
+      });
+    }
+
     if (!isDbConnected()) {
       return res.status(200).json({
         success: true,
@@ -228,6 +355,11 @@ export async function getPublicContactInfo(req, res, next) {
 // ----------------------------------------------------
 export async function getAdminSettings(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
+    if (usesPostgres()) {
+      const rows = await listPostgresCmsRecords(ContactSettings, { publicFilter: { settingsKey: "contact-settings" } });
+      return res.status(200).json({ success: true, data: rows[0] || DEFAULT_SETTINGS });
+    }
     if (!isDbConnected()) {
       return res.status(200).json({ success: true, data: DEFAULT_SETTINGS });
     }
@@ -245,8 +377,17 @@ export async function getAdminSettings(req, res, next) {
 
 export async function updateAdminSettings(req, res, next) {
   try {
-    const payload = req.body;
+    if (!await requireContactStore(res)) return;
+    const payload = { ...req.body };
     payload.updatedBy = req.user?.id;
+
+    if (usesPostgres()) {
+      const rows = await listPostgresCmsRecords(ContactSettings, { publicFilter: { settingsKey: "contact-settings" } });
+      const settings = rows[0]
+        ? await updateContactRecord(ContactSettings, rows[0]._id, payload)
+        : await createContactRecord(ContactSettings, { settingsKey: "contact-settings", ...DEFAULT_SETTINGS, ...payload });
+      return res.status(200).json({ success: true, message: "Contact settings updated successfully", data: settings });
+    }
 
     const settings = await ContactSettings.findOneAndUpdate(
       { settingsKey: "contact-settings" },
@@ -269,7 +410,8 @@ export async function updateAdminSettings(req, res, next) {
 // ----------------------------------------------------
 export async function getAdminPhones(req, res, next) {
   try {
-    const phones = await ContactPhone.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    if (!await requireContactStore(res)) return;
+    const phones = await listContactRecords(ContactPhone, { deletedAt: null });
     return res.status(200).json({ success: true, data: phones });
   } catch (err) {
     next(err);
@@ -278,17 +420,21 @@ export async function getAdminPhones(req, res, next) {
 
 export async function createAdminPhone(req, res, next) {
   try {
-    const payload = req.body;
+    if (!await requireContactStore(res)) return;
+    const payload = { ...req.body };
     if (!payload.phone) {
       return res.status(400).json({ success: false, message: "Phone number is required", data: null });
     }
 
-    const count = await ContactPhone.countDocuments({ deletedAt: null });
+    const existing = usesPostgres()
+      ? await listContactRecords(ContactPhone, { deletedAt: null })
+      : null;
+    const count = existing ? existing.length : await ContactPhone.countDocuments({ deletedAt: null });
     payload.order = payload.order ?? count + 1;
     payload.createdBy = req.user?.id;
     payload.updatedBy = req.user?.id;
 
-    const phone = await ContactPhone.create(payload);
+    const phone = await createContactRecord(ContactPhone, payload);
     return res.status(201).json({ success: true, message: "Phone number added successfully", data: phone });
   } catch (err) {
     next(err);
@@ -297,13 +443,13 @@ export async function createAdminPhone(req, res, next) {
 
 export async function updateAdminPhone(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    req.body.updatedBy = req.user?.id;
-    const phone = await ContactPhone.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const phone = await updateContactRecord(ContactPhone, id, { ...req.body, updatedBy: req.user?.id });
     if (!phone) return res.status(404).json({ success: false, message: "Phone number not found", data: null });
 
     return res.status(200).json({ success: true, message: "Phone number updated successfully", data: phone });
@@ -314,12 +460,13 @@ export async function updateAdminPhone(req, res, next) {
 
 export async function deleteAdminPhone(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const phone = await ContactPhone.findByIdAndUpdate(id, { deletedAt: new Date(), status: "inactive" }, { new: true });
+    const phone = await deleteContactRecord(ContactPhone, id);
     if (!phone) return res.status(404).json({ success: false, message: "Phone number not found", data: null });
 
     return res.status(200).json({ success: true, message: "Phone number deleted successfully", data: null });
@@ -330,23 +477,12 @@ export async function deleteAdminPhone(req, res, next) {
 
 export async function reorderAdminPhones(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { items } = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
 
-    const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
-      .map((i) => ({
-        updateOne: {
-          filter: { _id: i.id },
-          update: { $set: { order: Number(i.order) } }
-        }
-      }));
-
-    if (bulkOps.length > 0) {
-      await ContactPhone.bulkWrite(bulkOps);
-    }
-
-    const updated = await ContactPhone.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    const updated = await reorderContactRecords(ContactPhone, items);
+    if (!updated) return res.status(404).json({ success: false, message: "One or more phone numbers no longer exist", data: null });
     return res.status(200).json({ success: true, message: "Phones reordered successfully", data: updated });
   } catch (err) {
     next(err);
@@ -358,7 +494,8 @@ export async function reorderAdminPhones(req, res, next) {
 // ----------------------------------------------------
 export async function getAdminEmails(req, res, next) {
   try {
-    const emails = await ContactEmail.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    if (!await requireContactStore(res)) return;
+    const emails = await listContactRecords(ContactEmail, { deletedAt: null });
     return res.status(200).json({ success: true, data: emails });
   } catch (err) {
     next(err);
@@ -367,21 +504,23 @@ export async function getAdminEmails(req, res, next) {
 
 export async function createAdminEmail(req, res, next) {
   try {
-    const payload = req.body;
+    if (!await requireContactStore(res)) return;
+    const payload = { ...req.body };
     if (!payload.email) {
       return res.status(400).json({ success: false, message: "Email address is required", data: null });
     }
 
     if (payload.primary) {
-      await ContactEmail.updateMany({ deletedAt: null }, { $set: { primary: false } });
+      await clearPrimaryContactEmails();
     }
 
-    const count = await ContactEmail.countDocuments({ deletedAt: null });
+    const existing = usesPostgres() ? await listContactRecords(ContactEmail, { deletedAt: null }) : null;
+    const count = existing ? existing.length : await ContactEmail.countDocuments({ deletedAt: null });
     payload.order = payload.order ?? count + 1;
     payload.createdBy = req.user?.id;
     payload.updatedBy = req.user?.id;
 
-    const email = await ContactEmail.create(payload);
+    const email = await createContactRecord(ContactEmail, payload);
     return res.status(201).json({ success: true, message: "Email address added successfully", data: email });
   } catch (err) {
     next(err);
@@ -390,17 +529,17 @@ export async function createAdminEmail(req, res, next) {
 
 export async function updateAdminEmail(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
     if (req.body.primary) {
-      await ContactEmail.updateMany({ _id: { $ne: id }, deletedAt: null }, { $set: { primary: false } });
+      await clearPrimaryContactEmails(id);
     }
 
-    req.body.updatedBy = req.user?.id;
-    const email = await ContactEmail.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const email = await updateContactRecord(ContactEmail, id, { ...req.body, updatedBy: req.user?.id });
     if (!email) return res.status(404).json({ success: false, message: "Email address not found", data: null });
 
     return res.status(200).json({ success: true, message: "Email address updated successfully", data: email });
@@ -411,12 +550,13 @@ export async function updateAdminEmail(req, res, next) {
 
 export async function deleteAdminEmail(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const email = await ContactEmail.findByIdAndUpdate(id, { deletedAt: new Date(), status: "inactive" }, { new: true });
+    const email = await deleteContactRecord(ContactEmail, id);
     if (!email) return res.status(404).json({ success: false, message: "Email address not found", data: null });
 
     return res.status(200).json({ success: true, message: "Email address deleted successfully", data: null });
@@ -427,23 +567,11 @@ export async function deleteAdminEmail(req, res, next) {
 
 export async function reorderAdminEmails(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { items } = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
-
-    const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
-      .map((i) => ({
-        updateOne: {
-          filter: { _id: i.id },
-          update: { $set: { order: Number(i.order) } }
-        }
-      }));
-
-    if (bulkOps.length > 0) {
-      await ContactEmail.bulkWrite(bulkOps);
-    }
-
-    const updated = await ContactEmail.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    const updated = await reorderContactRecords(ContactEmail, items);
+    if (!updated) return res.status(404).json({ success: false, message: "One or more email addresses no longer exist", data: null });
     return res.status(200).json({ success: true, message: "Emails reordered successfully", data: updated });
   } catch (err) {
     next(err);
@@ -455,7 +583,8 @@ export async function reorderAdminEmails(req, res, next) {
 // ----------------------------------------------------
 export async function getAdminOffices(req, res, next) {
   try {
-    const offices = await ContactOffice.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    if (!await requireContactStore(res)) return;
+    const offices = await listContactRecords(ContactOffice, { deletedAt: null });
     return res.status(200).json({ success: true, data: offices });
   } catch (err) {
     next(err);
@@ -464,13 +593,15 @@ export async function getAdminOffices(req, res, next) {
 
 export async function createAdminOffice(req, res, next) {
   try {
-    const payload = req.body;
-    const count = await ContactOffice.countDocuments({ deletedAt: null });
+    if (!await requireContactStore(res)) return;
+    const payload = { ...req.body };
+    const existing = usesPostgres() ? await listContactRecords(ContactOffice, { deletedAt: null }) : null;
+    const count = existing ? existing.length : await ContactOffice.countDocuments({ deletedAt: null });
     payload.order = payload.order ?? count + 1;
     payload.createdBy = req.user?.id;
     payload.updatedBy = req.user?.id;
 
-    const office = await ContactOffice.create(payload);
+    const office = await createContactRecord(ContactOffice, payload);
     return res.status(201).json({ success: true, message: "Office location added successfully", data: office });
   } catch (err) {
     next(err);
@@ -479,13 +610,13 @@ export async function createAdminOffice(req, res, next) {
 
 export async function updateAdminOffice(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    req.body.updatedBy = req.user?.id;
-    const office = await ContactOffice.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const office = await updateContactRecord(ContactOffice, id, { ...req.body, updatedBy: req.user?.id });
     if (!office) return res.status(404).json({ success: false, message: "Office location not found", data: null });
 
     return res.status(200).json({ success: true, message: "Office location updated successfully", data: office });
@@ -496,12 +627,13 @@ export async function updateAdminOffice(req, res, next) {
 
 export async function deleteAdminOffice(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const office = await ContactOffice.findByIdAndUpdate(id, { deletedAt: new Date(), status: "inactive" }, { new: true });
+    const office = await deleteContactRecord(ContactOffice, id);
     if (!office) return res.status(404).json({ success: false, message: "Office location not found", data: null });
 
     return res.status(200).json({ success: true, message: "Office location deleted successfully", data: null });
@@ -512,23 +644,11 @@ export async function deleteAdminOffice(req, res, next) {
 
 export async function reorderAdminOffices(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { items } = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
-
-    const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
-      .map((i) => ({
-        updateOne: {
-          filter: { _id: i.id },
-          update: { $set: { order: Number(i.order) } }
-        }
-      }));
-
-    if (bulkOps.length > 0) {
-      await ContactOffice.bulkWrite(bulkOps);
-    }
-
-    const updated = await ContactOffice.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    const updated = await reorderContactRecords(ContactOffice, items);
+    if (!updated) return res.status(404).json({ success: false, message: "One or more offices no longer exist", data: null });
     return res.status(200).json({ success: true, message: "Offices reordered successfully", data: updated });
   } catch (err) {
     next(err);
@@ -540,7 +660,8 @@ export async function reorderAdminOffices(req, res, next) {
 // ----------------------------------------------------
 export async function getAdminWorkingHours(req, res, next) {
   try {
-    const hours = await WorkingHours.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    if (!await requireContactStore(res)) return;
+    const hours = await listContactRecords(WorkingHours, { deletedAt: null });
     return res.status(200).json({ success: true, data: hours });
   } catch (err) {
     next(err);
@@ -549,13 +670,15 @@ export async function getAdminWorkingHours(req, res, next) {
 
 export async function createAdminWorkingHours(req, res, next) {
   try {
-    const payload = req.body;
-    const count = await WorkingHours.countDocuments({ deletedAt: null });
+    if (!await requireContactStore(res)) return;
+    const payload = { ...req.body };
+    const existing = usesPostgres() ? await listContactRecords(WorkingHours, { deletedAt: null }) : null;
+    const count = existing ? existing.length : await WorkingHours.countDocuments({ deletedAt: null });
     payload.order = payload.order ?? count + 1;
     payload.createdBy = req.user?.id;
     payload.updatedBy = req.user?.id;
 
-    const hours = await WorkingHours.create(payload);
+    const hours = await createContactRecord(WorkingHours, payload);
     return res.status(201).json({ success: true, message: "Working hours added successfully", data: hours });
   } catch (err) {
     next(err);
@@ -564,13 +687,13 @@ export async function createAdminWorkingHours(req, res, next) {
 
 export async function updateAdminWorkingHours(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    req.body.updatedBy = req.user?.id;
-    const hours = await WorkingHours.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const hours = await updateContactRecord(WorkingHours, id, { ...req.body, updatedBy: req.user?.id });
     if (!hours) return res.status(404).json({ success: false, message: "Working hours not found", data: null });
 
     return res.status(200).json({ success: true, message: "Working hours updated successfully", data: hours });
@@ -581,12 +704,13 @@ export async function updateAdminWorkingHours(req, res, next) {
 
 export async function deleteAdminWorkingHours(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
-    const hours = await WorkingHours.findByIdAndUpdate(id, { deletedAt: new Date(), status: "inactive" }, { new: true });
+    const hours = await deleteContactRecord(WorkingHours, id);
     if (!hours) return res.status(404).json({ success: false, message: "Working hours not found", data: null });
 
     return res.status(200).json({ success: true, message: "Working hours deleted successfully", data: null });
@@ -597,23 +721,11 @@ export async function deleteAdminWorkingHours(req, res, next) {
 
 export async function reorderAdminWorkingHours(req, res, next) {
   try {
+    if (!await requireContactStore(res)) return;
     const { items } = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
-
-    const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
-      .map((i) => ({
-        updateOne: {
-          filter: { _id: i.id },
-          update: { $set: { order: Number(i.order) } }
-        }
-      }));
-
-    if (bulkOps.length > 0) {
-      await WorkingHours.bulkWrite(bulkOps);
-    }
-
-    const updated = await WorkingHours.find({ deletedAt: null }).sort({ order: 1, createdAt: 1 });
+    const updated = await reorderContactRecords(WorkingHours, items);
+    if (!updated) return res.status(404).json({ success: false, message: "One or more working hours no longer exist", data: null });
     return res.status(200).json({ success: true, message: "Working hours reordered successfully", data: updated });
   } catch (err) {
     next(err);

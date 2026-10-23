@@ -4,12 +4,20 @@ import { processAndSaveFile } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
 import { isMediaReferenced } from "../utils/mediaCleanup.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import { createPostgresMediaRecord, deletePostgresMediaRecord, isPostgresMediaReferenced, listPostgresMediaRecords } from "../db/mediaRepository.js";
+import { getPostgresCmsRecord } from "../db/cmsRepository.js";
+
+function usesPostgres() {
+  return isPostgresSelected();
+}
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
 }
 
 async function requireDb(res) {
+  if (usesPostgres()) return true;
   if (isDbConnected()) return true;
   try {
     await connectDatabase();
@@ -37,7 +45,7 @@ export async function uploadMedia(req, res, next) {
 
     let media;
     try {
-      media = await Media.create({
+      const payload = {
         filename: saved.filename,
         originalName: req.file.originalname,
         mimeType: saved.mimeType,
@@ -47,9 +55,12 @@ export async function uploadMedia(req, res, next) {
         category: category || "general",
         altText: altText || req.file.originalname,
         uploadedBy: req.user?.id
-      });
+      };
+      media = usesPostgres()
+        ? await createPostgresMediaRecord(Media, payload)
+        : await Media.create(payload);
     } catch (error) {
-      safeDeleteFile(saved.url);
+      safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true });
       throw error;
     }
 
@@ -65,6 +76,11 @@ export async function uploadMedia(req, res, next) {
 
 export async function getMediaFiles(req, res, next) {
   try {
+    if (usesPostgres()) {
+      const { category, search } = req.query;
+      const mediaList = await listPostgresMediaRecords(Media, { category, search });
+      return res.json({ success: true, message: "Media files retrieved successfully", data: mediaList });
+    }
     if (!isDbConnected()) {
       await connectDatabase().catch(() => {});
     }
@@ -97,9 +113,11 @@ export async function deleteMedia(req, res, next) {
       return res.status(400).json({ success: false, message: "Invalid media ID", data: null });
     }
 
-    const media = await Media.findById(req.params.id);
+    const media = usesPostgres()
+      ? await getPostgresCmsRecord(Media, req.params.id)
+      : await Media.findById(req.params.id);
     if (!media) return res.status(404).json({ success: false, message: "Media file not found", data: null });
-    if (await isMediaReferenced(media.url)) {
+    if (await (usesPostgres() ? isPostgresMediaReferenced(media.url) : isMediaReferenced(media.url))) {
       return res.status(409).json({
         success: false,
         message: "This media file is still used by published or CMS content.",
@@ -107,7 +125,8 @@ export async function deleteMedia(req, res, next) {
       });
     }
 
-    await Media.findByIdAndDelete(req.params.id);
+    if (usesPostgres()) await deletePostgresMediaRecord(Media, req.params.id);
+    else await Media.findByIdAndDelete(req.params.id);
     safeDeleteFile(media.url);
     return res.json({ success: true, message: "Media file deleted successfully", data: { id: req.params.id } });
   } catch (err) {
