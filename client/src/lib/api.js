@@ -3,16 +3,35 @@
 import fallbackMedia from "../assets/the-editing-table-logo.png";
 import { sanitizeStudio } from "./sanitizeStudio.js";
 
-const configuredApiRoot = import.meta.env.VITE_API_URL;
+const configuredApiRoot =
+  import.meta.env.VERCEL_ENV === "preview" && import.meta.env.VITE_PREVIEW_API_URL
+    ? import.meta.env.VITE_PREVIEW_API_URL
+    : import.meta.env.VITE_API_URL;
 
 export const API_ROOT = (() => {
   const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
+  let configuredHostname = "";
+  if (/^https?:\/\//i.test(configured)) {
+    try {
+      configuredHostname = new URL(configured).hostname.toLowerCase();
+    } catch {
+      configuredHostname = "";
+    }
+  }
 
-  // Stale separated server URL or any vercel.app domain should NEVER be called cross-origin
+  // The frontend and API are deployed as separate Vercel projects. Allow an
+  // explicitly configured URL for this backend project (especially its
+  // isolated Preview deployment), while refusing arbitrary Vercel hosts.
+  const isEditingTableBackend =
+    configuredHostname.startsWith("t-he-editing-table-server") &&
+    configuredHostname.endsWith(".vercel.app");
+
+  // Ignore stale local URLs and unrelated Vercel URLs. The configured backend
+  // project is the only Vercel host that may be called cross-origin.
   if (
     !configured ||
-    configured.includes("t-he-editing-table-server") ||
-    configured.includes(".vercel.app") ||
+    (configured.includes(".vercel.app") && !isEditingTableBackend) ||
+    (configured.includes("t-he-editing-table-server") && !isEditingTableBackend) ||
     configured.includes("localhost") ||
     configured.includes("127.0.0.1")
   ) {
