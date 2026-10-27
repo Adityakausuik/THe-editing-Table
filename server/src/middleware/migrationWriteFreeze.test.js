@@ -37,6 +37,41 @@ test("migration write freeze preserves read and preflight traffic", () => {
   }
 });
 
+test("Preview migration freeze permits only public enquiry POST while keeping other writes blocked", () => {
+  const middleware = createMigrationWriteFreeze({ enabled: true, allowPreviewInquiry: true });
+
+  const enquiryResponse = mockResponse();
+  let enquiryContinued = false;
+  middleware({ method: "POST", path: "/api/v1/enquiries" }, enquiryResponse, () => { enquiryContinued = true; });
+  assert.equal(enquiryContinued, true);
+  assert.equal(enquiryResponse.statusCode, null);
+
+  for (const request of [
+    { method: "POST", path: "/api/v1/media" },
+    { method: "POST", path: "/api/v1/enquiries/extra" },
+    { method: "PUT", path: "/api/v1/enquiries" }
+  ]) {
+    const response = mockResponse();
+    let continued = false;
+    middleware(request, response, () => { continued = true; });
+    assert.equal(continued, false, `${request.method} ${request.path} must remain frozen`);
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.body.code, "MIGRATION_MAINTENANCE");
+  }
+});
+
+test("Preview enquiry exception is disabled unless explicitly enabled", () => {
+  const response = mockResponse();
+  let continued = false;
+  createMigrationWriteFreeze({ enabled: true, allowPreviewInquiry: false })(
+    { method: "POST", path: "/api/v1/enquiries" },
+    response,
+    () => { continued = true; }
+  );
+  assert.equal(continued, false);
+  assert.equal(response.statusCode, 503);
+});
+
 test("migration write freeze is inert unless explicitly enabled", () => {
   const response = mockResponse();
   let continued = false;
