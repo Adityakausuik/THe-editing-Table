@@ -45,53 +45,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 .rawcopy .bold{letter-spacing:.05em}
 .rawcopy{position:relative}
 
-/* orbs */
-.orbs{position:absolute;left:-4px;top:38%;width:150px;height:150px;z-index:2;animation:spin 14s linear infinite, clusterWave 4.5s ease-in-out infinite}
-.orb{position:absolute;width:62px;height:62px;border-radius:50%;display:grid;place-items:center;
-  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.98),rgba(255,255,255,.5));border:1px solid var(--edge);
-  box-shadow:0 12px 24px -6px var(--shadow);animation:popin .8s var(--d,0s) cubic-bezier(.34,1.56,.64,1) backwards,unspin 14s linear infinite,var(--orbFloat);transition:scale .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;cursor:pointer}
-.orb:hover{scale:1.24;box-shadow:0 18px 36px -6px rgba(0,0,0,.35),0 0 24px rgba(109,143,79,.4);z-index:10}
-.orb:active{scale:.9}
-.orb i{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font:600 15px/1 'Inter',sans-serif;transition:transform .3s ease}
-.orb:hover i{transform:scale(1.08)}
-.pr{top:0;left:44px;--d:.45s;--orbFloat:floatPr 3.8s ease-in-out infinite}.pr i{background:#00005b;color:#9999ff}
-.lr{top:56px;left:0;width:54px;height:54px;--d:.6s;--orbFloat:floatLr 4.2s ease-in-out infinite}.lr i{background:#001e36;color:#31a8ff;width:32px;height:32px}
-.ps{top:62px;left:72px;width:72px;height:72px;--d:.75s;--orbFloat:floatPs 4.6s ease-in-out infinite}.ps i{background:#001e36;color:#31a8ff;width:42px;height:42px;font-size:17px}
-.dv{top:104px;left:20px;--d:.9s;--orbFloat:floatDv 4s ease-in-out infinite}.dv i{background:#1d1d1f;position:relative}
-.dv i::before,.dv i::after{content:"";position:absolute;width:11px;height:11px;border-radius:50%}
-.dv i::before{background:#f0503c;top:8px;left:12px;mix-blend-mode:screen}
-.dv i::after{background:#3ea5f5;top:15px;left:8px;mix-blend-mode:screen;box-shadow:8px 0 0 #7bd64a}
-
-@keyframes clusterWave{
-  0%,100%{translate:0 0}
-  35%{translate:6px -12px}
-  70%{translate:-5px 8px}
-}
-
-@keyframes floatPr{
-  0%,100%{transform:translate(0, 0) scale(1);box-shadow:0 10px 22px -5px rgba(100,100,255,.35)}
-  33%{transform:translate(8px, -15px) scale(1.08);box-shadow:0 18px 30px -4px rgba(100,100,255,.55)}
-  66%{transform:translate(-6px, 8px) scale(0.95);box-shadow:0 8px 16px -5px rgba(100,100,255,.25)}
-}
-
-@keyframes floatLr{
-  0%,100%{transform:translate(0, 0) scale(1);box-shadow:0 10px 22px -5px rgba(49,168,255,.35)}
-  40%{transform:translate(-10px, -14px) scale(1.1);box-shadow:0 18px 30px -4px rgba(49,168,255,.55)}
-  75%{transform:translate(8px, 10px) scale(0.94);box-shadow:0 8px 16px -5px rgba(49,168,255,.25)}
-}
-
-@keyframes floatPs{
-  0%,100%{transform:translate(0, 0) scale(1);box-shadow:0 12px 24px -5px rgba(49,168,255,.4)}
-  30%{transform:translate(10px, 14px) scale(0.93);box-shadow:0 8px 18px -5px rgba(49,168,255,.25)}
-  70%{transform:translate(-9px, -16px) scale(1.09);box-shadow:0 20px 36px -4px rgba(49,168,255,.6)}
-}
-
-@keyframes floatDv{
-  0%,100%{transform:translate(0, 0) scale(1);box-shadow:0 10px 22px -5px rgba(240,80,60,.35)}
-  45%{transform:translate(-8px, -15px) scale(1.09);box-shadow:0 18px 30px -4px rgba(240,80,60,.55)}
-  80%{transform:translate(9px, 9px) scale(0.94);box-shadow:0 8px 16px -5px rgba(240,80,60,.25)}
-}
-
 .brand{text-align:center;width:100%;max-width:960px}
 .brand h2{margin:0 0 .5rem;font:600 clamp(1.7rem,3.6vw,2.6rem)/1.1 'Cormorant Garamond',Georgia,serif;letter-spacing:.14em;color:var(--deep)}
 .brand p{margin:.9rem auto 0;font-size:clamp(.88rem,1.35vw,1.05rem);line-height:1.55;color:var(--muted);white-space:nowrap}
@@ -114,10 +67,6 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
 @keyframes rise{from{translate:0 26px;scale:.9;opacity:0}}
 @keyframes ring{from{scale:.2;opacity:1}to{scale:5;opacity:0}}
 @media (min-width:1440px){.stage{width:min(1200px,100%)}}
-@media (max-width:1100px){.orbs{transform:scale(.85);transform-origin:center center}}
-@media (max-width:980px){
-  .orbs{display:none !important}
-}
 @media (max-width:640px){
   .hero{padding-block:clamp(16px,4vh,36px)}
   .panel{padding:clamp(6px,2vw,20px) var(--pad)}
@@ -132,16 +81,8 @@ h1 .script{text-shadow:0 .04em .12em color-mix(in srgb,var(--moss) 45%,transpare
   .script{font-size:clamp(1.65rem,8vw,2.2rem)}
   .bold{font-size:clamp(1.25rem,6.2vw,1.7rem)}
 }
-@media (max-height:680px) and (orientation:landscape){.hero{padding-block:12px}.stage{gap:12px}.panel{padding-top:16px}.orbs{transform:scale(.55);margin:4px auto}}
-@media (prefers-reduced-motion:reduce){.orbs,.orb,.panel,.script,.bold,.brand>*{animation:none}.cta,.orb,.head::after,.tc{transition:none}.ring{display:none}}`;
-
-const ORBS = [
-  { cls: "pr", label: "Pr" },
-  { cls: "lr", label: "Lr" },
-  { cls: "ps", label: "Ps" },
-  { cls: "dv", label: "" },
-];
-
+@media (max-height:680px) and (orientation:landscape){.hero{padding-block:12px}.stage{gap:12px}.panel{padding-top:16px}}
+@media (prefers-reduced-motion:reduce){.panel,.script,.bold,.brand>*{animation:none}.cta,.head::after,.tc{transition:none}.ring{display:none}}`;
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -225,29 +166,11 @@ export default function HeroSection({
     if (d) { e.preventDefault(); stop(); setPos(pct.current + d); }
   };
 
-  const bounce = (e) => {
-    e.stopPropagation();
-    if (!prefersReducedMotion()) {
-      e.currentTarget.animate(
-        [{ scale: 1 }, { scale: 1.4 }, { scale: 0.88 }, { scale: 1.06 }, { scale: 1 }],
-        { duration: 520, easing: "ease-out" }
-      );
-    }
-  };
-
   return (
     <div className="et-hero" ref={rootRef}>
       <style>{CSS}</style>
       <main className="hero">
         <div className="stage">
-          <div className="orbs" aria-hidden="true">
-            {ORBS.map((o) => (
-              <span key={o.cls} className={"orb " + o.cls} onPointerDown={bounce}>
-                <i>{o.label}</i>
-              </span>
-            ))}
-          </div>
-
           <section
             ref={panelRef}
             className={"panel" + (grab ? " grab" : "")}
