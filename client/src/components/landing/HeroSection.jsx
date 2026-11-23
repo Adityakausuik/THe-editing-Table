@@ -4,7 +4,7 @@ import Button from "../ui/Button.jsx";
 /**
  * The Editing Table – hero section.
  * Drag (or use arrow keys on) the playhead to compare raw vs. edited footage.
- * Self-contained: styles are embedded below, no extra dependencies.
+ * Clean hero: floating software badges removed.
  */
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=Cormorant+Garamond:wght@600&family=Mrs+Saint+Delafield&family=Inter:wght@400;500&display=swap');
