@@ -1,14 +1,7 @@
-import mongoose from "mongoose";
-import { connectDatabase } from "../config/db.js";
-import { env } from "../config/env.js";
 import { createPostgresEnquiry, findRecentPostgresEnquiry } from "../db/enquiryRepository.js";
-import { Enquiry } from "../models/Enquiry.model.js";
 import { validateEnquiryInput } from "../validators/enquiry.validator.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
-
-function isDbConnected() {
-  return mongoose.connection.readyState === 1;
-}
+import { checkPostgresConnection } from "../db/postgres.js";
 
 export async function createEnquiry(req, res, next) {
   try {
@@ -21,22 +14,22 @@ export async function createEnquiry(req, res, next) {
       });
     }
 
-    const usePostgres = isPostgresSelected();
-    if (env.VERCEL_ENV === "preview" && !usePostgres) {
+    // Enquiries are PostgreSQL-backed on the migration branch. Never route a
+    // Preview submission through the legacy MongoDB model or a Production URI.
+    if (!isPostgresSelected()) {
       return res.status(503).json({
         success: false,
+        code: "POSTGRES_NOT_SELECTED",
         message: "Database service is temporarily offline. Please reach out via email or phone while we reconnect.",
         data: null
       });
     }
 
-    if (!usePostgres && !isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-
-    if (!usePostgres && !isDbConnected()) {
+    const postgresReady = await checkPostgresConnection().catch(() => false);
+    if (!postgresReady) {
       return res.status(503).json({
         success: false,
+        code: "DATABASE_UNAVAILABLE",
         message: "Database service is temporarily offline. Please reach out via email or phone while we reconnect.",
         data: null
       });
@@ -48,9 +41,7 @@ export async function createEnquiry(req, res, next) {
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedService = service.trim();
     const cutoff = new Date(Date.now() - 2 * 60 * 1000);
-    const recentDuplicate = usePostgres
-      ? await findRecentPostgresEnquiry(normalizedEmail, normalizedService, cutoff)
-      : await Enquiry.findOne({ email: normalizedEmail, service: normalizedService, createdAt: { $gte: cutoff } });
+    const recentDuplicate = await findRecentPostgresEnquiry(normalizedEmail, normalizedService, cutoff);
 
     if (recentDuplicate) {
       return res.status(429).json({
@@ -70,19 +61,25 @@ export async function createEnquiry(req, res, next) {
       referenceUrl: referenceUrl ? referenceUrl.trim() : "",
       description: description.trim()
     };
-    const enquiry = usePostgres
-      ? await createPostgresEnquiry(enquiryData)
-      : await Enquiry.create(enquiryData);
+    const enquiry = await createPostgresEnquiry(enquiryData);
 
     return res.status(201).json({
       success: true,
       message: "Your enquiry has been received successfully! Our creative director will respond within 24 hours.",
       data: {
-        id: enquiry._id,
+        id: enquiry._id ?? enquiry.id,
         createdAt: enquiry.createdAt
       }
     });
   } catch (err) {
+    if (isPostgresSelected() && err?.code === "42P01") {
+      return res.status(503).json({
+        success: false,
+        code: "DATABASE_SCHEMA_UNAVAILABLE",
+        message: "The inquiry service is not ready yet. Please try again shortly.",
+        data: null
+      });
+    }
     next(err);
   }
 }

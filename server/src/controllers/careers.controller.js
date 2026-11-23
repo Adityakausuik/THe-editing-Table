@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import { env } from "../config/env.js";
 import {
@@ -20,7 +21,6 @@ import Job from "../models/Job.model.js";
 import JobApplication from "../models/JobApplication.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
 import { deleteVercelBlob, getVercelBlob, isVercelBlobUrl } from "../utils/blobStorage.js";
-import { getFileStreamFromGridFS } from "../utils/gridfs.js";
 import { Readable } from "node:stream";
 import { isPostgresSelected } from "../config/databaseMode.js";
 
@@ -129,7 +129,7 @@ export async function getPublicJobById(req, res, next) {
     if (env.VERCEL_ENV === "preview" && !usesPostgres()) {
       return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
     }
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
 
@@ -230,7 +230,7 @@ export async function submitApplication(req, res, next) {
     // Save resume file safely
     const savedResume = await processAndSaveResume(req.file);
 
-    const validJobId = jobId && mongoose.Types.ObjectId.isValid(jobId) ? jobId : null;
+    const validJobId = jobId && isValidId(jobId) ? jobId : null;
 
     const payload = {
       jobId: validJobId,
@@ -407,7 +407,7 @@ export async function updateJob(req, res, next) {
       return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
     }
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
 
@@ -449,7 +449,7 @@ export async function deleteJob(req, res, next) {
       return res.status(503).json({ success: false, message: "Careers database is not configured.", data: null });
     }
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(404).json({ success: false, message: "Job vacancy not found." });
     }
 
@@ -546,7 +546,7 @@ export async function getAdminApplications(req, res, next) {
 
     if (usesPostgres()) {
       const applications = await listPostgresJobApplications({
-        jobId: jobId !== "all" && mongoose.Types.ObjectId.isValid(jobId) ? jobId : undefined,
+        jobId: jobId !== "all" && isValidId(jobId) ? jobId : undefined,
         status,
         search: search.trim(),
         sort
@@ -559,7 +559,7 @@ export async function getAdminApplications(req, res, next) {
 
     const filter = {};
 
-    if (jobId !== "all" && mongoose.Types.ObjectId.isValid(jobId)) {
+    if (jobId !== "all" && isValidId(jobId)) {
       filter.jobId = jobId;
     }
 
@@ -641,12 +641,11 @@ export async function downloadApplicationResume(req, res, next) {
       const stream = typeof blob.stream.pipe === "function" ? blob.stream : Readable.fromWeb(blob.stream);
       return stream.pipe(res);
     }
-    let file = await getFileStreamFromGridFS(application.resume.path || application.resume.url);
-    if (!file && application.resume.url && application.resume.url !== application.resume.path) {
-      file = await getFileStreamFromGridFS(application.resume.url);
-    }
-    if (!file) return res.status(404).json({ success: false, message: "Resume file is unavailable." });
-    file.stream.pipe(res);
+    return res.status(503).json({
+      success: false,
+      code: "RESUME_STORAGE_NOT_MIGRATED",
+      message: "This resume is not available in the configured private storage service."
+    });
   } catch (error) {
     next(error);
   }

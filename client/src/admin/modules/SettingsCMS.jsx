@@ -77,7 +77,7 @@ export default function SettingsCMS() {
         handleSaveSettingKey("maintenanceMode", String(maintenanceMode), "Maintenance Mode Toggle"),
         handleSaveSettingKey("publicContent", publicContent, "Navigation and public page content")
       ]);
-      setSavedMsg("Settings saved successfully to MongoDB!");
+      setSavedMsg("Settings saved successfully!");
       setTimeout(() => setSavedMsg(""), 3000);
     } catch (err) {
       console.error("Save settings failed:", err);

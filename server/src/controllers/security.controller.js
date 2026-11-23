@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import AuditLog from "../models/AuditLog.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import Session from "../models/Session.model.js";
@@ -33,7 +33,7 @@ function objectId(value) {
   if (isPostgresSelected()) {
     return /^[a-f\d]{24}$|^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(String(value || "")) ? value : null;
   }
-  return mongoose.Types.ObjectId.isValid(value) ? value : null;
+  return isValidId(value) ? value : null;
 }
 
 const isPostgresPreview = () => isPostgresSelected();

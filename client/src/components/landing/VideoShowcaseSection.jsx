@@ -108,7 +108,7 @@ const DEFAULT_VIDEOS = [
 const DEFAULT_SETTINGS = {
   heading: "We Turn Your Raw Footage Into Stories Worth Watching",
   subheading:
-    "From cinematic wedding films and brand campaigns to reels — The Editing Table transforms every frame into a polished visual story.",
+    "From cinematic wedding films and emotional highlights to brand campaigns, reels, and professional post-production — The Editing Table transforms every frame into a polished visual experience designed to connect, engage, and leave a lasting impression.",
   showSection: true,
   showSubheading: true,
   alignment: "center",
@@ -415,7 +415,7 @@ export default function VideoShowcaseSection() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      aria-label="Scroll-Stopping Video Showcase"
+      aria-label="Creative Post-Production & Visual Storytelling Showcase"
       className="relative overflow-hidden transition-colors duration-500 select-none outline-none border-t border-sage-border/60"
       style={{
         backgroundColor: settings.backgroundColor || "#F8FBF7",
@@ -475,17 +475,13 @@ export default function VideoShowcaseSection() {
               className="text-sm sm:text-base leading-relaxed font-normal max-w-5xl mx-auto lg:whitespace-nowrap"
               style={{ color: "var(--site-text-color)" }}
             >
-              {(settings.subheading || DEFAULT_SETTINGS.subheading) === DEFAULT_SETTINGS.subheading ||
-              (settings.subheading && settings.subheading.includes("From cinematic wedding films")) ? (
-                <>
-                  From cinematic wedding films and brand campaigns to reels —{" "}
-                  <strong className="font-semibold">The Editing Table</strong> transforms every frame into a polished visual story.
-                </>
-              ) : (
-                settings.subheading
-              )}
+              {settings.subheading || DEFAULT_SETTINGS.subheading}
             </m.p>
           )}
+
+          <p className="mx-auto max-w-4xl text-xs font-semibold uppercase leading-6 tracking-[0.12em] text-site sm:text-sm">
+            Wedding Films <span aria-hidden="true">•</span> Reels <span aria-hidden="true">•</span> Brand Videos <span aria-hidden="true">•</span> Color Grading <span aria-hidden="true">•</span> Photo Editing <span aria-hidden="true">•</span> Post-Production
+          </p>
         </m.div>
 
         {/* 5-Card Vertical Video Showcase Layout */}

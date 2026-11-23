@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import AdminActivityLog from "../models/AdminActivityLog.model.js";
 import PhotoShowcaseItem from "../models/PhotoShowcaseItem.model.js";
 import PhotoShowcaseSettings from "../models/PhotoShowcaseSettings.model.js";
@@ -389,7 +390,7 @@ export async function duplicateAdminPhoto(req, res, next) {
 export async function updateAdminPhoto(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -418,7 +419,7 @@ export async function updateAdminPhoto(req, res, next) {
 export async function softDeleteAdminPhoto(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -521,14 +522,14 @@ export async function reorderAdminPhotos(req, res, next) {
     if (!Array.isArray(items)) return res.status(400).json({ success: false, message: "Items array required" });
 
     if (usesPostgres()) {
-      const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+      const validItems = items.filter((item) => isValidId(item.id));
       await reorderPostgresPhotoShowcaseItems(validItems.map((item) => ({ id: item.id, order: Number(item.order) })));
       const updated = await getPostgresOrderedPhotoShowcaseItems();
       return res.status(200).json({ success: true, data: updated });
     }
 
     const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
+      .filter((i) => isValidId(i.id))
       .map((i) => ({
         updateOne: {
           filter: { _id: i.id },

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import Service from "../models/Service.model.js";
 import PortfolioItem from "../models/PortfolioItem.model.js";
@@ -949,7 +950,7 @@ function createCRUDActions(Model, entityName) {
     getOne: async (req, res) => {
       try {
         if (usesPostgres()) {
-          if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
+          if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
           const item = await getPostgresCmsRecord(Model, req.params.id, config.publicFilter);
           if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
           return res.json({ success: true, message: `${entityName} retrieved successfully`, data: normalizeDocForClient(item, entityName) });
@@ -971,7 +972,7 @@ function createCRUDActions(Model, entityName) {
           }
         }
         if (!await requireDb(res)) return;
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!isValidId(req.params.id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
         const item = await Model.findOne({ _id: req.params.id, ...config.publicFilter }).lean();
@@ -1015,7 +1016,7 @@ function createCRUDActions(Model, entityName) {
       try {
         const payload = sanitizeMutablePayload(config.normalizePayload(req.body));
         const id = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
 
@@ -1052,7 +1053,7 @@ function createCRUDActions(Model, entityName) {
     updateStatus: async (req, res) => {
       try {
         const id = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
         const { active, isPublished, published, status } = req.body;
@@ -1104,7 +1105,7 @@ function createCRUDActions(Model, entityName) {
 
         const validItems = items
           .map((it, index) => ({ id: it.id || it._id, order: Number(it.order ?? index + 1) }))
-          .filter((it) => mongoose.Types.ObjectId.isValid(it.id));
+          .filter((it) => isValidId(it.id));
 
         const uniqueIds = new Set(validItems.map((item) => String(item.id)));
         if (validItems.length !== items.length || uniqueIds.size !== validItems.length) {
@@ -1147,7 +1148,7 @@ function createCRUDActions(Model, entityName) {
     delete: async (req, res) => {
       try {
         const id = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
           return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
         }
         if (usesPostgres()) {
@@ -1174,7 +1175,7 @@ function createCRUDActions(Model, entityName) {
         if (!Array.isArray(ids)) {
           return res.status(400).json({ success: false, message: "Please provide an ids array.", data: null });
         }
-        const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+        const validIds = ids.filter((id) => isValidId(id));
         if (validIds.length !== ids.length) {
           return res.status(400).json({ success: false, message: "One or more record IDs are invalid.", data: null });
         }
@@ -1263,7 +1264,7 @@ export async function updateEnquiryStatus(req, res) {
     if (!postgres && !await requireDb(res)) return;
     const { id } = req.params;
     const { status } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry ID", data: null });
     }
     if (!Enquiry.schema.path("status").enumValues.includes(status)) {
@@ -1285,7 +1286,7 @@ export async function deleteEnquiry(req, res) {
     const postgres = usesPostgres();
     if (!postgres && !await requireDb(res)) return;
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry ID", data: null });
     }
     const deleted = postgres
@@ -1526,7 +1527,7 @@ export async function deleteUser(req, res) {
   try {
     if (!usesPostgres() && !await requireDb(res)) return;
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid user ID", data: null });
     }
     if (String(req.user?.id) === String(id)) {

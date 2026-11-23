@@ -5,6 +5,17 @@ import { env } from "../config/env.js";
 let pool;
 let database;
 
+export const REQUIRED_POSTGRES_TABLES = Object.freeze([
+  "aboutmes", "adminactivitylogs", "auditlogs", "blogposts", "brandcollaborations",
+  "careerscontents", "contactemails", "contactoffices", "contactphones", "contactsettings",
+  "emailotps", "enquiries", "heroslides", "jobs", "jobapplications", "media", "media_upload_parts",
+  "media_upload_sessions", "migration_runs", "mongo_migration_extras", "mongo_migration_mixed_bson",
+  "partners", "photoshowcaseitems", "photoshowcasesettings", "portfolioitems", "reviews",
+  "schema_migrations", "securitypolicies", "services", "sessions", "sitesettings", "teammembers",
+  "trusteddevices", "users", "videoanalytics", "videoshowcaseitems", "videoshowcasesettings",
+  "weddinggalleryitems", "workinghours"
+]);
+
 function requireDatabaseUrl() {
   const connectionString = env.DATABASE_URL?.trim();
   if (!connectionString) {
@@ -40,6 +51,15 @@ export function getPostgresDatabase() {
 export async function checkPostgresConnection() {
   const result = await getPostgresPool().query("SELECT 1 AS connected");
   return result.rows[0]?.connected === 1;
+}
+
+export async function inspectPostgresSchema() {
+  const result = await getPostgresPool().query(
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'"
+  );
+  const present = new Set(result.rows.map((row) => row.table_name));
+  const missingTables = REQUIRED_POSTGRES_TABLES.filter((name) => !present.has(name));
+  return { status: missingTables.length ? "incomplete" : "ready", missingTables };
 }
 
 export async function closePostgresPool() {

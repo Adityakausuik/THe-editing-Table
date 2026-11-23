@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import AdminActivityLog from "../models/AdminActivityLog.model.js";
 import VideoAnalytics from "../models/VideoAnalytics.model.js";
 import VideoShowcaseItem from "../models/VideoShowcaseItem.model.js";
@@ -30,14 +31,23 @@ import { safeDeleteFile } from "../utils/fileUtils.js";
 const VIDEO_SHOWCASE_HEADING = "We Turn Your Raw Footage Into Stories Worth Watching";
 const VIDEO_SHOWCASE_SUBHEADING =
   "From cinematic wedding films and emotional highlights to brand campaigns, reels, and professional post-production — The Editing Table transforms every frame into a polished visual experience designed to connect, engage, and leave a lasting impression.";
+const VIDEO_SHOWCASE_SEO_TITLE = "Creative Post-Production & Visual Storytelling | The Editing Table";
+const VIDEO_SHOWCASE_SEO_DESCRIPTION =
+  "Wedding films, reels, brand videos, color grading, photo editing, and professional post-production built to turn raw footage into stories worth watching.";
 const LEGACY_VIDEO_SHOWCASE_HEADING = "We Specialize in Scroll-Stopping Real Estate Videos";
 const LEGACY_VIDEO_SHOWCASE_SUBHEADING =
   "Cinematic property walkthroughs, drone films and social media videos designed to attract attention and generate enquiries.";
+const LEGACY_VIDEO_SHOWCASE_SEO_TITLE = "Scroll-Stopping Real Estate Videos";
+const LEGACY_VIDEO_SHOWCASE_SEO_DESCRIPTION = "Cinematic property walkthroughs, drone films and social media videos.";
 
 function normalizeVideoShowcaseCopy(settings) {
   const normalized = typeof settings?.toObject === "function" ? settings.toObject() : { ...settings };
   if (normalized.heading === LEGACY_VIDEO_SHOWCASE_HEADING) normalized.heading = VIDEO_SHOWCASE_HEADING;
   if (normalized.subheading === LEGACY_VIDEO_SHOWCASE_SUBHEADING) normalized.subheading = VIDEO_SHOWCASE_SUBHEADING;
+  if (normalized.seoTitle === LEGACY_VIDEO_SHOWCASE_SEO_TITLE) normalized.seoTitle = VIDEO_SHOWCASE_SEO_TITLE;
+  if (normalized.seoDescription === LEGACY_VIDEO_SHOWCASE_SEO_DESCRIPTION) {
+    normalized.seoDescription = VIDEO_SHOWCASE_SEO_DESCRIPTION;
+  }
   return normalized;
 }
 
@@ -386,10 +396,10 @@ export async function trackImpression(req, res, next) {
   try {
     const { id } = req.params;
     if (usesPostgres()) {
-      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "impression", clientInfo: extractClientInfo(req) });
+      if (isValidId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "impression", clientInfo: extractClientInfo(req) });
       return res.status(200).json({ success: true, message: "Impression recorded" });
     }
-    if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
+    if (!isValidId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
 
@@ -407,10 +417,10 @@ export async function trackPlay(req, res, next) {
   try {
     const { id } = req.params;
     if (usesPostgres()) {
-      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "play", clientInfo: extractClientInfo(req) });
+      if (isValidId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "play", clientInfo: extractClientInfo(req) });
       return res.status(200).json({ success: true, message: "Play recorded" });
     }
-    if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
+    if (!isValidId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
 
@@ -428,10 +438,10 @@ export async function trackComplete(req, res, next) {
   try {
     const { id } = req.params;
     if (usesPostgres()) {
-      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "complete", clientInfo: extractClientInfo(req) });
+      if (isValidId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "complete", clientInfo: extractClientInfo(req) });
       return res.status(200).json({ success: true, message: "Completion recorded" });
     }
-    if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
+    if (!isValidId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
 
@@ -449,10 +459,10 @@ export async function trackCtaClick(req, res, next) {
   try {
     const { id } = req.params;
     if (usesPostgres()) {
-      if (mongoose.isValidObjectId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "cta_click", clientInfo: extractClientInfo(req) });
+      if (isValidId(id)) await recordPostgresVideoEvent({ videoId: id, eventType: "cta_click", clientInfo: extractClientInfo(req) });
       return res.status(200).json({ success: true, message: "CTA click recorded" });
     }
-    if (!mongoose.isValidObjectId(id) || !isDbConnected()) {
+    if (!isValidId(id) || !isDbConnected()) {
       return res.status(200).json({ success: true, message: "Tracked" });
     }
 
@@ -577,7 +587,7 @@ export async function createAdminVideo(req, res, next) {
 export async function getAdminVideoById(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -595,7 +605,7 @@ export async function getAdminVideoById(req, res, next) {
 export async function updateAdminVideo(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -634,7 +644,7 @@ export async function updateAdminVideo(req, res, next) {
 export async function softDeleteAdminVideo(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -661,7 +671,7 @@ export async function softDeleteAdminVideo(req, res, next) {
 export async function permanentDeleteAdminVideo(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -698,7 +708,7 @@ export async function permanentDeleteAdminVideo(req, res, next) {
 export async function toggleAdminStatus(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -727,7 +737,7 @@ export async function toggleAdminStatus(req, res, next) {
 export async function toggleAdminFeatured(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -761,7 +771,7 @@ export async function reorderAdminVideos(req, res, next) {
     }
 
     if (usesPostgres()) {
-      const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+      const validItems = items.filter((item) => isValidId(item.id));
       if (validItems.length) {
         await reorderPostgresVideoShowcaseItems(validItems.map((item) => ({ id: item.id, order: Number(item.order) })));
         await logAdminActivity(req.user?.id, "REORDER_VIDEOS", null, { count: validItems.length });
@@ -770,7 +780,7 @@ export async function reorderAdminVideos(req, res, next) {
     }
 
     const bulkOps = items
-      .filter((i) => mongoose.isValidObjectId(i.id))
+      .filter((i) => isValidId(i.id))
       .map((i) => ({
         updateOne: {
           filter: { _id: i.id },
@@ -798,7 +808,7 @@ export async function reorderAdminVideos(req, res, next) {
 export async function duplicateAdminVideo(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -838,7 +848,7 @@ export async function duplicateAdminVideo(req, res, next) {
 export async function restoreAdminVideo(req, res, next) {
   try {
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -869,7 +879,7 @@ export async function bulkAdminAction(req, res, next) {
       return res.status(400).json({ success: false, message: "No video IDs provided", data: null });
     }
 
-    const validIds = ids.filter((id) => mongoose.isValidObjectId(id));
+    const validIds = ids.filter((id) => isValidId(id));
     if (validIds.length === 0) {
       return res.status(400).json({ success: false, message: "No valid ObjectIds provided", data: null });
     }

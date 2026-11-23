@@ -2,9 +2,8 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { ensureUploadDirectories, isServerlessEnvironment, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
-import { saveBufferToGridFS } from "../utils/gridfs.js";
 import { isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
-import { connectGridFs, isGridFsConnected } from "../config/gridfsDb.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 const memoryStorage = multer.memoryStorage();
 
@@ -56,11 +55,16 @@ export async function processAndSaveResume(file) {
     return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, originalName: file.originalname, size: file.size, mimeType };
   }
 
-  await connectGridFs().catch(() => {});
-  const gridFsConnected = isGridFsConnected();
-  if (isServerlessEnvironment() && !gridFsConnected) {
-    const error = new Error("Durable resume storage is unavailable. Configure the deployment's GridFS connection.");
-    error.code = "GRIDFS_STORAGE_UNAVAILABLE";
+  if (isPostgresSelected()) {
+    const error = new Error("Private resume storage is not configured. Configure the Preview private Blob store before accepting resumes.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+
+  if (isServerlessEnvironment()) {
+    const error = new Error("Durable resume storage is unavailable. Configure the deployment's private Blob store.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
     error.status = 503;
     throw error;
   }
@@ -71,14 +75,6 @@ export async function processAndSaveResume(file) {
   if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
   const filePath = path.join(targetDir, filename);
 
-  // GridFS is the durable store. A Vercel function's filesystem is temporary,
-  // so never report success unless the resume is persisted there first.
-  if (gridFsConnected) await saveBufferToGridFS(filename, file.buffer, mimeType, "resumes");
-  else if (isServerlessEnvironment()) {
-    const error = new Error("Durable resume storage is unavailable.");
-    error.status = 503;
-    throw error;
-  }
   try {
     fs.writeFileSync(filePath, file.buffer);
   } catch (err) {
@@ -88,7 +84,7 @@ export async function processAndSaveResume(file) {
   return {
     filename,
     url: `/uploads/resumes/${filename}`,
-    path: gridFsConnected ? `resumes/${filename}` : filePath,
+    path: filePath,
     originalName: file.originalname,
     size: file.size,
     mimeType

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import QRCode from "qrcode";
 import User from "../models/User.model.js";
 import Session from "../models/Session.model.js";
@@ -176,7 +177,7 @@ async function validateTrustedDevice(req, user) {
   const [id, rawToken] = String(req.cookies?.trustedDevice || "").split(".");
   const validId = isPostgresSelected()
     ? /^[a-f\d]{24}$|^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(id)
-    : mongoose.Types.ObjectId.isValid(id);
+    : isValidId(id);
   if (!validId || !rawToken) return null;
   const device = isPostgresSelected()
     ? await findPostgresActiveTrustedDevice({ id, userId: user._id })

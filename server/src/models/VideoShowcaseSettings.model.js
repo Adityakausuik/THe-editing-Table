@@ -135,11 +135,11 @@ const videoShowcaseSettingsSchema = new mongoose.Schema(
     },
     seoTitle: {
       type: String,
-      default: "Scroll-Stopping Real Estate Videos"
+      default: "Creative Post-Production & Visual Storytelling | The Editing Table"
     },
     seoDescription: {
       type: String,
-      default: "Cinematic property walkthroughs, drone films and social media videos."
+      default: "Wedding films, reels, brand videos, color grading, photo editing, and professional post-production built to turn raw footage into stories worth watching."
     },
     anchorId: {
       type: String,

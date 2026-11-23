@@ -1,8 +1,6 @@
 import User from "../models/User.model.js";
 import SiteSetting from "../models/SiteSetting.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
-import { resolveUploadsDirectory } from "../utils/fileUtils.js";
-import { syncLocalUploadsToGridFS } from "../utils/gridfs.js";
 import { env } from "./env.js";
 
 let hasBootstrapped = false;
@@ -93,10 +91,6 @@ export async function bootstrapDatabase() {
       );
     }
 
-    // Sync any local asset files into GridFS (non-blocking)
-    syncLocalUploadsToGridFS(resolveUploadsDirectory()).catch((err) => {
-      console.warn(`[BOOTSTRAP] GridFS initial sync note: ${err.message}`);
-    });
   } catch (error) {
     console.error(`[BOOTSTRAP] Database bootstrap notice: ${error.message}`);
     hasBootstrapped = false; // Allow retry on next request if DB wasn't ready

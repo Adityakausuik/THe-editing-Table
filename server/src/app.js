@@ -10,6 +10,7 @@ import mongoose from "mongoose";
 import morgan from "morgan";
 import { API_PREFIX } from "../../shared/constants.js";
 import { connectDatabase } from "./config/db.js";
+import { isPostgresSelected } from "./config/databaseMode.js";
 import { env } from "./config/env.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import migrationWriteFreeze from "./middleware/migrationWriteFreeze.js";
@@ -30,8 +31,6 @@ import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
-import { getFileStreamFromGridFS } from "./utils/gridfs.js";
-import { connectGridFs, isGridFsConnected } from "./config/gridfsDb.js";
 import {
   beginTwoFactorSetup,
   login,
@@ -153,7 +152,9 @@ export function createApp() {
 
   // Auto-connect to database in serverless runtime environments
   app.use(async (req, res, next) => {
-    if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
+    // PostgreSQL repositories acquire their Neon pool lazily. Never probe or
+    // open the legacy Mongoose connection on Preview/PostgreSQL requests.
+    if (!isPostgresSelected() && mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
       try {
         await connectDatabase({ bootstrap: false });
       } catch {
@@ -180,7 +181,8 @@ export function createApp() {
     next();
   });
 
-  // Persistent media streaming handler (Local disk cache first, MongoDB GridFS fallback)
+  // Serve local development assets. Durable production uploads are served from
+  // the configured Blob URLs stored with their PostgreSQL metadata.
   const staticUploadsDir = resolveUploadsDirectory();
 
   const handleMediaRequest = async (req, res, next) => {
@@ -208,49 +210,7 @@ export function createApp() {
         return res.sendFile(path.resolve(localFilePath));
       }
     } catch {
-      // Non-fatal, check GridFS
-    }
-
-    // 2. Stream fallback from MongoDB GridFS
-    try {
-      if (!isGridFsConnected() && env.NODE_ENV !== "test") {
-        if (env.VERCEL_ENV === "preview" || env.DATABASE_BACKEND === "postgres") {
-          await connectGridFs().catch(() => {});
-        } else {
-          await connectDatabase().catch(() => {});
-        }
-      }
-
-      if (isGridFsConnected()) {
-        const gridItem = await getFileStreamFromGridFS(subPath);
-        if (gridItem) {
-          const { stream, fileDoc } = gridItem;
-          const mimeType = fileDoc.contentType || fileDoc.metadata?.mimeType || "application/octet-stream";
-
-          res.setHeader("Content-Type", mimeType);
-          res.setHeader("Content-Length", fileDoc.length);
-          res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
-          res.setHeader("ETag", `"${fileDoc._id.toString()}"`);
-
-          if (req.method === "HEAD") {
-            return res.status(200).end();
-          }
-
-          // Cache stream back to disk for subsequent requests in this container
-          try {
-            const dir = path.dirname(localFilePath);
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-            const diskWriter = fs.createWriteStream(localFilePath);
-            stream.pipe(diskWriter);
-          } catch {
-            // Read-only filesystem or container restriction
-          }
-
-          return stream.pipe(res);
-        }
-      }
-    } catch (streamErr) {
-      console.error(`[Media Serve Error] for ${subPath}:`, streamErr.message);
+      // Read-only serverless filesystem or a missing local development asset.
     }
 
     return next();

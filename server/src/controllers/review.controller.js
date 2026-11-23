@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createId, isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 import {
@@ -64,7 +65,7 @@ async function requireDb(res) {
 }
 
 function validObjectId(id) {
-  return mongoose.Types.ObjectId.isValid(id);
+  return isValidId(id);
 }
 
 async function updatePostgresReviewOrFail(id, updates, res) {
@@ -189,7 +190,7 @@ export async function submitReview(req, res) {
     };
 
     if (isPostgresPreview()) {
-      reviewPayload._id = new mongoose.Types.ObjectId().toString();
+      reviewPayload._id = createId();
       await createPostgresReview(reviewPayload);
       return res.status(201).json({
         success: true,

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import { env } from "../config/env.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
@@ -195,7 +196,7 @@ async function deleteContactRecord(Model, id) {
 }
 
 async function reorderContactRecords(Model, items) {
-  const validItems = items.filter((item) => mongoose.isValidObjectId(item.id));
+  const validItems = items.filter((item) => isValidId(item.id));
   if (usesPostgres()) {
     const reordered = validItems.length
       ? await reorderPostgresCmsRecords(Model, "order", validItems.map(({ id, order }) => ({ id: String(id), order: Number(order) })))
@@ -445,7 +446,7 @@ export async function updateAdminPhone(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -462,7 +463,7 @@ export async function deleteAdminPhone(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -531,7 +532,7 @@ export async function updateAdminEmail(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -552,7 +553,7 @@ export async function deleteAdminEmail(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -612,7 +613,7 @@ export async function updateAdminOffice(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -629,7 +630,7 @@ export async function deleteAdminOffice(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -689,7 +690,7 @@ export async function updateAdminWorkingHours(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 
@@ -706,7 +707,7 @@ export async function deleteAdminWorkingHours(req, res, next) {
   try {
     if (!await requireContactStore(res)) return;
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid ObjectId", data: null });
     }
 

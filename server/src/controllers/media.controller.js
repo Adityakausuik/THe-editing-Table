@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import { processAndSaveFile } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
@@ -109,7 +110,7 @@ export async function getMediaFiles(req, res, next) {
 export async function deleteMedia(req, res, next) {
   try {
     if (!await requireDb(res)) return;
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (!isValidId(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid media ID", data: null });
     }
 

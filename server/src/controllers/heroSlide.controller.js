@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createId, isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import HeroSlide from "../models/HeroSlide.model.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
@@ -292,7 +293,7 @@ export async function createHeroSlide(req, res) {
       status: payload.status || "published"
     };
     const slide = usesPostgres()
-      ? await createPostgresHeroSlide(new mongoose.Types.ObjectId().toString(), slideData)
+      ? await createPostgresHeroSlide(createId(), slideData)
       : await HeroSlide.create(slideData);
 
     await normalizeAllHeroSlideOrders();
@@ -315,7 +316,7 @@ export async function updateHeroSlide(req, res) {
   try {
     if (!await requireDb(res)) return;
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid slide ID.", data: null });
     }
 
@@ -356,7 +357,7 @@ export async function deleteHeroSlide(req, res) {
   try {
     if (!await requireDb(res)) return;
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid slide ID.", data: null });
     }
 
@@ -392,7 +393,7 @@ export async function reorderHeroSlides(req, res) {
       });
     }
 
-    const validIds = orderedIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const validIds = orderedIds.filter((id) => isValidId(id));
     const totalSlides = usesPostgres() ? (await listPostgresHeroSlides()).length : await HeroSlide.countDocuments();
     if (
       validIds.length !== orderedIds.length ||

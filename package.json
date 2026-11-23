@@ -2,7 +2,7 @@
   "name": "the-editing-table-platform",
   "version": "0.1.0",
   "private": true,
-  "description": "Full-stack React, Express, and MongoDB foundation for The Editing Table.",
+  "description": "Full-stack React and Express platform with PostgreSQL migration tooling for The Editing Table.",
   "type": "module",
   "workspaces": [
     "client",

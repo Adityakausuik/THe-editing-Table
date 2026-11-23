@@ -3,10 +3,15 @@
 import fallbackMedia from "../assets/the-editing-table-logo.png";
 import { sanitizeStudio } from "./sanitizeStudio.js";
 
-const configuredApiRoot =
-  import.meta.env.VERCEL_ENV === "preview" && import.meta.env.VITE_PREVIEW_API_URL
-    ? import.meta.env.VITE_PREVIEW_API_URL
-    : import.meta.env.VITE_API_URL;
+const isVercelPreview = import.meta.env.VERCEL_ENV === "preview";
+const previewApiUrl = typeof import.meta.env.VITE_PREVIEW_API_URL === "string"
+  ? import.meta.env.VITE_PREVIEW_API_URL.trim()
+  : "";
+const configuredApiRoot = isVercelPreview ? previewApiUrl : import.meta.env.VITE_API_URL;
+
+export const API_CONFIGURATION_ERROR = isVercelPreview && !previewApiUrl
+  ? "Preview API is not configured. Set VITE_PREVIEW_API_URL in the client Vercel project's Preview environment to the backend Preview API base URL ending in /api."
+  : "";
 
 export const API_ROOT = (() => {
   const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
@@ -93,6 +98,7 @@ function cmsEventKey(rawUrl = "") {
 }
 
 export function apiUrl(path) {
+  if (API_CONFIGURATION_ERROR) throw new Error(API_CONFIGURATION_ERROR);
   if (/^https?:\/\//i.test(path)) return path;
   let normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
@@ -127,6 +133,7 @@ export function mediaUrl(src) {
       return FALLBACK_MEDIA_URL;
     }
   }
+  if (API_CONFIGURATION_ERROR) return FALLBACK_MEDIA_URL;
   const cleaned = normalizedSrc.startsWith("/api/uploads/") ? normalizedSrc.slice(4) : normalizedSrc;
   const path = cleaned.startsWith("/uploads/") ? cleaned : `/uploads/${cleaned.replace(/^\/+/, "")}`;
   return `${API_ORIGIN}${path}`;
