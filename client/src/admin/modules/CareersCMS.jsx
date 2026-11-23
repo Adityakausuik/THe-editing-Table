@@ -1,4 +1,4 @@
-/* global confirm, console, URLSearchParams */
+/* global confirm, console, URLSearchParams, Headers, sessionStorage, fetch */
 import {
   AlertCircle,
   Briefcase,
@@ -22,11 +22,32 @@ import {
   X
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { apiFetch, apiUrl } from "../../lib/api.js";
 
 const JOB_STATUSES = ["Active", "Draft", "Closed", "Inactive"];
 const EMPLOYMENT_TYPES = ["Full Time", "Part Time", "Internship", "Contract", "Freelance"];
 const APP_STATUSES = ["New", "Reviewing", "Shortlisted", "Interview", "Selected", "Rejected"];
+
+async function downloadResume(applicationId, filename) {
+  const headers = new Headers();
+  const token = sessionStorage.getItem("accessToken");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(apiUrl(`/api/v1/careers/admin/applications/${applicationId}/resume`), {
+    headers,
+    credentials: "include",
+    cache: "no-store"
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.message || "Resume download failed.");
+  }
+  const objectUrl = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = filename || "resume";
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+}
 
 export default function CareersCMS() {
   const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "applications" | "content"
@@ -858,9 +879,11 @@ export default function CareersCMS() {
                         <td className="p-4">
                           {app.resume?.url ? (
                             <a
-                              href={mediaUrl(app.resume.url)}
-                              target="_blank"
-                              rel="noreferrer"
+                              href="#resume"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                downloadResume(app._id, app.resume.originalName || app.resume.filename).catch((error) => window.alert(error.message));
+                              }}
                               className="inline-flex items-center gap-1 text-[11px] text-site hover:underline font-medium"
                             >
                               <FileText className="h-3.5 w-3.5" />
@@ -1392,10 +1415,11 @@ export default function CareersCMS() {
                   </div>
                 </div>
                 <a
-                  href={mediaUrl(activeApp.resume.url)}
-                  target="_blank"
-                  rel="noreferrer"
-                  download
+                  href="#resume"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    downloadResume(activeApp._id, activeApp.resume.originalName || activeApp.resume.filename).catch((error) => window.alert(error.message));
+                  }}
                   className="inline-flex items-center gap-1.5 rounded-full bg-[rgb(72,125,72)] px-4 py-2 text-xs font-medium text-white hover:bg-[#7C9B69] transition-all"
                 >
                   <Download className="h-3.5 w-3.5" />

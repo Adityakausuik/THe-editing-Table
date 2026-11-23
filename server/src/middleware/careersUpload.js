@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
-import { saveBufferToGridFS } from "../utils/gridfs.js";
+import { ensureUploadDirectories, isServerlessEnvironment, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
+import { isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 const memoryStorage = multer.memoryStorage();
 
@@ -35,14 +36,6 @@ export const resumeUploadMiddleware = multer({
 });
 
 export async function processAndSaveResume(file) {
-  ensureUploadDirectories();
-  const activeUploadsDir = resolveUploadsDirectory();
-  const targetDir = path.join(activeUploadsDir, "resumes");
-
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-
   // Basic signature inspection
   const ext = path.extname(file.originalname || "").toLowerCase();
   const bufferHeader = file.buffer.subarray(0, 8).toString("latin1");
@@ -55,12 +48,33 @@ export async function processAndSaveResume(file) {
 
   const { cleanName, uniqueSuffix } = sanitizeFilename(file.originalname);
   const filename = `${cleanName}-${uniqueSuffix}${ext}`;
-  const filePath = path.join(targetDir, filename);
   const mimeType = file.mimetype || (ext === ".pdf" ? "application/pdf" : "application/msword");
 
-  // GridFS is the durable store. A Vercel function's filesystem is temporary,
-  // so never report success unless the resume is persisted there first.
-  await saveBufferToGridFS(filename, file.buffer, mimeType, "resumes");
+  if (isBlobStorageConfigured("private")) {
+    const blob = await putVercelBlob(`resumes/${filename}`, file.buffer, { access: "private", contentType: mimeType });
+    return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, originalName: file.originalname, size: file.size, mimeType };
+  }
+
+  if (isPostgresSelected()) {
+    const error = new Error("Private resume storage is not configured. Configure the Preview private Blob store before accepting resumes.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+
+  if (isServerlessEnvironment()) {
+    const error = new Error("Durable resume storage is unavailable. Configure the deployment's private Blob store.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+
+  ensureUploadDirectories();
+  const activeUploadsDir = resolveUploadsDirectory();
+  const targetDir = path.join(activeUploadsDir, "resumes");
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+  const filePath = path.join(targetDir, filename);
+
   try {
     fs.writeFileSync(filePath, file.buffer);
   } catch (err) {

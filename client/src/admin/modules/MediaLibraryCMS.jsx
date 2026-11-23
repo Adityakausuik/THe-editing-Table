@@ -1,7 +1,8 @@
-/* global FormData, confirm, console, navigator */
+/* global confirm, console, navigator */
 import { AlertCircle, Copy, Loader2, Search, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
 
 export default function MediaLibraryCMS() {
   const [mediaList, setMediaList] = useState([]);
@@ -32,15 +33,9 @@ export default function MediaLibraryCMS() {
     setUploading(true);
     setError("");
 
-    const body = new FormData();
-    body.append("file", file);
-
     try {
-      const data = await apiFetch("/api/v1/media/upload", {
-        method: "POST",
-        body
-      });
-      setMediaList((prev) => [data.data, ...prev].filter(Boolean));
+      const uploaded = await uploadFileInChunks(file, "general");
+      setMediaList((prev) => [uploaded, ...prev].filter(Boolean));
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to upload media file.");
@@ -85,7 +80,7 @@ export default function MediaLibraryCMS() {
         <label className="inline-flex items-center gap-2 rounded-full bg-[rgb(72,125,72)] text-white px-5 py-2.5 text-xs font-semibold hover:bg-[#7C9B69] hover:shadow-sage transition cursor-pointer shadow-soft shrink-0">
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           <span>{uploading ? "Uploading..." : "Upload New File"}</span>
-          <input type="file" onChange={handleUpload} className="hidden" accept="image/*,video/*,application/pdf" />
+          <input type="file" onChange={handleUpload} className="hidden" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4" />
         </label>
       </div>
 

@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import sharp from "sharp";
-import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
-import { deleteFromGridFS, saveBufferToGridFS } from "../utils/gridfs.js";
+import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, isServerlessEnvironment, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
+import { deleteVercelBlob, isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 export const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
@@ -53,13 +54,26 @@ export function validateUploadMetadata({ mimeType, size }) {
 }
 
 export async function processAndSaveFile(file, requestedFolder = "general") {
-  ensureUploadDirectories();
   const folder = ALLOWED_MODULE_FOLDERS.includes(requestedFolder) ? requestedFolder : "general";
-  const activeUploadsDir = resolveUploadsDirectory();
-  const targetDir = path.join(activeUploadsDir, folder);
-
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+  const useBlob = isBlobStorageConfigured("public");
+  const usePostgres = isPostgresSelected();
+  if (usePostgres && !useBlob) {
+    const error = new Error("Public media storage is not configured. Configure the Preview public Blob store before uploading.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+  if (!useBlob && isServerlessEnvironment()) {
+    const error = new Error("Durable media storage is unavailable. Configure the deployment's public Blob store.");
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
+  let targetDir;
+  if (!useBlob) {
+    ensureUploadDirectories();
+    targetDir = path.join(resolveUploadsDirectory(), folder);
+    if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
   }
 
   const { cleanName, uniqueSuffix } = sanitizeFilename(file.originalname);
@@ -74,15 +88,14 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
       throw error;
     }
 
-    // Persist the original video in GridFS. Vercel's function filesystem is only a cache.
     const ext = path.extname(file.originalname) || ".mp4";
     const filename = `${cleanName}-${uniqueSuffix}${ext}`;
-    const filePath = path.join(targetDir, filename);
-
-    await saveBufferToGridFS(filename, file.buffer, file.mimetype, folder);
-    try { fs.writeFileSync(filePath, file.buffer); } catch (err) {
-      console.info(`[upload] Local video cache unavailable for ${filename}: ${err.message}`);
+    if (useBlob) {
+      const blob = await putVercelBlob(`${folder}/${filename}`, file.buffer, { access: "public", contentType: file.mimetype, multipart: true });
+      return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, mimeType: file.mimetype, size: file.size, isVideo: true };
     }
+    const filePath = path.join(targetDir, filename);
+    fs.writeFileSync(filePath, file.buffer);
 
     return {
       filename,
@@ -111,8 +124,8 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
   }
   const webpFilename = `${cleanName}-${uniqueSuffix}.webp`;
   const thumbFilename = `${cleanName}-${uniqueSuffix}-thumb.webp`;
-  const webpPath = path.join(targetDir, webpFilename);
-  const thumbPath = path.join(targetDir, thumbFilename);
+  const webpPath = useBlob ? null : path.join(targetDir, webpFilename);
+  const thumbPath = useBlob ? null : path.join(targetDir, thumbFilename);
 
   // Main WebP optimization
   const processedBuffer = await sharp(file.buffer)
@@ -127,25 +140,28 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     .webp({ quality: 75 })
     .toBuffer();
 
-  try {
-    const persisted = await Promise.allSettled([
-      saveBufferToGridFS(webpFilename, processedBuffer, "image/webp", folder),
-      saveBufferToGridFS(thumbFilename, thumbBuffer, "image/webp", folder)
-    ]);
-    const failed = persisted.find((result) => result.status === "rejected");
-    if (failed) throw failed.reason;
+  if (useBlob) {
+    let mainBlob;
     try {
-      fs.writeFileSync(webpPath, processedBuffer);
-      fs.writeFileSync(thumbPath, thumbBuffer);
-    } catch (err) {
-      console.info(`[upload] Local image cache unavailable for ${webpFilename}: ${err.message}`);
+      mainBlob = await putVercelBlob(`${folder}/${webpFilename}`, processedBuffer, { access: "public", contentType: "image/webp" });
+      return {
+        filename: mainBlob.pathname.split("/").pop(),
+        url: mainBlob.url,
+        path: mainBlob.pathname,
+        mimeType: "image/webp",
+        size: processedBuffer.length,
+        isVideo: false
+      };
+    } catch (error) {
+      if (mainBlob?.url) await deleteVercelBlob(mainBlob.url).catch(() => {});
+      throw error;
     }
+  }
+
+  try {
+    fs.writeFileSync(webpPath, processedBuffer);
+    fs.writeFileSync(thumbPath, thumbBuffer);
   } catch (error) {
-    // GridFS is the durable store; do not return success if persistence failed.
-    await Promise.all([
-      deleteFromGridFS(`${folder}/${webpFilename}`),
-      deleteFromGridFS(`${folder}/${thumbFilename}`)
-    ]);
     if (fs.existsSync(webpPath)) fs.unlinkSync(webpPath);
     if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath);
     throw error;

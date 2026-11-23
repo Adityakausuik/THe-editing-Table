@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createJob,
   deleteApplication,
+  downloadApplicationResume,
   deleteJob,
   duplicateJob,
   getAdminApplications,
@@ -54,6 +55,7 @@ router.post("/admin/jobs/:id/duplicate", adminAuth, asyncHandler(duplicateJob));
 // Application Management
 router.get("/admin/applications", adminAuth, asyncHandler(getAdminApplications));
 router.get("/admin/applications/:id", adminAuth, asyncHandler(getApplicationById));
+router.get("/admin/applications/:id/resume", adminAuth, asyncHandler(downloadApplicationResume));
 router.patch("/admin/applications/:id/status", adminAuth, asyncHandler(updateApplicationStatus));
 router.patch("/admin/applications/:id/notes", adminAuth, asyncHandler(updateApplicationNotes));
 router.delete("/admin/applications/:id", adminAuth, asyncHandler(deleteApplication));

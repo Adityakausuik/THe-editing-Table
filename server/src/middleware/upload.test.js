@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, processAndSaveFile, validateUploadMetadata } from "./upload.js";
 
@@ -39,4 +40,25 @@ test("server rejects mismatched image and video content before persistence", asy
     processAndSaveFile({ originalname: "clip.mp4", mimetype: "video/mp4", size: 4, buffer: Buffer.from("nope") }, "weddings"),
     { status: 400 }
   );
+});
+
+test("PostgreSQL Preview uploads fail closed without Blob instead of falling back to GridFS", () => {
+  const probe = spawnSync(process.execPath, [
+    "--input-type=module",
+    "-e",
+    'const { processAndSaveFile } = await import("./src/middleware/upload.js"); try { await processAndSaveFile({ originalname: "photo.jpg", mimetype: "image/jpeg", size: 4, buffer: Buffer.from("nope") }, "weddings"); process.exitCode = 2; } catch (error) { process.stdout.write(JSON.stringify({ code: error.code, status: error.status })); }'
+  ], {
+    cwd: new URL("../..", import.meta.url),
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      VERCEL_ENV: "preview",
+      DATABASE_BACKEND: "postgres",
+      PREVIEW_DATABASE_URL: "postgresql://preview:preview@localhost/staging"
+    }
+  });
+
+  assert.equal(probe.status, 0, probe.stderr);
+  assert.deepEqual(JSON.parse(probe.stdout), { code: "BLOB_STORAGE_NOT_CONFIGURED", status: 503 });
+  assert.doesNotMatch(probe.stdout, /mongodb|gridfs/i);
 });

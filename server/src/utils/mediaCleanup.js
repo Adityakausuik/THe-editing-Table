@@ -9,6 +9,7 @@ import Service from "../models/Service.model.js";
 import TeamMember from "../models/TeamMember.model.js";
 import WeddingGalleryItem from "../models/WeddingGalleryItem.model.js";
 import { safeDeleteFile } from "./fileUtils.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
 
 const CONTENT_MODELS = [
   HeroSlide,
@@ -65,6 +66,9 @@ export async function isMediaReferenced(path) {
 }
 
 export async function deleteUnreferencedMedia(paths = []) {
+  // Retain the Mongo/GridFS originals while PostgreSQL is active so Atlas remains
+  // a usable rollback source during the cutover window.
+  if (isPostgresSelected()) return;
   const candidates = [...new Set(paths.map(normalizeMediaPath).filter(Boolean))];
   if (candidates.length === 0) return;
 

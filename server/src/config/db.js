@@ -1,6 +1,7 @@
 import dns from "node:dns";
 import mongoose from "mongoose";
 import { env } from "./env.js";
+import { isPostgresSelected } from "./databaseMode.js";
 import { bootstrapDatabase } from "./bootstrap.js";
 import { isServerlessEnvironment } from "../utils/fileUtils.js";
 
@@ -27,9 +28,16 @@ mongoose.connection.on("error", () => {
   cachedConnection = null;
 });
 
-export async function connectDatabase() {
+export async function connectDatabase({ bootstrap = false } = {}) {
+  // Preview deployments must use their isolated Neon branch. If the dedicated
+  // URL is absent, fail closed instead of falling through to the production
+  // DATABASE_URL or MongoDB Atlas URI.
+  if (env.VERCEL_ENV === "preview" || isPostgresSelected()) {
+    return null;
+  }
+
   if (mongoose.connection.readyState === 1) {
-    if (env.NODE_ENV !== "test") {
+    if (bootstrap && env.NODE_ENV !== "test") {
       bootstrapDatabase().catch(() => {});
     }
     return mongoose.connection;
@@ -63,7 +71,9 @@ export async function connectDatabase() {
       })
       .then(async (m) => {
         console.log("MongoDB connected successfully.");
-        await bootstrapDatabase().catch((err) => console.error("Bootstrap error:", err.message));
+        if (bootstrap) {
+          await bootstrapDatabase().catch((err) => console.error("Bootstrap error:", err.message));
+        }
         return m.connection;
       })
       .catch((error) => {

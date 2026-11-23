@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import process from "node:process";
 // Fix Windows junction / OneDrive symlink path mismatch strictly on Windows
 if (process.platform === "win32") {
   try {
@@ -16,6 +17,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env.VERCEL_ENV": JSON.stringify(process.env.VERCEL_ENV || "")
+  },
   server: {
     host: true,
     port: 5173,

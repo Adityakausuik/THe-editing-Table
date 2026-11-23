@@ -4,6 +4,8 @@ import Session from "../models/Session.model.js";
 import User from "../models/User.model.js";
 import { env } from "../config/env.js";
 import { sha256, timingSafeEqualText } from "../utils/security.js";
+import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMode.js";
+import { findPostgresActiveAuthUser, findPostgresAuthSession, touchPostgresAuthSession } from "../db/authRepository.js";
 
 export function csrfTokenForSession(sessionId) {
   return sha256(`${sessionId}:${env.JWT_SECRET}`);
@@ -17,51 +19,39 @@ export async function authenticate(req, res, next) {
     return res.status(401).json({ success: false, message: "Authentication required", data: null });
   }
 
-  // Support offline fallback admin session when token is an emergency fallback token
-  if (token === "fallback-access-token" || token.startsWith("fallback-")) {
-    req.authSession = { _id: "fallback-session", user: "fallback-admin", twoFactorVerified: true };
-    req.userDocument = null;
-    req.user = {
-      id: "fallback-admin",
-      email: "admin@theeditingtable.com",
-      name: "Administrator",
-      role: "superadmin",
-      avatar: "",
-      sessionId: "fallback-session"
-    };
-    return next();
-  }
-
   try {
     const payload = verifyAccessToken(token);
-    if (payload.type !== "access" || !payload.sid) throw new Error("Invalid session token");
-
-    // Support offline fallback admin session when database is offline or session is an emergency token
-    if (payload.sid.startsWith("fallback-") || mongoose.connection.readyState !== 1) {
-      if (payload.role === "superadmin" || payload.role === "admin") {
-        req.authSession = { _id: payload.sid, user: payload.id, twoFactorVerified: true };
-        req.userDocument = null;
-        req.user = {
-          id: payload.id,
-          email: payload.email,
-          name: payload.name || "Administrator",
-          role: payload.role,
-          avatar: "",
-          sessionId: payload.sid
-        };
-        return next();
-      }
+    if (payload.type !== "access" || !payload.sid || payload.sid.startsWith("fallback-")) {
+      throw new Error("Invalid session token");
+    }
+    if (!isPostgresSelected() && mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
     }
 
-    const session = await Session.findOne({
-      _id: payload.sid,
-      user: payload.id,
-      revokedAt: null,
-      expiresAt: { $gt: new Date() }
-    });
+    let session;
+    let user;
+    if (isPostgresSelected()) {
+      if (!isPostgresAuthEnabled()) {
+        return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
+      }
+      try {
+        [session, user] = await Promise.all([
+          findPostgresAuthSession(payload.sid, payload.id),
+          findPostgresActiveAuthUser(payload.id)
+        ]);
+      } catch {
+        return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
+      }
+    } else {
+      session = await Session.findOne({
+        _id: payload.sid,
+        user: payload.id,
+        revokedAt: null,
+        expiresAt: { $gt: new Date() }
+      });
+      user = await User.findOne({ _id: payload.id, isActive: true });
+    }
     if (!session) throw new Error("Session revoked or expired");
-
-    const user = await User.findOne({ _id: payload.id, isActive: true });
     if (!user) throw new Error("Account unavailable");
 
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
@@ -72,7 +62,11 @@ export async function authenticate(req, res, next) {
       }
     }
 
-    Session.updateOne({ _id: session._id }, { $set: { lastSeenAt: new Date() } }).catch(() => null);
+    if (isPostgresSelected()) {
+      touchPostgresAuthSession(session._id).catch(() => null);
+    } else {
+      Session.updateOne({ _id: session._id }, { $set: { lastSeenAt: new Date() } }).catch(() => null);
+    }
     req.authSession = session;
     req.userDocument = user;
     req.user = {

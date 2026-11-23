@@ -97,6 +97,9 @@ export default function ContactPage() {
     if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
       errors.email = "Please enter a valid email address.";
     }
+    if (!formData.service.trim()) {
+      errors.service = "Please select a service.";
+    }
     if (!formData.description.trim() || formData.description.trim().length < 10) {
       errors.description = "Project description must be at least 10 characters.";
     }
@@ -138,8 +141,9 @@ export default function ContactPage() {
     } catch (error) {
       setStatus("error");
       setResponseMsg(error.message || "Unable to connect to the server. Please try again.");
-      if (error.payload?.data && typeof error.payload.data === "object") {
-        setValidationErrors(error.payload.data);
+      const serverFieldErrors = error.payload?.data?.errors || error.payload?.errors;
+      if (serverFieldErrors && typeof serverFieldErrors === "object") {
+        setValidationErrors(serverFieldErrors);
       }
     }
   };
@@ -282,11 +286,12 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-name" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Full Name *
                   </label>
                   <input
                     type="text"
+                    id="inquiry-name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -300,11 +305,12 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-email" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Email Address *
                   </label>
                   <input
                     type="email"
+                    id="inquiry-email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -320,11 +326,12 @@ export default function ContactPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-phone" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Phone Number
                   </label>
                   <input
                     type="tel"
+                    id="inquiry-phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
@@ -334,14 +341,16 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-service" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Required Service *
                   </label>
                   <select
+                    id="inquiry-service"
                     name="service"
                     value={formData.service}
                     onChange={handleChange}
                     className="field-luxury cursor-pointer"
+                    required
                   >
                     <option value="">Select a service</option>
                     {displayServices.map((service) => (
@@ -350,15 +359,19 @@ export default function ContactPage() {
                       </option>
                     ))}
                   </select>
+                  {validationErrors.service && (
+                    <p className="text-xs text-rose-600 mt-1">{validationErrors.service}</p>
+                  )}
                 </div>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-budget" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Estimated Budget Range
                   </label>
                   <select
+                    id="inquiry-budget"
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
@@ -374,11 +387,12 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                  <label htmlFor="inquiry-delivery-date" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                     Expected Delivery Date
                   </label>
                   <input
                     type="date"
+                    id="inquiry-delivery-date"
                     name="deliveryDate"
                     value={formData.deliveryDate}
                     onChange={handleChange}
@@ -388,10 +402,11 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                <label htmlFor="inquiry-reference-url" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                   Cloud Link or Reference URL (Dropbox, Drive, Vimeo)
                 </label>
                 <input
+                  id="inquiry-reference-url"
                   type="text"
                   name="referenceUrl"
                   value={formData.referenceUrl}
@@ -405,10 +420,11 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
+                <label htmlFor="inquiry-description" className="block text-xs font-semibold uppercase tracking-wider text-sage-muted mb-2">
                   Project Description & Requirements *
                 </label>
                 <textarea
+                  id="inquiry-description"
                   name="description"
                   rows={4}
                   value={formData.description}

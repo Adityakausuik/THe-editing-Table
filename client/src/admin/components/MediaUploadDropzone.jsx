@@ -8,7 +8,7 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 const CHUNK_BYTES = 3 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4"]);
 
-async function uploadFileInChunks(file, folder, onProgress) {
+export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
   if (!ALLOWED_TYPES.has(file.type)) {
     throw new Error("Choose a JPG, PNG, WEBP, GIF, or MP4 file.");
   }

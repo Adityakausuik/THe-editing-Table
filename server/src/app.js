@@ -10,10 +10,13 @@ import mongoose from "mongoose";
 import morgan from "morgan";
 import { API_PREFIX } from "../../shared/constants.js";
 import { connectDatabase } from "./config/db.js";
+import { isPostgresSelected } from "./config/databaseMode.js";
 import { env } from "./config/env.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
+import migrationWriteFreeze from "./middleware/migrationWriteFreeze.js";
 import { rejectUnsafeInput } from "./middleware/requestSecurity.js";
 import healthRoutes from "./routes/health.routes.js";
+import maintenanceRoutes from "./routes/maintenance.routes.js";
 import enquiryRoutes from "./routes/enquiry.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import securityRoutes from "./routes/security.routes.js";
@@ -28,7 +31,6 @@ import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
-import { getFileStreamFromGridFS } from "./utils/gridfs.js";
 import {
   beginTwoFactorSetup,
   login,
@@ -144,11 +146,17 @@ export function createApp() {
     next();
   });
 
+  // Keep the live application read-only across the final source sync and database cutover.
+  // This runs before any database connection is opened for a write request.
+  app.use(migrationWriteFreeze);
+
   // Auto-connect to database in serverless runtime environments
   app.use(async (req, res, next) => {
-    if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
+    // PostgreSQL repositories acquire their Neon pool lazily. Never probe or
+    // open the legacy Mongoose connection on Preview/PostgreSQL requests.
+    if (!isPostgresSelected() && mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
       try {
-        await connectDatabase();
+        await connectDatabase({ bootstrap: false });
       } catch {
         // Non-blocking: individual controllers that require DB will handle 503 if DB is down
       }
@@ -173,7 +181,8 @@ export function createApp() {
     next();
   });
 
-  // Persistent media streaming handler (Local disk cache first, MongoDB GridFS fallback)
+  // Serve local development assets. Durable production uploads are served from
+  // the configured Blob URLs stored with their PostgreSQL metadata.
   const staticUploadsDir = resolveUploadsDirectory();
 
   const handleMediaRequest = async (req, res, next) => {
@@ -182,6 +191,10 @@ export function createApp() {
     let subPath = req.path || "";
     subPath = subPath.replace(/^\/+/, "").replace(/^uploads\//, "").replace(/^api\/uploads\//, "");
     if (!subPath) return next();
+
+    // Career resumes are private and must only be returned by the authenticated
+    // admin download route, never through the public static media endpoint.
+    if (subPath === "resumes" || subPath.startsWith("resumes/")) return res.sendStatus(404);
 
     // Prevent path traversal
     if (subPath.includes("..") || path.isAbsolute(subPath)) {
@@ -197,45 +210,7 @@ export function createApp() {
         return res.sendFile(path.resolve(localFilePath));
       }
     } catch {
-      // Non-fatal, check GridFS
-    }
-
-    // 2. Stream fallback from MongoDB GridFS
-    try {
-      if (mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
-        await connectDatabase().catch(() => {});
-      }
-
-      if (mongoose.connection.readyState === 1) {
-        const gridItem = await getFileStreamFromGridFS(subPath);
-        if (gridItem) {
-          const { stream, fileDoc } = gridItem;
-          const mimeType = fileDoc.contentType || fileDoc.metadata?.mimeType || "application/octet-stream";
-
-          res.setHeader("Content-Type", mimeType);
-          res.setHeader("Content-Length", fileDoc.length);
-          res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
-          res.setHeader("ETag", `"${fileDoc._id.toString()}"`);
-
-          if (req.method === "HEAD") {
-            return res.status(200).end();
-          }
-
-          // Cache stream back to disk for subsequent requests in this container
-          try {
-            const dir = path.dirname(localFilePath);
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-            const diskWriter = fs.createWriteStream(localFilePath);
-            stream.pipe(diskWriter);
-          } catch {
-            // Read-only filesystem or container restriction
-          }
-
-          return stream.pipe(res);
-        }
-      }
-    } catch (streamErr) {
-      console.error(`[Media Serve Error] for ${subPath}:`, streamErr.message);
+      // Read-only serverless filesystem or a missing local development asset.
     }
 
     return next();
@@ -366,6 +341,7 @@ export function createApp() {
 
   app.use("/health", healthRoutes);
   app.use(`${API_PREFIX}/health`, healthRoutes);
+  app.use(`${API_PREFIX}/v1/maintenance`, maintenanceRoutes);
   app.use(`${API_PREFIX}/v1/auth`, authRoutes);
   app.use(`${API_PREFIX}/auth`, authRoutes);
   app.use("/v1/auth", authRoutes);
