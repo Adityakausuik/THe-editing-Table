@@ -8,6 +8,7 @@ import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMod
 import { isBlobStorageConfigured } from "../utils/blobStorage.js";
 import { connectGridFs, isGridFsConfigured, isGridFsConnected } from "../config/gridfsDb.js";
 import { findPostgresAuthUserByEmail, getPostgresGlobalSecurityPolicy } from "../db/authRepository.js";
+import { bootstrapPostgresDatabase } from "../config/bootstrap.js";
 
 const router = Router();
 
@@ -49,6 +50,7 @@ router.get("/", async (req, res) => {
         const schema = await ensurePostgresSchema();
         schemaStatus = schema.status;
         missingTables = schema.missingTables;
+        await bootstrapPostgresDatabase().catch(() => {});
       }
     } catch (error) {
       // Keep provider details and credentials out of the public health response.

@@ -67,8 +67,12 @@ export async function bootstrapPostgresDatabase() {
 
     await pool.query(
       `INSERT INTO "securitypolicies" (key, require_admin2_fa, require_user2_fa)
-       VALUES ('global', true, false)
-       ON CONFLICT (key) DO NOTHING`
+       VALUES ('global', false, false)
+       ON CONFLICT (key) DO UPDATE SET require_admin2_fa = false, require_user2_fa = false`
+    );
+    await pool.query(
+      `UPDATE "users" SET two_factor__enabled = false, two_factor__required = false, force_security_setup = false WHERE email = $1`,
+      [adminEmail]
     );
 
     for (const setting of defaultSettings) {

@@ -48,9 +48,9 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).optional().default("lax"),
   ADMIN_2FA_ENABLED: z.string().optional().transform((val) => {
-    if (val === undefined || val === null || val === "") return true; // Default secure: true if missing
+    if (val === undefined || val === null || val === "") return false; // Default: false (2FA disabled by default)
     const normalized = String(val).trim().toLowerCase();
-    return normalized !== "false" && normalized !== "0" && normalized !== "disabled" && normalized !== "off";
+    return normalized === "true" || normalized === "1" || normalized === "enabled" || normalized === "on";
   })
 }).superRefine((value, context) => {
   if (value.NODE_ENV === "production" && value.JWT_SECRET === "development-only-change-this-secret") {
