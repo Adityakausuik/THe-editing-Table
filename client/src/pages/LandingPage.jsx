@@ -4,13 +4,13 @@ import Navbar from "../components/layout/Navbar.jsx";
 import BeforeAfterSection from "../components/landing/BeforeAfterSection.jsx";
 import ContactSection from "../components/landing/ContactSection.jsx";
 import CTASection from "../components/landing/CTASection.jsx";
+import GlobalReachSection from "../components/landing/GlobalReachSection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
 import ServicesSection from "../components/landing/ServicesSection.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import TrustStrip from "../components/landing/TrustStrip.jsx";
-import WorkingPartnersSection from "../components/landing/WorkingPartnersSection.jsx";
 import WhyChooseUsSection from "../components/landing/WhyChooseUsSection.jsx";
 
 export default function LandingPage() {
@@ -25,7 +25,7 @@ export default function LandingPage() {
           id="main-content"
         >
           <HeroSection />
-          <WorkingPartnersSection />
+          <GlobalReachSection />
           <TrustStrip />
           <ServicesSection />
           <BeforeAfterSection />

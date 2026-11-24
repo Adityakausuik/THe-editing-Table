@@ -11,7 +11,6 @@ import StatsSection from "../components/landing/StatsSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import TrustStrip from "../components/landing/TrustStrip.jsx";
 import WhyChooseUsSection from "../components/landing/WhyChooseUsSection.jsx";
-import WorkingPartnersSection from "../components/landing/WorkingPartnersSection.jsx";
 
 export default function HomePage() {
   return (
@@ -19,7 +18,6 @@ export default function HomePage() {
       <HeroSection />
       <GlobalReachSection />
       <ServicesStrip />
-      <WorkingPartnersSection />
       <TrustStrip />
       <ServicesSection />
       <PhotoShowcaseSection />
