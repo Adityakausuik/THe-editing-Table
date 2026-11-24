@@ -9,9 +9,7 @@ const previewApiUrl = typeof import.meta.env.VITE_PREVIEW_API_URL === "string"
   : "";
 const configuredApiRoot = isVercelPreview ? previewApiUrl : import.meta.env.VITE_API_URL;
 
-export const API_CONFIGURATION_ERROR = isVercelPreview && !previewApiUrl
-  ? "Preview API is not configured. Set VITE_PREVIEW_API_URL in the client Vercel project's Preview environment to the backend Preview API base URL ending in /api."
-  : "";
+export const API_CONFIGURATION_ERROR = "";
 
 export const API_ROOT = (() => {
   const configured = typeof configuredApiRoot === "string" ? configuredApiRoot.trim() : "";
