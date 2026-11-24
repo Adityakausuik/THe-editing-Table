@@ -26,7 +26,6 @@ const DashboardOverview = lazy(() => import("../admin/modules/DashboardOverview.
 const PartnersCMS = lazy(() => import("../admin/modules/PartnersCMS.jsx"));
 const ServicesCMS = lazy(() => import("../admin/modules/ServicesCMS.jsx"));
 const PortfolioCMS = lazy(() => import("../admin/modules/PortfolioCMS.jsx"));
-const VideoShowcaseCMS = lazy(() => import("../admin/modules/VideoShowcaseCMS.jsx"));
 const PhotoShowcaseCMS = lazy(() => import("../admin/modules/PhotoShowcaseCMS.jsx"));
 const WeddingGalleryCMS = lazy(() => import("../admin/modules/WeddingGalleryCMS.jsx"));
 const CollaborationsCMS = lazy(() => import("../admin/modules/CollaborationsCMS.jsx"));
@@ -97,7 +96,7 @@ export default function AppRoutes() {
               <Route path="partners" element={<PartnersCMS />} />
               <Route path="services" element={<ServicesCMS />} />
               <Route path="portfolio" element={<PortfolioCMS />} />
-              <Route path="video-showcase" element={<VideoShowcaseCMS />} />
+              <Route path="video-showcase" element={<Navigate to="/admin/collaborations" replace />} />
               <Route path="photo-showcase" element={<PhotoShowcaseCMS />} />
               <Route path="wedding-gallery" element={<WeddingGalleryCMS />} />
               <Route path="collaborations" element={<CollaborationsCMS />} />

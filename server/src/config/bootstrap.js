@@ -41,6 +41,31 @@ const defaultSettings = [
     },
     group: "footer",
     description: "Default public website content and social links"
+  },
+  {
+    key: "globalReach",
+    value: {
+      enabled: true,
+      heading: "TRUSTED BY PREMIERE PRODUCTION HOUSES & CREATIVE AGENCIES",
+      description: "Collaborating with creative teams, production houses and businesses across the globe to bring visual stories to life.",
+      speed: 35,
+      direction: "left",
+      pauseOnHover: true,
+      countries: [
+        { id: "US", code: "US", name: "United States", flag: "🇺🇸", active: true, order: 1 },
+        { id: "GB", code: "GB", name: "United Kingdom", flag: "🇬🇧", active: true, order: 2 },
+        { id: "FR", code: "FR", name: "France", flag: "🇫🇷", active: true, order: 3 },
+        { id: "IT", code: "IT", name: "Italy", flag: "🇮🇹", active: true, order: 4 },
+        { id: "AE", code: "AE", name: "UAE", flag: "🇦🇪", active: true, order: 5 },
+        { id: "CH", code: "CH", name: "Switzerland", flag: "🇨🇭", active: true, order: 6 },
+        { id: "JP", code: "JP", name: "Japan", flag: "🇯🇵", active: true, order: 7 },
+        { id: "AU", code: "AU", name: "Australia", flag: "🇦🇺", active: true, order: 8 },
+        { id: "IN", code: "IN", name: "India", flag: "🇮🇳", active: true, order: 9 },
+        { id: "MC", code: "MC", name: "Monaco", flag: "🇲🇨", active: true, order: 10 }
+      ]
+    },
+    group: "general",
+    description: "Global Reach Country Marquee configuration and international presence settings"
   }
 ];
 

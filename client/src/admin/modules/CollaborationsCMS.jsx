@@ -1,12 +1,27 @@
 /* global confirm, console */
-import { AlertCircle, CheckCircle2, Edit3, Eye, EyeOff, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  CheckCircle2,
+  Edit3,
+  Eye,
+  EyeOff,
+  Globe2,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  X
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 import MediaUploadDropzone from "../components/MediaUploadDropzone.jsx";
 import CmsOrderControls from "../components/CmsOrderControls.jsx";
 import { CollectionPagination, CollectionStatusFilter, useAdminCollectionView } from "../components/AdminCollectionView.jsx";
+import GlobalReachManager from "../components/GlobalReachManager.jsx";
 
 export default function CollaborationsCMS() {
+  const [activeTab, setActiveTab] = useState("global-reach"); // "global-reach" | "projects"
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -180,11 +195,11 @@ export default function CollaborationsCMS() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-sage-border pb-4">
         <div>
           <span className="text-xs font-semibold uppercase tracking-widest text-site">CMS Module</span>
-          <h1 className="font-heading text-3xl text-forest">Brand Collaborations</h1>
+          <h1 className="font-heading text-3xl text-forest">Brand Collaborations &amp; Global Reach</h1>
         </div>
 
         <div className="flex items-center gap-3">
-          {selectedIds.length > 0 && (
+          {activeTab === "projects" && selectedIds.length > 0 && (
             <button
               type="button"
               onClick={handleBulkDelete}
@@ -194,45 +209,82 @@ export default function CollaborationsCMS() {
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={fetchCollaborations}
-            disabled={loading}
-            className="p-2.5 rounded-2xl border border-sage-border bg-sage-card text-forest hover:border-[rgb(72,125,72)] transition cursor-pointer"
-            title="Refresh Collaborations"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-site" : ""}`} />
-          </button>
-          <button
-            type="button"
-            onClick={() => openModal()}
-            className="inline-flex items-center gap-2 rounded-full bg-[rgb(72,125,72)] text-white px-5 py-2.5 text-xs font-semibold hover:bg-[#7C9B69] hover:shadow-sage transition cursor-pointer shadow-soft shrink-0"
-          >
-            <Plus className="h-4 w-4" /> Add Brand Campaign
-          </button>
+          {activeTab === "projects" && (
+            <>
+              <button
+                type="button"
+                onClick={fetchCollaborations}
+                disabled={loading}
+                className="p-2.5 rounded-2xl border border-sage-border bg-sage-card text-forest hover:border-[rgb(72,125,72)] transition cursor-pointer"
+                title="Refresh Collaborations"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-site" : ""}`} />
+              </button>
+              <button
+                type="button"
+                onClick={() => openModal()}
+                className="inline-flex items-center gap-2 rounded-full bg-[rgb(72,125,72)] text-white px-5 py-2.5 text-xs font-semibold hover:bg-[#7C9B69] hover:shadow-sage transition cursor-pointer shadow-soft shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Add Brand Campaign
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {savedMsg && (
-        <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-900 shadow-soft">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>{savedMsg}</span>
-        </div>
-      )}
+      {/* Module Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-2.5 border-b border-sage-border/80 pb-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab("global-reach")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold transition cursor-pointer select-none ${
+            activeTab === "global-reach"
+              ? "bg-[rgb(72,125,72)] text-white shadow-sage"
+              : "border border-sage-border bg-sage-card text-charcoal-700 hover:border-site/50"
+          }`}
+        >
+          <Globe2 className="h-4 w-4" />
+          Global Reach Countries (Homepage Marquee)
+        </button>
 
-      {error && (
-        <div className="flex items-center gap-3 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-900 shadow-soft">
-          <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+        <button
+          type="button"
+          onClick={() => setActiveTab("projects")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold transition cursor-pointer select-none ${
+            activeTab === "projects"
+              ? "bg-[rgb(72,125,72)] text-white shadow-sage"
+              : "border border-sage-border bg-sage-card text-charcoal-700 hover:border-site/50"
+          }`}
+        >
+          <Briefcase className="h-4 w-4" />
+          Brand Campaigns &amp; Showcase ({items.length})
+        </button>
+      </div>
 
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-sage-muted z-10 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Search brand collaborations..."
-          value={search}
+      {activeTab === "global-reach" ? (
+        <GlobalReachManager />
+      ) : (
+        <>
+          {savedMsg && (
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-900 shadow-soft">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span>{savedMsg}</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-3 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-900 shadow-soft">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="relative max-w-md w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-sage-muted z-10 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search brand collaborations..."
+              value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ paddingLeft: "2.75rem" }}
           className="field-luxury text-sm"
@@ -405,6 +457,8 @@ export default function CollaborationsCMS() {
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

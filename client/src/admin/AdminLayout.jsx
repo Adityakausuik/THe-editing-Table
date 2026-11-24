@@ -40,7 +40,6 @@ const navSections = [
       { label: "Working Partners", path: "/admin/partners", icon: Briefcase },
       { label: "Services Suite", path: "/admin/services", icon: Grid },
       { label: "Portfolio Showcase", path: "/admin/portfolio", icon: Images },
-      { label: "Video Showcase", path: "/admin/video-showcase", icon: Video },
       { label: "Photo Showcase", path: "/admin/photo-showcase", icon: Camera },
       { label: "Wedding Gallery", path: "/admin/wedding-gallery", icon: Image },
       { label: "Brand Collaborations", path: "/admin/collaborations", icon: Briefcase },

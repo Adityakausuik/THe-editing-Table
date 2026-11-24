@@ -812,6 +812,26 @@ const DEFAULT_AUTHENTIC_SETTINGS = {
       email: "hello@theeditingtable.com",
       address: "Mumbai & New Delhi, India"
     }
+  },
+  globalReach: {
+    enabled: true,
+    heading: "TRUSTED BY PREMIERE PRODUCTION HOUSES & CREATIVE AGENCIES",
+    description: "Collaborating with creative teams, production houses and businesses across the globe to bring visual stories to life.",
+    speed: 35,
+    direction: "left",
+    pauseOnHover: true,
+    countries: [
+      { id: "US", code: "US", name: "United States", flag: "🇺🇸", active: true, order: 1 },
+      { id: "GB", code: "GB", name: "United Kingdom", flag: "🇬🇧", active: true, order: 2 },
+      { id: "FR", code: "FR", name: "France", flag: "🇫🇷", active: true, order: 3 },
+      { id: "IT", code: "IT", name: "Italy", flag: "🇮🇹", active: true, order: 4 },
+      { id: "AE", code: "AE", name: "UAE", flag: "🇦🇪", active: true, order: 5 },
+      { id: "CH", code: "CH", name: "Switzerland", flag: "🇨🇭", active: true, order: 6 },
+      { id: "JP", code: "JP", name: "Japan", flag: "🇯🇵", active: true, order: 7 },
+      { id: "AU", code: "AU", name: "Australia", flag: "🇦🇺", active: true, order: 8 },
+      { id: "IN", code: "IN", name: "India", flag: "🇮🇳", active: true, order: 9 },
+      { id: "MC", code: "MC", name: "Monaco", flag: "🇲🇨", active: true, order: 10 }
+    ]
   }
 };
 
@@ -1315,7 +1335,7 @@ export async function getSiteSettings(req, res) {
       });
     }
 
-    const publicKeys = ["siteName", "metaTitle", "metaDescription", "maintenanceMode", "publicContent"];
+    const publicKeys = ["siteName", "metaTitle", "metaDescription", "maintenanceMode", "publicContent", "globalReach"];
     const settings = postgres
       ? await listPostgresSiteSettings(publicKeys)
       : await SiteSetting.find({ key: { $in: publicKeys } });
@@ -1334,6 +1354,18 @@ export async function getSiteSettings(req, res) {
     }
     if (!settingsMap.publicContent.footer.linkedin || settingsMap.publicContent.footer.linkedin === "#") {
       settingsMap.publicContent.footer.linkedin = "https://www.linkedin.com/company/the-editing-table/";
+    }
+    if (settingsMap.globalReach && typeof settingsMap.globalReach === "object") {
+      const activeCountries = Array.isArray(settingsMap.globalReach.countries)
+        ? settingsMap.globalReach.countries.filter((c) => c.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        : DEFAULT_AUTHENTIC_SETTINGS.globalReach.countries;
+      settingsMap.globalReach = {
+        ...DEFAULT_AUTHENTIC_SETTINGS.globalReach,
+        ...settingsMap.globalReach,
+        countries: activeCountries
+      };
+    } else {
+      settingsMap.globalReach = DEFAULT_AUTHENTIC_SETTINGS.globalReach;
     }
     return res.json({ success: true, message: "Site settings retrieved successfully", data: settingsMap });
   } catch {
@@ -1556,5 +1588,131 @@ export async function deleteUser(req, res) {
     return res.json({ success: true, message: "User deleted successfully", data: { id } });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message || "User delete failed", data: null });
+  }
+}
+
+// --- GLOBAL REACH SETTINGS & MARQUEE ---
+export async function getGlobalReachSettings(req, res) {
+  try {
+    const postgres = usesPostgres();
+    if (!postgres && !isDbConnected()) {
+      await connectDatabase().catch(() => {});
+    }
+
+    let globalReach = null;
+    if (postgres) {
+      const settings = await listPostgresSiteSettings(["globalReach"]);
+      if (settings?.[0]?.value) globalReach = settings[0].value;
+    } else if (isDbConnected()) {
+      const setting = await SiteSetting.findOne({ key: "globalReach" });
+      if (setting?.value) globalReach = setting.value;
+    }
+
+    if (!globalReach || typeof globalReach !== "object") {
+      globalReach = { ...DEFAULT_AUTHENTIC_SETTINGS.globalReach };
+    }
+
+    globalReach = {
+      ...DEFAULT_AUTHENTIC_SETTINGS.globalReach,
+      ...globalReach,
+      countries: Array.isArray(globalReach.countries) && globalReach.countries.length > 0
+        ? globalReach.countries
+        : DEFAULT_AUTHENTIC_SETTINGS.globalReach.countries
+    };
+
+    const isAdmin = Boolean(req.user && ["admin", "superadmin"].includes(req.user.role));
+    if (!isAdmin) {
+      const activeCountries = (globalReach.countries || [])
+        .filter((c) => c.active !== false)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      return res.json({
+        success: true,
+        message: "Global reach settings retrieved successfully",
+        data: {
+          ...globalReach,
+          countries: activeCountries
+        }
+      });
+    }
+
+    const sortedCountries = (globalReach.countries || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return res.json({
+      success: true,
+      message: "Global reach admin settings retrieved successfully",
+      data: {
+        ...globalReach,
+        countries: sortedCountries
+      }
+    });
+  } catch {
+    return res.json({
+      success: true,
+      message: "Global reach settings retrieved (fallback)",
+      data: DEFAULT_AUTHENTIC_SETTINGS.globalReach
+    });
+  }
+}
+
+export async function updateGlobalReachSettings(req, res) {
+  try {
+    const postgres = usesPostgres();
+    if (!postgres && !await requireDb(res)) return;
+
+    const body = req.body || {};
+    const existing = DEFAULT_AUTHENTIC_SETTINGS.globalReach;
+
+    const updated = {
+      enabled: typeof body.enabled === "boolean" ? body.enabled : existing.enabled,
+      heading: typeof body.heading === "string" && body.heading.trim() ? body.heading.trim() : existing.heading,
+      description: typeof body.description === "string" ? body.description.trim() : existing.description,
+      speed: Number(body.speed) > 0 ? Number(body.speed) : existing.speed,
+      direction: ["left", "right"].includes(body.direction) ? body.direction : existing.direction,
+      pauseOnHover: typeof body.pauseOnHover === "boolean" ? body.pauseOnHover : existing.pauseOnHover,
+      countries: Array.isArray(body.countries)
+        ? body.countries.map((c, idx) => ({
+            id: String(c.id || c.code || `country-${idx + 1}`),
+            code: String(c.code || "").toUpperCase(),
+            name: String(c.name || "").trim(),
+            flag: String(c.flag || "").trim(),
+            active: c.active !== false,
+            order: Number(c.order ?? idx + 1)
+          }))
+        : existing.countries
+    };
+
+    if (postgres) {
+      await savePostgresSiteSetting({
+        key: "globalReach",
+        value: updated,
+        group: "general",
+        description: "Global Reach Country Marquee configuration and international presence settings",
+        updatedBy: req.user?.id
+      });
+    } else {
+      await SiteSetting.findOneAndUpdate(
+        { key: "globalReach" },
+        {
+          $set: {
+            value: updated,
+            group: "general",
+            description: "Global Reach Country Marquee configuration and international presence settings",
+            updatedBy: req.user?.id
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: "Global reach settings updated successfully",
+      data: updated
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Failed to update global reach settings: ${error.message}`,
+      data: null
+    });
   }
 }
