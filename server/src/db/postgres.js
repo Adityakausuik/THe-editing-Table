@@ -1,6 +1,7 @@
 import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { env } from "../config/env.js";
+import { INITIAL_SCHEMA_SQL } from "./initialSchemaSql.js";
 
 let pool;
 let database;
@@ -60,6 +61,20 @@ export async function inspectPostgresSchema() {
   const present = new Set(result.rows.map((row) => row.table_name));
   const missingTables = REQUIRED_POSTGRES_TABLES.filter((name) => !present.has(name));
   return { status: missingTables.length ? "incomplete" : "ready", missingTables };
+}
+
+export async function ensurePostgresSchema() {
+  const schema = await inspectPostgresSchema();
+  if (schema.status === "ready") return schema;
+
+  console.log(`[POSTGRES] Missing ${schema.missingTables.length} tables. Applying initial schema...`);
+  try {
+    await getPostgresPool().query(INITIAL_SCHEMA_SQL);
+    return await inspectPostgresSchema();
+  } catch (err) {
+    console.error(`[POSTGRES] Error applying schema: ${err.message}`);
+    return schema;
+  }
 }
 
 export async function closePostgresPool() {

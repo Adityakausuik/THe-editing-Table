@@ -44,6 +44,7 @@ import {
 } from "../db/authRepository.js";
 import { checkPostgresConnection } from "../db/postgres.js";
 import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMode.js";
+import { bootstrapDatabase } from "../config/bootstrap.js";
 
 async function getSecurityPolicy() {
   return isPostgresSelected() ? getPostgresGlobalSecurityPolicy() : SecurityPolicy.getGlobal();
@@ -52,6 +53,7 @@ async function getSecurityPolicy() {
 async function ensureDbConnected() {
   if (isPostgresSelected()) {
     if (!isPostgresAuthEnabled()) return false;
+    await bootstrapDatabase().catch(() => {});
     return checkPostgresConnection().catch(() => false);
   }
   if (mongoose.connection.readyState !== 1) {

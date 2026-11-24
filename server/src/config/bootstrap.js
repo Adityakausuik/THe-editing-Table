@@ -2,6 +2,7 @@ import User from "../models/User.model.js";
 import SiteSetting from "../models/SiteSetting.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import { env } from "./env.js";
+import { isPostgresSelected } from "./databaseMode.js";
 
 let hasBootstrapped = false;
 
@@ -43,9 +44,54 @@ const defaultSettings = [
   }
 ];
 
+export async function bootstrapPostgresDatabase() {
+  try {
+    const { getPostgresPool, ensurePostgresSchema } = await import("../db/postgres.js");
+    await ensurePostgresSchema();
+    const pool = getPostgresPool();
+
+    const adminEmail = (env.ADMIN_EMAIL || "admin@theeditingtable.com").trim().toLowerCase();
+    const targetPassword = env.ADMIN_PASSWORD || "Admin@EditingTable2026";
+    const passwordHash = await User.hashPassword(targetPassword);
+
+    const existing = await pool.query('SELECT "_id" FROM "users" WHERE email = $1', [adminEmail]);
+    if (!existing.rows.length) {
+      await pool.query(
+        `INSERT INTO "users" (name, email, password_hash, role, is_active, force_security_setup, two_factor__enabled, two_factor__required)
+         VALUES ($1, $2, $3, 'superadmin', true, false, false, false)
+         ON CONFLICT (email) DO NOTHING`,
+        ["Master Director", adminEmail, passwordHash]
+      );
+      console.log(`[BOOTSTRAP-PG] Administrator created: ${adminEmail}`);
+    }
+
+    await pool.query(
+      `INSERT INTO "securitypolicies" (key, require_admin2_fa, require_user2_fa)
+       VALUES ('global', true, false)
+       ON CONFLICT (key) DO NOTHING`
+    );
+
+    for (const setting of defaultSettings) {
+      await pool.query(
+        `INSERT INTO "sitesettings" (key, value, "group", description)
+         VALUES ($1, $2::jsonb, $3, $4)
+         ON CONFLICT (key) DO NOTHING`,
+        [setting.key, JSON.stringify(setting.value), setting.group, setting.description]
+      );
+    }
+    console.log("[BOOTSTRAP-PG] PostgreSQL baseline bootstrap complete.");
+  } catch (error) {
+    console.error(`[BOOTSTRAP-PG] Database bootstrap notice: ${error.message}`);
+  }
+}
+
 export async function bootstrapDatabase() {
   if (hasBootstrapped) return;
   hasBootstrapped = true;
+
+  if (isPostgresSelected()) {
+    return bootstrapPostgresDatabase();
+  }
 
   try {
     const adminEmail = (env.ADMIN_EMAIL || "").trim().toLowerCase();

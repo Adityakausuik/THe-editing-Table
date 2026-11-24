@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import User from "../models/User.model.js";
 import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import { env } from "../config/env.js";
-import { checkPostgresConnection, inspectPostgresSchema } from "../db/postgres.js";
+import { checkPostgresConnection, inspectPostgresSchema, ensurePostgresSchema } from "../db/postgres.js";
 import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMode.js";
 import { isBlobStorageConfigured } from "../utils/blobStorage.js";
 import { connectGridFs, isGridFsConfigured, isGridFsConnected } from "../config/gridfsDb.js";
@@ -46,7 +46,7 @@ router.get("/", async (req, res) => {
     try {
       postgresStatus = (await checkPostgresConnection()) ? "connected" : "unavailable";
       if (postgresStatus === "connected") {
-        const schema = await inspectPostgresSchema();
+        const schema = await ensurePostgresSchema();
         schemaStatus = schema.status;
         missingTables = schema.missingTables;
       }
