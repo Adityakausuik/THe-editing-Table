@@ -3,7 +3,6 @@ import Footer from "../components/layout/Footer.jsx";
 import Navbar from "../components/layout/Navbar.jsx";
 import BeforeAfterSection from "../components/landing/BeforeAfterSection.jsx";
 import ContactSection from "../components/landing/ContactSection.jsx";
-import CTASection from "../components/landing/CTASection.jsx";
 import GlobalReachSection from "../components/landing/GlobalReachSection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
@@ -31,7 +30,6 @@ export default function LandingPage() {
           <StatsSection />
           <WhyChooseUsSection />
           <TestimonialsSection />
-          <CTASection />
           <ContactSection />
         </m.main>
         <Footer />
