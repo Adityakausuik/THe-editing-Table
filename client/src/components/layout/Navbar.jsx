@@ -1,91 +1,23 @@
 import { AnimatePresence, m } from "framer-motion";
-import { ArrowUpRight, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useSiteSettings } from "../../lib/useSiteSettings.js";
 import BrandLogo from "../ui/BrandLogo.jsx";
-import Container from "../ui/Container.jsx";
 
-const DEFAULT_NAV_LINKS = [
+const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/services", label: "Services" },
+  { href: "/services", label: "Services", hasChevron: true },
   { href: "/portfolio", label: "Portfolio" },
   { href: "/about", label: "About" },
   { href: "/careers", label: "Careers" },
-  { href: "/blog", label: "Blog" },
+  { href: "/blog", label: "Blogs" },
   { href: "/contactus", label: "Contact" },
 ];
-
-const NAV_ORDER = {
-  "/": 1,
-  "/services": 2,
-  "/portfolio": 3,
-  "/about": 4,
-  "/careers": 5,
-  "/blog": 6,
-  "/contactus": 7,
-  "/contact": 7
-};
-
-function formatNavLabel(label, href = "") {
-  const cleanLabel = String(label || "").trim();
-  const cleanHref = String(href || "").trim().toLowerCase();
-  if (
-    cleanLabel.toLowerCase() === "about me" ||
-    cleanLabel.toLowerCase() === "about us" ||
-    cleanLabel.toLowerCase() === "about" ||
-    cleanHref.includes("about")
-  ) {
-    return "About";
-  }
-  return cleanLabel;
-}
-
-function normalizeNavHref(href = "") {
-  const clean = String(href || "").trim().replace(/\/+$/, "") || "/";
-  if (clean.includes("about")) {
-    return "/about";
-  }
-  return clean;
-}
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { settings } = useSiteSettings();
-  const cmsNav = settings.publicContent?.navigation;
-  const rawLinks = Array.isArray(cmsNav) && cmsNav.length > 0
-    ? cmsNav
-    : DEFAULT_NAV_LINKS;
-  const siteLinks = rawLinks
-    .filter((link) => {
-      const h = String(link?.href || "").trim();
-      return h !== "/founder" && h !== "/team";
-    })
-    .map((link) => {
-      const isAbout =
-        String(link?.label || "").trim().toLowerCase().includes("about") ||
-        String(link?.href || "").trim().toLowerCase().includes("about");
-
-      if (isAbout) {
-        return {
-          ...link,
-          href: "/about",
-          label: "About"
-        };
-      }
-      return {
-        ...link,
-        href: normalizeNavHref(link?.href),
-        label: formatNavLabel(link?.label, link?.href)
-      };
-    })
-    .sort((a, b) => {
-      const orderA = NAV_ORDER[a.href] ?? 99;
-      const orderB = NAV_ORDER[b.href] ?? 99;
-      return orderA - orderB;
-    });
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 15);
@@ -114,90 +46,122 @@ export default function Navbar() {
 
   return (
     <header
-      className={`liquid-header fixed inset-x-0 top-0 z-50 ${isScrolled ? "is-scrolled py-2.5" : "py-4"}`}
+      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-200 border-b ${
+        isScrolled
+          ? "bg-[#F8FBF7]/95 backdrop-blur-md border-[#E3ECE0] shadow-[0_2px_12px_rgba(40,60,35,0.03)]"
+          : "bg-[#F8FBF7] border-[#E3ECE0]/70"
+      }`}
     >
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
 
-      <Container className="liquid-header__bar relative z-50 flex items-center justify-between gap-3">
-        <NavLink to="/" className="liquid-header__brand group flex min-w-0 items-center" aria-label="The Editing Table home" onClick={closeMenu}>
-          <BrandLogo />
+      <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-10 h-16 sm:h-[72px] flex items-center justify-between gap-4">
+        {/* Left Side: Original Logo Asset */}
+        <NavLink
+          to="/"
+          className="flex items-center shrink-0 group py-1"
+          aria-label="The Editing Table home"
+          onClick={closeMenu}
+        >
+          <BrandLogo className="h-8 sm:h-9 w-auto" />
         </NavLink>
 
-        <nav className="liquid-nav-row hidden items-center min-[1180px]:flex" aria-label="Primary navigation">
-          {siteLinks.map((link) => (
-            <NavLink
-              key={link.href}
-              to={link.href}
-              end={link.href === "/"}
-              className={({ isActive }) =>
-                `liquid-nav-link ${isActive ? "is-active" : ""}`
-              }
-            >
-              <span>{formatNavLabel(link.label, link.href)}</span>
-            </NavLink>
-          ))}
-        </nav>
+        {/* Right Side Navigation (Desktop min-[1080px]) */}
+        <nav
+          className="hidden min-[1080px]:flex items-center gap-7 lg:gap-8 xl:gap-9"
+          aria-label="Primary navigation"
+        >
+          {NAV_LINKS.map((link) => {
+            const isServices = link.hasChevron;
+            return (
+              <NavLink
+                key={link.href}
+                to={link.href}
+                end={link.href === "/"}
+                className={({ isActive }) =>
+                  `group relative inline-flex items-center gap-1 py-1 text-[14px] lg:text-[15px] font-medium no-liquid-control transition-colors duration-200 ${
+                    isActive
+                      ? "text-[#1B3322] font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#487D48] after:rounded-full"
+                      : "text-[#2C3B28] hover:text-[#487D48]"
+                  }`
+                }
+              >
+                <span>{link.label}</span>
+                {isServices && (
+                  <ChevronDown className="h-3 w-3 stroke-[2.2] opacity-60 group-hover:opacity-100 group-hover:translate-y-0.5 transition-all" />
+                )}
+              </NavLink>
+            );
+          })}
 
-        <div className="hidden min-[1180px]:block">
+          {/* Start a Project CTA Button at Extreme Right */}
           <NavLink
             to="/contactus"
-            className={({ isActive }) => `liquid-nav-link liquid-nav-cta ${isActive ? "is-active" : ""}`}
+            className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-[#487D48] px-5 py-2 text-[14px] font-medium text-white shadow-sm hover:bg-[#3D6E3D] hover:shadow transition-all duration-200 no-liquid-control shrink-0"
           >
             <span>Start a Project</span>
-            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-3.5 w-3.5 stroke-[2.2]" aria-hidden="true" />
           </NavLink>
-        </div>
+        </nav>
 
+        {/* Mobile Hamburger Toggle Button */}
         <button
-          className="liquid-menu-button inline-flex h-11 w-11 items-center justify-center min-[1180px]:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#1B3322] hover:bg-[#1B3322]/5 transition-colors min-[1080px]:hidden no-liquid-control"
           type="button"
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={isOpen}
           aria-controls="mobile-navigation"
-          onClick={() => setIsOpen((value) => !value)}
+          onClick={() => setIsOpen((prev) => !prev)}
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
-      </Container>
+      </div>
 
+      {/* Mobile Navigation Drawer */}
       <AnimatePresence>
-        {isOpen ? (
+        {isOpen && (
           <m.div
             id="mobile-navigation"
-            className="liquid-mobile-panel fixed inset-0 z-40 overflow-y-auto px-4 sm:px-6 min-[1180px]:hidden"
-            style={{ paddingTop: "var(--public-header-offset, 5.5rem)", paddingBottom: "env(safe-area-inset-bottom, 1.5rem)" }}
-            initial={{ opacity: 0, y: "-10%" }}
+            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7]/98 backdrop-blur-xl border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto min-[1080px]:hidden flex flex-col justify-between"
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "-10%" }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
           >
-            <nav className="mx-auto flex max-w-md flex-col gap-2.5 py-4" aria-label="Mobile navigation">
-              {siteLinks.map((link) => (
+            <nav className="flex flex-col gap-4 py-2" aria-label="Mobile navigation">
+              {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
                   to={link.href}
                   end={link.href === "/"}
                   className={({ isActive }) =>
-                    `liquid-mobile-link ${isActive ? "is-active" : ""}`
+                    `flex items-center justify-between py-2 text-[17px] font-medium transition-colors no-liquid-control ${
+                      isActive
+                        ? "text-[#1B3322] font-semibold border-b-2 border-[#487D48] w-fit"
+                        : "text-[#2C3B28] hover:text-[#487D48]"
+                    }`
                   }
                   onClick={closeMenu}
                 >
-                  <span>{formatNavLabel(link.label, link.href)}</span>
+                  <span>{link.label}</span>
+                  {link.hasChevron && <ChevronDown className="h-4 w-4 opacity-60" />}
                 </NavLink>
               ))}
+            </nav>
+
+            <div className="pt-6 pb-6 border-t border-[#E3ECE0]">
               <NavLink
                 to="/contactus"
-                className={({ isActive }) => `liquid-mobile-link liquid-mobile-cta mt-2 ${isActive ? "is-active" : ""}`}
+                className="flex items-center justify-center gap-2 rounded-full bg-[#487D48] px-6 py-3.5 text-[15px] font-medium text-white shadow-sm hover:bg-[#3D6E3D] transition-all no-liquid-control"
                 onClick={closeMenu}
               >
                 <span>Start a Project</span>
-                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                <ArrowRight className="h-4 w-4" />
               </NavLink>
-            </nav>
+            </div>
           </m.div>
-        ) : null}
+        )}
       </AnimatePresence>
     </header>
   );

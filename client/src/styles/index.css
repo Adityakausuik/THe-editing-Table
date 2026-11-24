@@ -224,7 +224,7 @@ svg.text-terracotta {
 }
 
 .liquid-header {
-  pointer-events: none;
+  pointer-events: auto;
   transition: padding 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
