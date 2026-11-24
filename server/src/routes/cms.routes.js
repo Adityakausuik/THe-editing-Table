@@ -57,6 +57,15 @@ registerModuleRoutes("services", servicesCMS);
 registerModuleRoutes("portfolio", portfolioCMS);
 registerModuleRoutes("wedding-gallery", weddingGalleryCMS);
 registerModuleRoutes("wedding", weddingGalleryCMS);
+
+// Global Reach Countries & Marquee (must precede generic /collaborations/:id)
+router.get("/collaborations/global-reach", getGlobalReachSettings);
+router.put("/collaborations/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
+router.post("/collaborations/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
+router.get("/global-reach", getGlobalReachSettings);
+router.put("/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
+router.post("/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
+
 registerModuleRoutes("collaborations", collaborationsCMS);
 registerModuleRoutes("blog", blogCMS);
 registerModuleRoutes("blogs", blogCMS);
@@ -79,14 +88,6 @@ router.delete("/enquiries/:id", authenticate, requireMinimumRole("editor"), dele
 
 // Site Settings
 router.post("/settings", authenticate, requireMinimumRole("admin"), updateSiteSetting);
-
-// Global Reach Countries & Marquee
-router.get("/collaborations/global-reach", getGlobalReachSettings);
-router.put("/collaborations/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
-router.post("/collaborations/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
-router.get("/global-reach", getGlobalReachSettings);
-router.put("/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
-router.post("/global-reach", authenticate, requireMinimumRole("admin"), updateGlobalReachSettings);
 
 // Audit Logs & User Management
 router.get("/audit-logs", authenticate, requireRole("superadmin"), getAuditLogs);

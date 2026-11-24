@@ -130,7 +130,7 @@ export default function GlobalReachSection() {
           }}
         >
           {/* Track 1 */}
-          <div className="flex shrink-0 items-center gap-6 sm:gap-10 md:gap-14 pr-6 sm:pr-10 md:pr-14">
+          <div className="flex shrink-0 items-center gap-8 sm:gap-12 md:gap-16 pr-8 sm:pr-12 md:pr-16">
             {baseItems.map((country, idx) => (
               <CountryPill key={`track1-${country.id || country.code}-${idx}`} country={country} />
             ))}
@@ -139,7 +139,7 @@ export default function GlobalReachSection() {
           {/* Track 2 (Exact Duplicate for Seamless Loop) */}
           <div
             aria-hidden="true"
-            className="flex shrink-0 items-center gap-6 sm:gap-10 md:gap-14 pr-6 sm:pr-10 md:pr-14"
+            className="flex shrink-0 items-center gap-8 sm:gap-12 md:gap-16 pr-8 sm:pr-12 md:pr-16"
           >
             {baseItems.map((country, idx) => (
               <CountryPill key={`track2-${country.id || country.code}-${idx}`} country={country} />
@@ -183,17 +183,17 @@ function CountryPill({ country }) {
   const name = country.name || country.code || "Global";
 
   return (
-    <div className="flex items-center gap-3 sm:gap-4 shrink-0 select-none">
-      <div className="group/item flex items-center gap-2.5 sm:gap-3 rounded-full border border-sage-border/80 bg-sage-card/90 px-4 sm:px-5 py-2 sm:py-2.5 shadow-xs transition-all duration-300 hover:border-site/50 hover:bg-sage-card hover:shadow-soft hover:-translate-y-0.5">
+    <div className="flex items-center gap-4 sm:gap-6 shrink-0 select-none">
+      <div className="group/item flex items-center gap-3 sm:gap-3.5 rounded-full border border-sage-border/90 bg-sage-card px-5 sm:px-6 md:px-7 py-2.5 sm:py-3 md:py-3.5 shadow-sm transition-all duration-300 hover:border-site/60 hover:bg-sage-card hover:shadow-soft hover:-translate-y-0.5">
         {/* National Flag Graphic with Emoji Fallback */}
-        <span className="relative flex h-4 w-6 shrink-0 items-center justify-center overflow-hidden rounded-[2px] shadow-2xs border border-sage-border/60 bg-sage-secondary/40">
+        <span className="relative flex h-5 w-7 sm:h-6 sm:w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-[3px] shadow-2xs border border-sage-border/70 bg-sage-secondary/40">
           {code && code.length === 2 ? (
             <>
               <img
                 src={`https://flagcdn.com/w40/${code}.png`}
                 srcSet={`https://flagcdn.com/w80/${code}.png 2x`}
-                width="24"
-                height="16"
+                width="34"
+                height="24"
                 alt={`${name} flag`}
                 loading="lazy"
                 className="h-full w-full object-cover"
@@ -203,19 +203,19 @@ function CountryPill({ country }) {
                   if (fallback) fallback.style.display = "inline";
                 }}
               />
-              <span className="fallback-emoji hidden text-sm leading-none" aria-hidden="true">
+              <span className="fallback-emoji hidden text-base sm:text-lg leading-none" aria-hidden="true">
                 {flagEmoji}
               </span>
             </>
           ) : (
-            <span className="text-sm leading-none" aria-hidden="true">
+            <span className="text-base sm:text-lg leading-none" aria-hidden="true">
               {flagEmoji}
             </span>
           )}
         </span>
 
         {/* Country Name */}
-        <span className="text-xs sm:text-sm md:text-base font-medium tracking-wide text-charcoal-800 group-hover/item:text-forest-900 transition-colors whitespace-nowrap">
+        <span className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-forest-900 group-hover/item:text-site transition-colors whitespace-nowrap">
           {name}
         </span>
       </div>
@@ -223,7 +223,7 @@ function CountryPill({ country }) {
       {/* Elegant Separator */}
       <span
         aria-hidden="true"
-        className="text-[10px] sm:text-xs text-site/60 select-none font-serif tracking-widest pl-1"
+        className="text-xs sm:text-sm md:text-base text-site/70 select-none font-serif tracking-widest px-1 sm:px-2"
       >
         ✦
       </span>

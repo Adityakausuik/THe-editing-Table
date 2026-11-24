@@ -429,9 +429,9 @@ export default function GlobalReachManager() {
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             Live Motion Preview
           </div>
-          <div className="relative w-full overflow-hidden rounded-2xl border border-sage-border/80 bg-sage-secondary/40 py-4 px-2">
+          <div className="relative w-full overflow-hidden rounded-2xl border border-sage-border/80 bg-sage-secondary/40 py-5 px-3">
             <div
-              className={`flex w-max items-center gap-6 ${
+              className={`flex w-max items-center gap-6 sm:gap-8 ${
                 settings.pauseOnHover ? "hover:[animation-play-state:paused]" : ""
               }`}
               style={{
@@ -441,10 +441,17 @@ export default function GlobalReachManager() {
               }}
             >
               {[...settings.countries, ...settings.countries].filter((c) => c.active !== false).map((c, i) => (
-                <div key={`preview-${c.code}-${i}`} className="flex items-center gap-2 shrink-0">
-                  <span className="text-base">{c.flag || "🌐"}</span>
-                  <span className="text-xs font-semibold text-forest">{c.name}</span>
-                  <span className="text-[10px] text-site/60 ml-2">✦</span>
+                <div key={`preview-${c.code}-${i}`} className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-sage-border bg-sage-card shadow-xs">
+                    <img
+                      src={`https://flagcdn.com/w40/${(c.code || "").toLowerCase()}.png`}
+                      alt=""
+                      className="h-4 w-6 rounded-[2px] object-cover"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="text-xs sm:text-sm font-semibold text-forest">{c.name}</span>
+                  </div>
+                  <span className="text-xs text-site/70 select-none">✦</span>
                 </div>
               ))}
             </div>
