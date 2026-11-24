@@ -5,6 +5,7 @@ import HeroSection from "../components/landing/HeroSection.jsx";
 import PhotoShowcaseSection from "../components/landing/PhotoShowcaseSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
 import ServicesSection from "../components/landing/ServicesSection.jsx";
+import ServicesStrip from "../components/landing/ServicesStrip.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import TrustStrip from "../components/landing/TrustStrip.jsx";
@@ -16,6 +17,7 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <ServicesStrip />
       <VideoShowcaseSection />
       <WorkingPartnersSection />
       <TrustStrip />
