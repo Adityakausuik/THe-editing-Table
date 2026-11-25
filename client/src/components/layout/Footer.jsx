@@ -180,19 +180,19 @@ function formatNavLabel(label, href = "") {
   };
 
   return (
-    <footer className="relative border-t border-sage-border bg-sage-secondary pt-[36px] md:pt-[44px] lg:pt-[56px] pb-[20px] md:pb-[22px] lg:pb-[24px] text-forest overflow-hidden box-border w-full">
-      <div className="mx-auto w-full max-w-[1440px] px-[clamp(24px,5vw,80px)] box-border">
+    <footer className="relative border-t border-sage-border/80 bg-sage-bg pt-12 sm:pt-16 pb-8 text-forest overflow-hidden box-border w-full">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 box-border">
         {/* Top Section: Responsive 4-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_0.9fr_0.9fr_1.1fr] gap-y-8 md:gap-y-10 lg:gap-x-[clamp(32px,4vw,70px)] items-start w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_0.9fr_0.9fr_1.1fr] gap-8 lg:gap-10 items-start w-full">
           {/* Column 1: Brand Information */}
-          <div className="space-y-4 w-full">
-            <BrandLogo imageClassName="h-9 sm:h-11" />
-            <p className="text-[clamp(13px,0.95vw,16px)] leading-relaxed text-sage-muted [overflow-wrap:anywhere] break-words">
+          <div className="space-y-3.5 w-full">
+            <BrandLogo imageClassName="h-8 sm:h-9" />
+            <p className="text-xs sm:text-sm leading-relaxed text-sage-muted max-w-sm [overflow-wrap:anywhere] break-words">
               {description}
             </p>
-            <div className="pt-1 flex items-center gap-3">
+            <div className="pt-1.5 flex items-center gap-2.5">
               <a
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-sage-border bg-white text-site shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white hover:shadow-sage"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sage-muted transition-colors duration-200 hover:text-site hover:bg-[rgb(72,125,72)]/10"
                 href={instagramUrl}
                 target={instagramUrl !== "#" ? "_blank" : undefined}
                 rel="noopener noreferrer"
@@ -201,7 +201,7 @@ function formatNavLabel(label, href = "") {
                 <Instagram className="h-4 w-4 shrink-0" />
               </a>
               <a
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-sage-border bg-white text-site shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgb(72,125,72)] hover:bg-[rgb(72,125,72)] hover:text-white hover:shadow-sage"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-sage-muted transition-colors duration-200 hover:text-site hover:bg-[rgb(72,125,72)]/10"
                 href={linkedinUrl}
                 target={linkedinUrl !== "#" ? "_blank" : undefined}
                 rel="noopener noreferrer"
@@ -214,14 +214,14 @@ function formatNavLabel(label, href = "") {
 
           {/* Column 2: Navigation */}
           <div className="space-y-3 w-full lg:border-l lg:border-sage-border/60 lg:pl-6">
-            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-site font-sans">
               Navigation
             </h2>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-1">
               {siteLinks.map((link) => (
                 <li key={link.href}>
                   <Link
-                    className="inline-block text-[clamp(15px,1.1vw,18px)] font-medium text-sage-muted transition-all duration-300 hover:translate-x-1 hover:text-site"
+                    className="inline-block text-xs sm:text-sm font-medium text-sage-muted transition-colors duration-200 hover:text-forest"
                     to={link.href}
                   >
                     {formatNavLabel(link.label, link.href)}
@@ -233,14 +233,14 @@ function formatNavLabel(label, href = "") {
 
           {/* Column 3: Services Suite */}
           <div className="space-y-3 w-full lg:border-l lg:border-sage-border/60 lg:pl-6">
-            <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-site font-sans">
               Services Suite
             </h2>
             <ul className="space-y-2">
               {displayServices.map((service) => (
                 <li key={service._id || service.slug}>
                   <Link
-                    className="inline-block text-[clamp(15px,1.1vw,18px)] font-medium text-sage-muted transition-all duration-300 hover:translate-x-1 hover:text-site truncate max-w-full"
+                    className="inline-block text-xs sm:text-sm font-medium text-sage-muted transition-colors duration-200 hover:text-forest truncate max-w-full"
                     to={`/servicesdetails/${service.slug}`}
                   >
                     {service.title}
@@ -251,23 +251,23 @@ function formatNavLabel(label, href = "") {
           </div>
 
           {/* Column 4: Contact Us */}
-          <div className="space-y-4 w-full lg:border-l lg:border-sage-border/60 lg:pl-6 flex flex-col justify-start">
+          <div className="space-y-3.5 w-full lg:border-l lg:border-sage-border/60 lg:pl-6 flex flex-col justify-start">
             {contactSettings.sectionEnabled !== false && (
               <div className="space-y-3">
-                <h2 className="text-[clamp(13px,1vw,16px)] font-bold uppercase tracking-[0.2em] text-site font-sans">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-site font-sans">
                   {contactSettings.sectionTitle || "Contact Us"}
                 </h2>
 
-                <ul className="space-y-[18px] text-[clamp(13px,0.95vw,16px)] text-sage-muted">
+                <ul className="space-y-3 text-xs sm:text-sm text-sage-muted">
                   {/* Phone */}
                   {contactSettings.phoneEnabled !== false && displayPhones.length > 0 && (
-                    <li className="group flex items-start gap-2.5 transition-colors duration-300 hover:text-forest">
-                      <Phone className="h-4 w-4 text-site shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                    <li className="flex items-start gap-2.5">
+                      <Phone className="h-3.5 w-3.5 text-site shrink-0 mt-0.5" />
                       <div>
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site mb-1">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site mb-0.5">
                           {contactSettings.phoneHeading || "Phone"}
                         </span>
-                        <div className="space-y-[6px]">
+                        <div className="space-y-1">
                           {displayPhones.map((p, idx) => {
                             const flag = getFlagEmoji(p.countryCode);
                             const phoneText = p.displayPhone || p.phone;
@@ -277,7 +277,7 @@ function formatNavLabel(label, href = "") {
                               <a
                                 key={p._id || p.phone || idx}
                                 href={`tel:${cleanTel}`}
-                                className="flex items-center gap-1.5 font-semibold text-forest hover:text-site transition-colors text-[clamp(13px,0.95vw,16px)]"
+                                className="flex items-center gap-1.5 font-medium text-forest hover:text-site transition-colors text-xs sm:text-sm"
                               >
                                 {flag && <span>{flag}</span>}
                                 <span>{phoneText}</span>
@@ -291,10 +291,10 @@ function formatNavLabel(label, href = "") {
 
                   {/* Email */}
                   {contactSettings.emailEnabled !== false && displayEmails.length > 0 && (
-                    <li className="group flex items-start gap-2.5 transition-colors duration-300 hover:text-forest">
-                      <Mail className="h-4 w-4 text-site shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                    <li className="flex items-start gap-2.5">
+                      <Mail className="h-3.5 w-3.5 text-site shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site mb-0.5">
                           {contactSettings.emailHeading || "Email"}
                         </span>
                         {displayEmails.map((e, idx) => {
@@ -303,7 +303,7 @@ function formatNavLabel(label, href = "") {
                             <a
                               key={e._id || e.email || idx}
                               href={`mailto:${e.email}`}
-                              className="font-semibold text-forest hover:text-site transition-colors [overflow-wrap:anywhere] break-words block text-[clamp(13px,0.95vw,16px)]"
+                              className="font-medium text-forest hover:text-site transition-colors [overflow-wrap:anywhere] break-words block text-xs sm:text-sm"
                             >
                               {e.email}
                             </a>
@@ -315,10 +315,10 @@ function formatNavLabel(label, href = "") {
 
                   {/* Office */}
                   {contactSettings.officeEnabled !== false && displayOffices.length > 0 && (
-                    <li className="group flex items-start gap-2.5 transition-colors duration-300 hover:text-forest">
-                      <MapPin className="h-4 w-4 text-site shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                    <li className="flex items-start gap-2.5">
+                      <MapPin className="h-3.5 w-3.5 text-site shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site mb-0.5">
                           {contactSettings.officeHeading || "Office"}
                         </span>
                         {displayOffices.map((off, idx) => {
@@ -326,7 +326,7 @@ function formatNavLabel(label, href = "") {
                           return (
                             <address
                               key={off._id || off.companyName || idx}
-                              className="not-italic leading-relaxed text-[clamp(13px,0.95vw,16px)] [overflow-wrap:anywhere] break-words"
+                              className="not-italic leading-relaxed text-xs sm:text-sm [overflow-wrap:anywhere] break-words"
                             >
                               {off.companyName && <>{off.companyName},<br /></>}
                               {off.addressLine1 && <>{off.addressLine1},<br /></>}
@@ -340,10 +340,10 @@ function formatNavLabel(label, href = "") {
 
                   {/* Working Hours */}
                   {contactSettings.workingHoursEnabled !== false && displayHours.length > 0 && (
-                    <li className="group flex items-start gap-2.5 transition-colors duration-300 hover:text-forest">
-                      <Clock className="h-4 w-4 text-site shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                    <li className="flex items-start gap-2.5">
+                      <Clock className="h-3.5 w-3.5 text-site shrink-0 mt-0.5" />
                       <div>
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-site mb-0.5">
                           {contactSettings.workingHoursHeading || "Working Hours"}
                         </span>
                         {displayHours.map((h, idx) => {
@@ -355,12 +355,12 @@ function formatNavLabel(label, href = "") {
                           return (
                             <div key={h._id || h.dayFrom || idx}>
                               {dayText && (
-                                <span className="font-semibold text-forest block text-[clamp(13px,0.95vw,16px)]">
+                                <span className="font-medium text-forest block text-xs sm:text-sm">
                                   {dayText}
                                 </span>
                               )}
                               {timeText && (
-                                <span className="text-[clamp(12px,0.9vw,15px)] text-sage-muted">
+                                <span className="text-xs text-sage-muted">
                                   {timeText}
                                 </span>
                               )}
@@ -376,35 +376,37 @@ function formatNavLabel(label, href = "") {
 
             {/* Let's Work Together CTA Button */}
             {contactSettings.ctaEnabled !== false && (
-              <Link
-                to={contactSettings.ctaLink || "/contactus"}
-                target={contactSettings.ctaNewTab ? "_blank" : undefined}
-                rel={contactSettings.ctaNewTab ? "noopener noreferrer" : undefined}
-                className="group mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[rgb(72,125,72)] bg-transparent px-4 py-2.5 text-[clamp(13px,0.95vw,16px)] font-semibold text-forest transition-all duration-300 hover:bg-[rgb(72,125,72)] hover:text-white hover:shadow-sage active:scale-[0.98]"
-              >
-                <span>{contactSettings.ctaText || "Let's Work Together"}</span>
-                <ArrowRight className="h-4 w-4 text-site shrink-0 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white" />
-              </Link>
+              <div className="pt-1">
+                <Link
+                  to={contactSettings.ctaLink || "/contactus"}
+                  target={contactSettings.ctaNewTab ? "_blank" : undefined}
+                  rel={contactSettings.ctaNewTab ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[rgb(72,125,72)] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all duration-200 hover:bg-[#3d683d] active:scale-[0.98]"
+                >
+                  <span>{contactSettings.ctaText || "Let's Work Together"}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             )}
           </div>
         </div>
 
         {/* Bottom Bar: Copyright & Policy Links */}
-        <div className="mt-[28px] sm:mt-[36px] pt-4 sm:pt-5 border-t border-sage-border flex flex-col items-center gap-3 text-center text-[clamp(12px,0.9vw,15px)] font-medium text-sage-muted sm:flex-row sm:items-center sm:justify-between sm:text-left w-full">
+        <div className="mt-10 sm:mt-12 pt-4 border-t border-sage-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-xs font-normal text-sage-muted w-full">
           <p>&copy; {year} {siteName}. All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-end">
-            <Link className="transition-colors hover:text-site" to="/contactus">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 sm:justify-end">
+            <Link className="transition-colors hover:text-forest" to="/contactus">
               Privacy Policy
             </Link>
-            <Link className="transition-colors hover:text-site" to="/contactus">
+            <Link className="transition-colors hover:text-forest" to="/contactus">
               Terms of Service
             </Link>
             <button
               onClick={scrollToTop}
               type="button"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 font-semibold text-forest transition-colors hover:bg-sage-secondary/60 hover:text-site"
+              className="inline-flex items-center gap-1 font-medium text-forest transition-colors hover:text-site ml-1"
             >
-              Back to top <ArrowUp className="h-3.5 w-3.5 text-site shrink-0" />
+              Back to top <ArrowUp className="h-3 w-3 text-site shrink-0" />
             </button>
           </div>
         </div>
