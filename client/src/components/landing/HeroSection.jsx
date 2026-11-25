@@ -83,8 +83,8 @@ h1{
   transform-origin:85% 65%;
   margin-right:-0.05em;
   line-height:0.92;
-  color:#647A5A;
-  text-shadow:0 .03em .1em rgba(72,125,72,.15);
+  color:#526B55;
+  text-shadow:0 .03em .1em rgba(38,61,45,.15);
 }
 
 .bold{
@@ -94,12 +94,12 @@ h1{
   letter-spacing:.025em;
   text-transform:uppercase;
   line-height:1;
-  color:#3C6647;
-  background:linear-gradient(180deg,#4D7B58 0%,#3B6645 55%,#2A4A31 100%);
+  color:#263D2D;
+  background:linear-gradient(180deg,#3C5A42 0%,#263D2D 55%,#1A2B20 100%);
   -webkit-background-clip:text;
   background-clip:text;
   -webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 .04em .08em rgba(45,70,40,.2));
+  filter:drop-shadow(0 .04em .08em rgba(38,61,45,.2));
 }
 
 .brand{
@@ -115,7 +115,7 @@ h1{
   font-size:clamp(1.3rem,3.2vw,2.2rem);
   letter-spacing:.07em;
   line-height:1.2;
-  color:#3C6647;
+  color:#263D2D;
   text-align:center;
 }
 

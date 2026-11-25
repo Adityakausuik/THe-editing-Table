@@ -14,11 +14,30 @@
    proportions, font weights, and letter spacing.
    ========================================================================== */
 @layer base {
-  h1, h2, h3, h4,
-  .h1, .h2, .h3, .h4,
+  body {
+    color: var(--color-text-body);
+  }
+  h1, h2, h3,
+  .h1, .h2, .h3,
   [role="heading"] {
     font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif;
     letter-spacing: -0.01em;
+    color: var(--color-heading-primary);
+  }
+  h4, h5, h6,
+  .h4, .h5, .h6 {
+    font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif;
+    color: var(--color-heading-secondary);
+  }
+  p {
+    color: var(--color-text-body);
+  }
+  a {
+    color: var(--color-link);
+    transition: color 0.2s ease;
+  }
+  a:hover {
+    color: var(--color-link-hover);
   }
 }
 
@@ -27,32 +46,56 @@ h1,
 [role="heading"][aria-level="1"] {
   font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif !important;
   letter-spacing: -0.015em;
+  color: var(--color-heading-primary) !important;
 }
 
 :root {
-  --site-text-color: rgb(72,125,72);
+  /* ==========================================================================
+     CENTRALIZED TYPOGRAPHY & TEXT-COLOUR SYSTEM DESIGN TOKENS
+     - Primary headings: Deep Forest Green (#263D2D)
+     - Secondary headings: Muted Forest Green (#526B55)
+     - Body text: Dark Charcoal (#343A35)
+     - Secondary text: Soft Grey (#777D76)
+     - Labels and Eyebrows: Muted Olive (#78866A)
+     - Links: Forest Green (#263D2D)
+     - Hover states: Slightly darker green (#1A2B20)
+     ========================================================================== */
+  --color-heading-primary: #263D2D;
+  --color-heading-secondary: #526B55;
+  --color-text-body: #343A35;
+  --color-text-secondary: #777D76;
+  --color-label-eyebrow: #78866A;
+  --color-link: #263D2D;
+  --color-link-hover: #1A2B20;
+  --color-brand-accent: #3C6647;
+
+  /* Theme surface and layout variables */
+  --site-text-color: var(--color-heading-primary);
   --public-header-offset: 5.5rem;
   --bg-primary: #F8FBF7;
   --bg-secondary: #F2F7F0;
   --bg-section: #F6F8F4;
   --bg-dark: #1A241A;
   --bg-card: #FFFFFF;
-  --global-text-color: var(--site-text-color);
-  --text-primary: var(--site-text-color);
-  --text-secondary: var(--site-text-color);
-  --accent-sage: rgb(72,125,72);
+  --global-text-color: var(--color-text-body);
+  --text-primary: var(--color-heading-primary);
+  --text-secondary: var(--color-heading-secondary);
+  --text-body: var(--color-text-body);
+  --text-muted: var(--color-text-secondary);
+  --text-eyebrow: var(--color-label-eyebrow);
+  --accent-sage: #3C6647;
   --accent-light-sage: #C8D8BE;
-  --accent-hover: #3B693B;
+  --accent-hover: var(--color-link-hover);
   --border-sage: #E3EBDD;
-  --glow-sage: rgba(72, 125, 72, 0.20);
-  --icon-forest-color: #1A241A;
-  --icon-muted-color: #4A584A;
-  --icon-hover-color: #3B693B;
+  --glow-sage: rgba(38, 61, 45, 0.15);
+  --icon-forest-color: var(--color-heading-primary);
+  --icon-muted-color: var(--color-text-secondary);
+  --icon-hover-color: var(--color-link-hover);
   
   color-scheme: light;
   font-family: "Manrope", "Avenir Next", "Segoe UI Variable", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg-primary);
-  color: var(--site-text-color);
+  color: var(--color-text-body);
 }
 
 *,

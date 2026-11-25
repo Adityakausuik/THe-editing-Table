@@ -11,15 +11,15 @@ export default function SectionHeading({ label, title, text, align = "center", l
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >
       {label && (
-        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${light ? "text-sage-light" : "text-site"}`}>
+        <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${light ? "text-sage-light" : "text-[#78866A]"}`}>
           {label}
         </span>
       )}
-      <h2 className={`font-heading text-2xl sm:text-3xl lg:text-[2.5rem] font-normal leading-[1.18] tracking-tight ${light ? "text-forest" : "text-forest"}`}>
+      <h2 className={`font-heading text-2xl sm:text-3xl lg:text-[2.5rem] font-normal leading-[1.18] tracking-tight ${light ? "text-white" : "text-[#263D2D]"}`}>
         {title}
       </h2>
       {text ? (
-        <p className={`text-sm sm:text-base font-normal leading-relaxed ${light ? "text-site" : "text-sage-muted"}`}>
+        <p className={`text-sm sm:text-base font-normal leading-relaxed ${light ? "text-white/80" : "text-[#777D76]"}`}>
           {text}
         </p>
       ) : null}

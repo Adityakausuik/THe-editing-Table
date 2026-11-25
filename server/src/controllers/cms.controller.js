@@ -820,6 +820,12 @@ const DEFAULT_AUTHENTIC_SETTINGS = {
     speed: 35,
     direction: "left",
     pauseOnHover: true,
+    locations: [
+      { id: "uae-dubai", country: "UAE", city: "Dubai", label: "Dubai, UAE", countryCode: "AE", flag: "🇦🇪", lat: 25.2048, lon: 55.2708, active: true, featured: true, order: 1 },
+      { id: "ch-zurich", country: "Switzerland", city: "Zurich", label: "Zurich, Switzerland", countryCode: "CH", flag: "🇨🇭", lat: 47.3769, lon: 8.5417, active: true, featured: true, order: 2 },
+      { id: "gb-london", country: "United Kingdom", city: "London", label: "London, UK", countryCode: "GB", flag: "🇬🇧", lat: 51.5074, lon: -0.1278, active: true, featured: true, order: 3 },
+      { id: "in-chandigarh", country: "India", city: "Chandigarh", label: "Chandigarh, India", countryCode: "IN", flag: "🇮🇳", lat: 30.7333, lon: 76.7794, active: true, featured: true, order: 4 }
+    ],
     countries: [
       { id: "US", code: "US", name: "United States", flag: "🇺🇸", active: true, order: 1 },
       { id: "GB", code: "GB", name: "United Kingdom", flag: "🇬🇧", active: true, order: 2 },
@@ -1615,6 +1621,9 @@ export async function getGlobalReachSettings(req, res) {
     globalReach = {
       ...DEFAULT_AUTHENTIC_SETTINGS.globalReach,
       ...globalReach,
+      locations: Array.isArray(globalReach.locations) && globalReach.locations.length > 0
+        ? globalReach.locations
+        : DEFAULT_AUTHENTIC_SETTINGS.globalReach.locations,
       countries: Array.isArray(globalReach.countries) && globalReach.countries.length > 0
         ? globalReach.countries
         : DEFAULT_AUTHENTIC_SETTINGS.globalReach.countries
@@ -1625,22 +1634,29 @@ export async function getGlobalReachSettings(req, res) {
       const activeCountries = (globalReach.countries || [])
         .filter((c) => c.active !== false)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const activeLocations = (globalReach.locations || [])
+        .filter((loc) => loc.active !== false)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
       return res.json({
         success: true,
         message: "Global reach settings retrieved successfully",
         data: {
           ...globalReach,
+          locations: activeLocations,
           countries: activeCountries
         }
       });
     }
 
     const sortedCountries = (globalReach.countries || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const sortedLocations = (globalReach.locations || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     return res.json({
       success: true,
       message: "Global reach admin settings retrieved successfully",
       data: {
         ...globalReach,
+        locations: sortedLocations,
         countries: sortedCountries
       }
     });
@@ -1668,6 +1684,22 @@ export async function updateGlobalReachSettings(req, res) {
       speed: Number(body.speed) > 0 ? Number(body.speed) : existing.speed,
       direction: ["left", "right"].includes(body.direction) ? body.direction : existing.direction,
       pauseOnHover: typeof body.pauseOnHover === "boolean" ? body.pauseOnHover : existing.pauseOnHover,
+      locations: Array.isArray(body.locations)
+        ? body.locations.map((loc, idx) => ({
+            id: String(loc.id || `loc-${idx + 1}`),
+            country: String(loc.country || "").trim(),
+            city: String(loc.city || "").trim(),
+            label: String(loc.label || `${loc.city || ""}, ${loc.country || ""}`).trim(),
+            countryCode: String(loc.countryCode || "").toUpperCase(),
+            flag: String(loc.flag || "").trim(),
+            flagUrl: String(loc.flagUrl || "").trim(),
+            lat: typeof loc.lat === "number" ? loc.lat : Number(loc.lat) || 0,
+            lon: typeof loc.lon === "number" ? loc.lon : Number(loc.lon) || 0,
+            active: loc.active !== false,
+            featured: loc.featured === true,
+            order: Number(loc.order ?? idx + 1)
+          }))
+        : existing.locations || DEFAULT_AUTHENTIC_SETTINGS.globalReach.locations,
       countries: Array.isArray(body.countries)
         ? body.countries.map((c, idx) => ({
             id: String(c.id || c.code || `country-${idx + 1}`),

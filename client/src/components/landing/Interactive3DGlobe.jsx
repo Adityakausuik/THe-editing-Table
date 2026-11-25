@@ -30,6 +30,7 @@ function createCurvedArc(p1, p2, radius = GLOBE_RADIUS) {
 
 export default function Interactive3DGlobe({
   activeLocation,
+  locations = GLOBAL_LOCATIONS,
   onSelectLocation,
   onUserInteractionChange,
 }) {
@@ -38,15 +39,25 @@ export default function Interactive3DGlobe({
   const [webglSupported, setWebglSupported] = useState(true);
   const [activeLabelPos, setActiveLabelPos] = useState({ x: 0, y: 0, visible: false });
 
+  // Location references for real-time reactivity without WebGL context destruction
+  const activeLocationRef = useRef(activeLocation);
+  activeLocationRef.current = activeLocation;
+  const locationsRef = useRef(locations);
+  locationsRef.current = locations;
+
+  const rebuildMarkersRef = useRef(null);
+  const rebuildArcsRef = useRef(null);
+
   // Interaction refs
   const isDragging = useRef(false);
+  const pointerStart = useRef({ x: 0, y: 0 });
   const prevPointer = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const targetRotation = useRef({ x: 0.25, y: -0.96 }); // Initial Dubai focus
   const currentRotation = useRef({ x: 0.25, y: -0.96 });
   const idleTimer = useRef(null);
 
-  // Update target rotation when activeLocation changes
+  // Update target rotation & arcs when activeLocation changes
   useEffect(() => {
     if (!activeLocation) return;
     const latRad = activeLocation.lat * (Math.PI / 180);
@@ -55,7 +66,18 @@ export default function Interactive3DGlobe({
       x: Math.max(-0.6, Math.min(0.7, latRad * 0.65)),
       y: -lonRad
     };
+    if (rebuildArcsRef.current) {
+      rebuildArcsRef.current(activeLocation.id, locationsRef.current);
+    }
   }, [activeLocation]);
+
+  // Update 3D markers and arcs when locations prop updates from CMS
+  useEffect(() => {
+    if (rebuildMarkersRef.current && rebuildArcsRef.current) {
+      rebuildMarkersRef.current(locations);
+      rebuildArcsRef.current(activeLocationRef.current?.id, locations);
+    }
+  }, [locations]);
 
   const notifyUserInteraction = useCallback((interacting) => {
     if (onUserInteractionChange) {
@@ -202,38 +224,48 @@ export default function Interactive3DGlobe({
     const pulseRings = [];
     const arcParticles = [];
 
-    // Build static and dynamic markers for all locations
-    GLOBAL_LOCATIONS.forEach((loc) => {
-      const pos = latLonToVector3(loc.lat, loc.lon, GLOBE_RADIUS);
+    // Function to dynamically rebuild markers for current active locations
+    function rebuildMarkers(currentLocations) {
+      while (markerGroup.children.length > 0) {
+        const obj = markerGroup.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+        markerGroup.remove(obj);
+      }
+      pulseRings.length = 0;
 
-      // Core glowing golden pin dot
-      const dotGeo = new THREE.SphereGeometry(0.026, 16, 16);
-      const dotMat = new THREE.MeshBasicMaterial({ color: 0xf5d36e });
-      const dotMesh = new THREE.Mesh(dotGeo, dotMat);
-      dotMesh.position.copy(pos);
-      dotMesh.userData = { locationId: loc.id };
-      markerGroup.add(dotMesh);
+      const locs = currentLocations && currentLocations.length > 0 ? currentLocations : GLOBAL_LOCATIONS;
+      locs.forEach((loc) => {
+        const pos = latLonToVector3(loc.lat, loc.lon, GLOBE_RADIUS);
 
-      // Outer ripple ring
-      const ringGeo = new THREE.RingGeometry(0.038, 0.054, 32);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xecd185,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.85
+        // Core glowing golden pin dot
+        const dotGeo = new THREE.SphereGeometry(0.026, 16, 16);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xf5d36e });
+        const dotMesh = new THREE.Mesh(dotGeo, dotMat);
+        dotMesh.position.copy(pos);
+        dotMesh.userData = { locationId: loc.id };
+        markerGroup.add(dotMesh);
+
+        // Outer ripple ring
+        const ringGeo = new THREE.RingGeometry(0.038, 0.054, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xecd185,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.85
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.position.copy(pos.clone().multiplyScalar(1.006));
+        ringMesh.lookAt(pos.clone().multiplyScalar(2));
+        ringMesh.userData = { locationId: loc.id, baseScale: 1.0 };
+        markerGroup.add(ringMesh);
+
+        pulseRings.push({ mesh: ringMesh, locId: loc.id });
       });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.position.copy(pos.clone().multiplyScalar(1.006));
-      ringMesh.lookAt(pos.clone().multiplyScalar(2));
-      ringMesh.userData = { locationId: loc.id, baseScale: 1.0 };
-      markerGroup.add(ringMesh);
-
-      pulseRings.push({ mesh: ringMesh, locId: loc.id });
-    });
+    }
 
     // 9. Rebuild connecting arcs radiating from active hub
-    function rebuildArcs(currentActiveId) {
-      // Clear existing arcs
+    function rebuildArcs(currentActiveId, currentLocations) {
       while (arcGroup.children.length > 0) {
         const obj = arcGroup.children[0];
         if (obj.geometry) obj.geometry.dispose();
@@ -242,10 +274,12 @@ export default function Interactive3DGlobe({
       }
       arcParticles.length = 0;
 
-      const activeLoc = GLOBAL_LOCATIONS.find((l) => l.id === currentActiveId) || GLOBAL_LOCATIONS[0];
+      const locs = currentLocations && currentLocations.length > 0 ? currentLocations : GLOBAL_LOCATIONS;
+      const activeLoc = locs.find((l) => l.id === currentActiveId) || locs[0];
+      if (!activeLoc) return;
       const pActive = latLonToVector3(activeLoc.lat, activeLoc.lon, GLOBE_RADIUS);
 
-      GLOBAL_LOCATIONS.forEach((destLoc) => {
+      locs.forEach((destLoc) => {
         if (destLoc.id === activeLoc.id) return;
         const pDest = latLonToVector3(destLoc.lat, destLoc.lon, GLOBE_RADIUS);
         const curve = createCurvedArc(pActive, pDest, GLOBE_RADIUS);
@@ -276,12 +310,19 @@ export default function Interactive3DGlobe({
       });
     }
 
-    rebuildArcs(activeLocation?.id || GLOBAL_LOCATIONS[0].id);
+    // Expose helpers via refs
+    rebuildMarkersRef.current = rebuildMarkers;
+    rebuildArcsRef.current = rebuildArcs;
 
-    // 10. Pointer Drag Handling (Mouse & Touch)
+    // Initial build
+    rebuildMarkers(locationsRef.current);
+    rebuildArcs(activeLocationRef.current?.id, locationsRef.current);
+
+    // 10. Pointer Drag & Click Handling (Mouse & Touch)
     const onPointerDown = (e) => {
       isDragging.current = true;
       velocity.current = { x: 0, y: 0 };
+      pointerStart.current = { x: e.clientX, y: e.clientY };
       prevPointer.current = { x: e.clientX, y: e.clientY };
       notifyUserInteraction(true);
 
@@ -303,9 +344,32 @@ export default function Interactive3DGlobe({
       velocity.current = { x: deltaY * rotSpeed, y: deltaX * rotSpeed };
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e) => {
       if (!isDragging.current) return;
       isDragging.current = false;
+
+      // Detect click on location marker pins
+      const dragDist = Math.hypot(e.clientX - pointerStart.current.x, e.clientY - pointerStart.current.y);
+      if (dragDist < 6 && onSelectLocation) {
+        const rect = canvasElem.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(markerGroup.children);
+        if (intersects.length > 0) {
+          const hitLocId = intersects[0].object.userData?.locationId;
+          if (hitLocId) {
+            const locs = locationsRef.current || GLOBAL_LOCATIONS;
+            const hitIdx = locs.findIndex((l) => l.id === hitLocId);
+            if (hitIdx !== -1) {
+              onSelectLocation(hitIdx);
+            }
+          }
+        }
+      }
 
       // Resume auto-rotation after 8 seconds of idle
       if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -360,9 +424,10 @@ export default function Interactive3DGlobe({
       globeGroup.rotation.x = currentRotation.current.x;
       globeGroup.rotation.y = currentRotation.current.y;
 
-      // Pulse location rings
+      // Pulse location rings (read from activeLocationRef for fresh reactivity)
+      const curActiveLoc = activeLocationRef.current;
       pulseRings.forEach((p) => {
-        const isActive = p.locId === activeLocation?.id;
+        const isActive = p.locId === curActiveLoc?.id;
         const speed = isActive ? 3.0 : 1.8;
         const wave = (time * speed) % 1;
         const scale = isActive ? 1.0 + wave * 1.5 : 1.0 + wave * 0.8;
@@ -378,8 +443,8 @@ export default function Interactive3DGlobe({
       });
 
       // Project Active Location to 2D Screen Space for the Floating Label
-      if (activeLocation) {
-        const localPos = latLonToVector3(activeLocation.lat, activeLocation.lon, GLOBE_RADIUS);
+      if (curActiveLoc) {
+        const localPos = latLonToVector3(curActiveLoc.lat, curActiveLoc.lon, GLOBE_RADIUS);
         const worldPos = localPos.clone().applyMatrix4(globeGroup.matrixWorld);
 
         // Vector pointing from world center to marker
@@ -398,7 +463,7 @@ export default function Interactive3DGlobe({
             visible: true
           });
         } else {
-          setActiveLabelPos((prev) => ({ ...prev, visible: false }));
+          setActiveLabelPos((prev) => (prev.visible ? { ...prev, visible: false } : prev));
         }
       }
 
@@ -407,10 +472,9 @@ export default function Interactive3DGlobe({
 
     animate();
 
-    // Rebuild arcs on external activeLocation prop change
-    container.rebuildArcs = rebuildArcs;
-
     return () => {
+      rebuildMarkersRef.current = null;
+      rebuildArcsRef.current = null;
       cancelAnimationFrame(animationFrameId);
       resizeObserver.disconnect();
       if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -425,7 +489,7 @@ export default function Interactive3DGlobe({
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
     };
-  }, [activeLocation?.id, notifyUserInteraction]);
+  }, [notifyUserInteraction, onSelectLocation]);
 
   return (
     <div className="relative w-full h-[380px] sm:h-[460px] lg:h-[520px] flex items-center justify-center select-none overflow-hidden touch-none">
