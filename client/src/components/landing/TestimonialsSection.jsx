@@ -104,41 +104,41 @@ export default function TestimonialsSection() {
         </div>
 
         {/* Stats & Rating Summary Bar */}
-        <div className="mt-10 rounded-3xl border border-sage-light/30 bg-sage-card/90 p-6 sm:p-8 shadow-soft flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sage-secondary/80 border border-[rgb(72,125,72)]/20 text-site font-serif font-bold text-3xl shadow-soft">
+        <div className="mt-8 rounded-2xl border border-sage-border/80 bg-sage-secondary/30 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white border border-sage-border text-site font-serif font-bold text-xl shadow-xs">
               {Number(stats.averageRating || 5).toFixed(1)}
             </div>
             <div>
               <div className="flex gap-1 text-site">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-copper text-site" />
+                  <Star key={i} className="h-3.5 w-3.5 fill-copper text-site" />
                 ))}
               </div>
-              <p className="text-xs text-sage-muted mt-1">
-                Average Rating from <span className="font-bold text-forest">{stats.totalApproved || reviews.length} Verified Reviews</span>
+              <p className="text-xs text-sage-muted mt-0.5">
+                Average Rating from <span className="font-semibold text-forest">{stats.totalApproved || reviews.length} Verified Reviews</span>
               </p>
             </div>
           </div>
 
           {/* Search & Filters */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-sage-muted z-10 pointer-events-none" />
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            <div className="relative flex-1 md:w-60">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sage-muted z-10 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search endorsements..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ paddingLeft: "2.75rem" }}
-                className="field-luxury text-xs py-2"
+                style={{ paddingLeft: "2.5rem" }}
+                className="field-luxury text-xs py-1.5 min-h-[40px]"
               />
             </div>
 
             <select
               value={selectedProjectType}
               onChange={(e) => setSelectedProjectType(e.target.value)}
-              className="rounded-2xl border border-sage-border bg-sage-card px-3 py-2 text-xs text-forest outline-none focus:border-[rgb(72,125,72)]"
+              className="rounded-xl border border-sage-border bg-white px-3 py-2 text-xs text-forest outline-none focus:border-[rgb(72,125,72)] min-h-[40px]"
             >
               <option value="All">All Services</option>
               <option value="Wedding Film">Wedding Film</option>
@@ -154,7 +154,7 @@ export default function TestimonialsSection() {
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-3xl border border-sage-border bg-sage-card/50 p-8 space-y-4 animate-pulse h-64" />
+              <div key={i} className="rounded-2xl border border-sage-border bg-white p-6 space-y-4 animate-pulse h-60" />
             ))
           ) : error ? (
             <div className="col-span-full text-center py-12 text-rose-700">{error}</div>
@@ -177,11 +177,11 @@ export default function TestimonialsSection() {
             filteredReviews.map((testimonial, index) => (
               <m.article
                 key={testimonial._id || testimonial.name}
-                className="rounded-3xl border border-sage-border bg-sage-card p-8 shadow-soft transition-all duration-500 hover:border-sage-light/80 hover:shadow-editorial flex flex-col justify-between"
-                initial={{ opacity: 0, y: 20 }}
+                className="rounded-2xl border border-sage-border/80 bg-white p-6 transition-all duration-300 hover:border-site/50 flex flex-col justify-between shadow-xs"
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
+                transition={{ delay: index * 0.06 }}
               >
                 <TestimonialCardContent testimonial={testimonial} />
               </m.article>

@@ -13,13 +13,13 @@ export default function BlogListingPage() {
   const filteredPosts = posts.filter((p) => (p.title || "").toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="py-24 sm:py-32 bg-sage-bg text-forest space-y-12">
-      <Container className="space-y-12">
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-site shadow-soft">
-            <BookOpen className="h-4 w-4" /> Editorial Journal & Craft Insights
+    <div className="py-16 sm:py-20 bg-sage-bg text-forest space-y-8">
+      <Container className="space-y-8">
+        <div className="text-center space-y-3.5 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-widest text-site shadow-xs">
+            <BookOpen className="h-3.5 w-3.5" /> Editorial Journal & Craft Insights
           </div>
-          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-normal text-forest">
+          <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest">
             Post-Production Journal
           </h1>
           <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
@@ -46,39 +46,39 @@ export default function BlogListingPage() {
           <p className="text-center text-sm text-sage-muted">No published journal articles are available yet.</p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredPosts.map((post, idx) => (
             <m.div
               key={post._id || post.id || idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: idx * 0.05 }}
-              className="group rounded-3xl border border-sage-light/60 bg-sage-card p-6 shadow-soft hover:shadow-editorial transition-all flex flex-col justify-between"
+              className="group rounded-2xl border border-sage-border/80 bg-white p-5 shadow-xs hover:border-site/50 transition-all flex flex-col justify-between"
             >
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {post.coverImage && (
-                  <div className="h-44 rounded-2xl overflow-hidden bg-forest/5 border border-sage-border">
+                  <div className="h-40 rounded-xl overflow-hidden bg-forest/5 border border-sage-border">
                     <img src={mediaUrl(post.coverImage)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-site bg-sage-secondary/70 px-2.5 py-0.5 rounded-full border border-[rgb(72,125,72)]/20">
                     {post.category} • {post.readTime}
                   </span>
-                  <h2 className="font-heading text-2xl font-semibold text-forest group-hover:text-site transition-colors">
+                  <h2 className="font-heading text-lg sm:text-xl font-normal text-forest group-hover:text-site transition-colors">
                     {post.title}
                   </h2>
                   <p className="text-xs text-sage-muted leading-relaxed line-clamp-3">{post.excerpt}</p>
                 </div>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-sage-border/40 flex items-center justify-between">
+              <div className="pt-4 mt-4 border-t border-sage-border/40 flex items-center justify-between">
                 <Link
                   to={`/blog/${post.slug || post._id || post.id}`}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-forest group-hover:text-site transition-colors"
                 >
-                  Read Full Article <ArrowUpRight className="h-4 w-4" />
+                  Read Full Article <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </m.div>

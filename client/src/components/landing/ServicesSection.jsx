@@ -45,15 +45,15 @@ export default function ServicesSection() {
   const displayServices = Array.isArray(services) && services.length > 0 ? services : DEFAULT_SERVICES;
 
   return (
-    <section aria-label="Post-Production Services Suite" className="py-24 sm:py-32 bg-sage-card text-forest relative">
+    <section aria-label="Post-Production Services Suite" className="py-16 sm:py-20 lg:py-24 bg-sage-bg text-forest relative border-b border-sage-border/60">
       <Container>
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-12 border-b border-sage-border/80">
-          <div className="space-y-3 max-w-2xl">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-10 border-b border-sage-border/80">
+          <div className="space-y-2.5 max-w-2xl">
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
-              Core Capabilities & Post-Production Suite
+              Core Capabilities &amp; Post-Production Suite
             </span>
-            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-[2.5rem] font-normal text-forest leading-tight">
               Handcrafted Post-Production Built for Visual Excellence
             </h2>
           </div>
@@ -63,45 +63,46 @@ export default function ServicesSection() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 pt-12">
+        <div className="grid gap-0 md:grid-cols-3 pt-10 divide-y md:divide-y-0 md:divide-x divide-sage-border/70">
           {displayServices.map((service, idx) => {
             const Icon = categoryIcons[service.category] || Film;
             return (
               <m.div
                 key={service._id || service.id || idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="group relative rounded-3xl border border-sage-border/80 bg-sage-card p-7 sm:p-8 shadow-soft hover:shadow-editorial hover:border-[rgb(72,125,72)]/70 transition-all duration-500 flex flex-col justify-between"
+                transition={{ duration: 0.45, delay: idx * 0.08 }}
+                className="group py-8 md:py-0 md:px-8 first:md:pl-0 last:md:pr-0 flex flex-col justify-between"
               >
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="h-12 w-12 rounded-2xl bg-sage-secondary border border-sage-light/40 text-site flex items-center justify-center">
-                      <Icon className="h-6 w-6" />
+                    <div className="h-10 w-10 rounded-xl bg-sage-secondary border border-sage-border/80 text-site flex items-center justify-center">
+                      <Icon className="h-5 w-5" />
                     </div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-site bg-sage-secondary/70 px-3 py-1 rounded-full border border-[rgb(72,125,72)]/20">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-site px-2.5 py-0.5 rounded-full border border-[rgb(72,125,72)]/25">
                       {service.turnaround}
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-heading text-2xl font-semibold text-forest group-hover:text-site transition-colors">
+                    <h3 className="font-heading text-xl sm:text-2xl font-normal text-forest group-hover:text-site transition-colors">
                       {service.title}
                     </h3>
-                    <p className="text-xs text-sage-muted italic">{service.tagline}</p>
-                    <p className="text-xs text-sage-muted leading-relaxed line-clamp-3">
+                    <p className="text-xs text-site/80 italic font-medium">{service.tagline}</p>
+                    <p className="text-xs sm:text-sm text-sage-muted leading-relaxed line-clamp-3">
                       {service.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-6 mt-6 border-t border-sage-border/40 flex items-center justify-between">
+                <div className="pt-5 mt-6 border-t border-sage-border/40 flex items-center justify-between">
                   <Link
                     to={`/servicesdetails/${service.slug || service._id || service.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-forest group-hover:text-site transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest group-hover:text-site transition-colors"
                   >
-                    Explore Service Suite <ArrowUpRight className="h-4 w-4" />
+                    <span>Explore Service Suite</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
                 </div>
               </m.div>

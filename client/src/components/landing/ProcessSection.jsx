@@ -44,33 +44,38 @@ export default function ProcessSection() {
           text="A frictionless post-production pipeline built so you can focus on shooting while we handle post."
         />
 
-        <div className="relative mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="absolute left-[12.5%] right-[12.5%] top-16 hidden h-[1px] bg-gradient-to-r from-transparent via-copper/40 to-transparent lg:block" />
-
+        <div className="relative mt-12 sm:mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {processSteps.map((step, index) => {
             const StepIcon = icons[step.icon] || Scissors;
             return (
-            <m.article
-              key={step.title}
-              className="relative flex flex-col justify-between rounded-3xl border border-sage-border bg-sage-card p-8 shadow-soft transition-all duration-500 hover:border-sage-light/80 hover:shadow-editorial"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgb(72,125,72)]/20 bg-sage-secondary/60 text-site">
-                    <StepIcon className="h-6 w-6" />
+              <m.article
+                key={step.title}
+                className="relative flex flex-col justify-between pt-6 border-t border-sage-border/80 transition-all duration-300"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-heading text-xl sm:text-2xl font-normal text-site/80 tracking-widest">
+                      0{index + 1}
+                    </span>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                      <StepIcon className="h-4 w-4" />
+                    </div>
                   </div>
-                  <span className="font-heading text-3xl font-bold text-site">0{index + 1}</span>
-                </div>
 
-                <h3 className="font-heading text-2xl font-normal text-forest">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-sage-muted">{step.description}</p>
-              </div>
-            </m.article>
-          );})}
+                  <h3 className="font-heading text-lg sm:text-xl font-normal text-forest leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-sage-muted">
+                    {step.description}
+                  </p>
+                </div>
+              </m.article>
+            );
+          })}
         </div>
       </Container>
     </section>

@@ -1,30 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Bona+Nova:ital,wght@0,400;0,700;1,400&family=Lavishly+Yours&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 .font-lavishly {
-  font-family: "Lavishly Yours", cursive !important;
+  font-family: "Alex Brush", cursive !important;
 }
 
 /* ==========================================================================
-   GLOBAL HEADINGS & TITLES TYPOGRAPHY - BONA NOVA
-   Applies Bona Nova strictly and universally to all headings (h1, h2, h3, h4)
-   and editorial titles across every page, section, and module, preserving weights,
-   sizes, letter spacing, and line heights.
+   GLOBAL HEADINGS & TITLES TYPOGRAPHY - PLAYFAIR DISPLAY & CORMORANT GARAMOND
+   Applies consistent hero-grade editorial serif universally to all headings
+   (h1, h2, h3, h4) and titles across every page, preserving refined editorial
+   proportions, font weights, and letter spacing.
    ========================================================================== */
 @layer base {
   h1, h2, h3, h4,
   .h1, .h2, .h3, .h4,
   [role="heading"] {
-    font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif;
+    font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif;
+    letter-spacing: -0.01em;
   }
 }
 
 h1,
 .h1,
 [role="heading"][aria-level="1"] {
-  font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
+  font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif !important;
+  letter-spacing: -0.015em;
 }
 
 :root {
@@ -182,13 +184,13 @@ svg.text-terracotta {
 .font-serif,
 .font-heading,
 .font-bona {
-  font-family: "Bona Nova", Georgia, Cambria, "Times New Roman", Times, serif !important;
+  font-family: "Playfair Display", "Cormorant Garamond", "Bona Nova", Georgia, serif !important;
 }
 
 .section-pad {
   position: relative;
-  padding-top: clamp(3.5rem, 7vw, 7.5rem);
-  padding-bottom: clamp(3.5rem, 7vw, 7.5rem);
+  padding-top: clamp(2.5rem, 4.5vw, 4.75rem);
+  padding-bottom: clamp(2.5rem, 4.5vw, 4.75rem);
 }
 
 /* Public navigation: lightweight liquid-glass system. */
@@ -430,78 +432,7 @@ svg.text-terracotta {
     var(--liquid-button-active);
 }
 
-/* Shared public + admin control finish. Media cards are intentionally excluded. */
-:where(
-  button:not(:has(img, video)),
-  a[class*="rounded-full"]:not(:has(img, video)),
-  a[class*="rounded-xl"]:not(:has(img, video)),
-  a[class*="rounded-2xl"]:not(:has(img, video))
-):where(:not(.liquid-nav-link):not(.liquid-mobile-link):not(.liquid-menu-button):not(.no-liquid-control)) {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 0.9rem;
-  font-family: "Manrope", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  backdrop-filter: blur(14px) saturate(145%);
-  -webkit-backdrop-filter: blur(14px) saturate(145%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 8px 24px -20px var(--liquid-shadow);
-  transform: translate3d(0, 0, 0) scale(1);
-  transition-property: transform, box-shadow, border-color, background-color, color, filter;
-  transition-duration: 280ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
 
-:where(
-  button:not(:has(img, video)),
-  a[class*="rounded-full"]:not(:has(img, video)),
-  a[class*="rounded-xl"]:not(:has(img, video)),
-  a[class*="rounded-2xl"]:not(:has(img, video))
-):where(:not(.liquid-nav-link):not(.liquid-mobile-link):not(.liquid-menu-button):not(.no-liquid-control))::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(112deg, transparent 16%, rgba(255, 255, 255, 0.22) 38%, transparent 58%);
-  opacity: 0.7;
-  transform: translate3d(-110%, 0, 0) skewX(-12deg);
-  transition: transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-:where(
-  button:not(:has(img, video)),
-  a[class*="rounded-full"]:not(:has(img, video)),
-  a[class*="rounded-xl"]:not(:has(img, video)),
-  a[class*="rounded-2xl"]:not(:has(img, video))
-):where(:not(.liquid-nav-link):not(.liquid-mobile-link):not(.liquid-menu-button):not(.no-liquid-control)):where(:not(:disabled)):hover {
-  transform: translate3d(0, -2px, 0) scale(1.02);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    0 14px 28px -20px var(--liquid-shadow);
-}
-
-:where(
-  button:not(:has(img, video)),
-  a[class*="rounded-full"]:not(:has(img, video)),
-  a[class*="rounded-xl"]:not(:has(img, video)),
-  a[class*="rounded-2xl"]:not(:has(img, video))
-):where(:not(.liquid-nav-link):not(.liquid-mobile-link):not(.liquid-menu-button):not(.no-liquid-control)):hover::after {
-  transform: translate3d(110%, 0, 0) skewX(-12deg);
-}
-
-:where(
-  button:not(:has(img, video)),
-  a[class*="rounded-full"]:not(:has(img, video)),
-  a[class*="rounded-xl"]:not(:has(img, video)),
-  a[class*="rounded-2xl"]:not(:has(img, video))
-):where(:not(.liquid-nav-link):not(.liquid-mobile-link):not(.liquid-menu-button):not(.no-liquid-control)):where(:not(:disabled)):active {
-  transform: translate3d(0, 0, 0) scale(0.98);
-  transition-duration: 90ms;
-}
 
 :root.dark .liquid-header__brand img,
 :root[data-theme="dark"] .liquid-header__brand img,

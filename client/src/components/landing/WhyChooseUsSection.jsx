@@ -33,13 +33,13 @@ export default function WhyChooseUsSection() {
     <section id="why-us" data-theme="about" className="section-pad">
       <Container className="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
         <m.div
-          className="relative overflow-hidden rounded-3xl border border-sage-border bg-white p-3 shadow-editorial"
-          initial={{ opacity: 0, x: -30 }}
+          className="relative overflow-hidden rounded-2xl border border-sage-border shadow-sm"
+          initial={{ opacity: 0, x: -24 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sage-secondary flex items-center justify-center">
+          <div className="relative aspect-[4/5] overflow-hidden bg-sage-secondary flex items-center justify-center">
             <img
               src={workflowImageSrc}
               alt="Post-production workflow"
@@ -50,12 +50,12 @@ export default function WhyChooseUsSection() {
               className="h-full w-full object-cover"
             />
             {/* Subtle Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-forest/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-forest/80 via-transparent to-transparent pointer-events-none" />
 
-            {/* High-Contrast Floating Feature Box */}
-            <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-sage-border bg-white p-5 shadow-editorial">
-              <p className="font-heading text-xl font-semibold text-forest">Tailored to Your Signature Look</p>
-              <p className="mt-1.5 text-xs text-sage-muted leading-relaxed font-normal">
+            {/* Editorial Feature Caption */}
+            <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/20 bg-forest/85 backdrop-blur-md p-4 text-white">
+              <p className="font-heading text-lg font-normal text-white">Tailored to Your Signature Look</p>
+              <p className="mt-1 text-xs text-white/80 leading-relaxed font-normal">
                 Custom profile cataloguing ensures your color science, film emulation, and skin retouching remain completely consistent across all weddings.
               </p>
             </div>
@@ -70,22 +70,22 @@ export default function WhyChooseUsSection() {
             text="A luxury post-production partner designed to maintain the highest editorial standards without compromising your creative vision."
           />
 
-          <div className="grid gap-4 sm:grid-cols-2 pt-2">
+          <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2 pt-2">
             {benefits.map((benefit, index) => {
               const BenefitIcon = icons[benefit.icon] || CheckCircle2;
               return (
                 <m.div
                   key={benefit.title}
-                  className="flex items-center gap-3.5 rounded-2xl border border-sage-border bg-white p-4.5 shadow-soft transition-all duration-300 hover:border-[rgb(72,125,72)] hover:shadow-editorial"
-                  initial={{ opacity: 0, y: 16 }}
+                  className="flex items-center gap-3 py-3 border-b border-sage-border/70"
+                  initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.05, duration: 0.5 }}
+                  transition={{ delay: index * 0.04, duration: 0.4 }}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sage-secondary text-site">
-                    <BenefitIcon className="h-5 w-5" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                    <BenefitIcon className="h-4 w-4" />
                   </div>
-                  <span className="text-sm font-semibold text-forest">{benefit.title}</span>
+                  <span className="text-xs sm:text-sm font-medium text-forest">{benefit.title}</span>
                 </m.div>
               );
             })}

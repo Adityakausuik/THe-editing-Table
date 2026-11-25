@@ -198,17 +198,17 @@ export default function CareersPage() {
   const ctaButtonText = content?.cta?.buttonText || "Send Your Resume";
 
   return (
-    <div className="min-h-screen bg-sage-bg text-forest pt-28 pb-20 selection:bg-[rgb(72,125,72)]/20">
-      <Container className="space-y-24 sm:space-y-32">
+    <div className="min-h-screen bg-sage-bg text-forest pt-24 pb-16 selection:bg-[rgb(72,125,72)]/20">
+      <Container className="space-y-16 sm:space-y-20">
         {/* ==========================================
             1. HERO SECTION
         ========================================== */}
-        <section className="text-center max-w-4xl mx-auto space-y-6 pt-6 sm:pt-12">
+        <section className="text-center max-w-4xl mx-auto space-y-5 pt-4 sm:pt-8">
           <m.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-site backdrop-blur-md shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-site backdrop-blur-md shadow-xs"
           >
             <Sparkles className="h-3.5 w-3.5 text-site" />
             <span>{heroBadge}</span>
@@ -218,7 +218,7 @@ export default function CareersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-heading text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-forest leading-[1.08]"
+            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-forest leading-tight"
           >
             {heroHeading}
           </m.h1>
@@ -227,7 +227,7 @@ export default function CareersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-xl text-sage-muted font-normal leading-relaxed max-w-2xl mx-auto"
+            className="text-sm sm:text-base text-sage-muted font-normal leading-relaxed max-w-2xl mx-auto"
           >
             {heroDesc}
           </m.p>
@@ -236,22 +236,22 @@ export default function CareersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="pt-2 flex flex-wrap items-center justify-center gap-4"
+            className="pt-2 flex flex-wrap items-center justify-center gap-3.5"
           >
             <a
               href="#open-positions"
-              className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full bg-[rgb(72,125,72)] px-7 py-3 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#7C9B69] hover:shadow-sage active:scale-[0.98]"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full bg-[rgb(72,125,72)] px-6 py-2.5 text-xs sm:text-sm font-medium text-white shadow-xs transition-all duration-300 hover:bg-[#7C9B69] active:scale-[0.98]"
             >
               <span>Explore Vacancies</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </a>
             <button
               type="button"
               onClick={() => openApplyModal()}
-              className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-7 py-3 text-sm font-medium text-forest backdrop-blur-sm transition-all duration-300 hover:border-[rgb(72,125,72)] hover:bg-sage-card hover:text-site active:scale-[0.98]"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-white px-6 py-2.5 text-xs sm:text-sm font-medium text-forest transition-all duration-300 hover:border-[rgb(72,125,72)] hover:text-site active:scale-[0.98]"
             >
               <span>Send Your Resume</span>
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5" />
             </button>
           </m.div>
         </section>
@@ -259,14 +259,14 @@ export default function CareersPage() {
         {/* ==========================================
             2. WHY JOIN US SECTION
         ========================================== */}
-        <section className="space-y-12">
+        <section className="space-y-10">
           <SectionHeading
             label="CULTURE & BENEFITS"
             title="Why Build Your Craft at The Editing Table"
             text="We provide an inspiring environment designed to help creative post-production artists flourish."
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {whyJoinUsCards.map((card, idx) => {
               const IconComp = ICON_MAP[card.icon] || Sparkles;
               return (
@@ -276,15 +276,15 @@ export default function CareersPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.08 }}
-                  className="group relative rounded-3xl border border-sage-border bg-sage-card/90 p-8 shadow-soft backdrop-blur-md transition-all duration-500 hover:border-[rgb(72,125,72)]/40 hover:-translate-y-1.5 hover:shadow-xl"
+                  className="group relative rounded-2xl border border-sage-border/80 bg-white p-6 shadow-xs transition-all duration-300 hover:border-site/50"
                 >
-                  <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgb(72,125,72)]/10 text-site transition-transform duration-500 group-hover:scale-110 group-hover:bg-[rgb(72,125,72)] group-hover:text-white">
-                    <IconComp className="h-6 w-6" />
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[rgb(72,125,72)]/10 text-site transition-transform duration-300 group-hover:scale-105 group-hover:bg-[rgb(72,125,72)] group-hover:text-white">
+                    <IconComp className="h-5 w-5" />
                   </div>
-                  <h3 className="font-heading text-xl sm:text-2xl text-forest font-medium tracking-tight mb-3">
+                  <h3 className="font-heading text-lg sm:text-xl text-forest font-normal tracking-tight mb-2">
                     {card.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
+                  <p className="text-xs sm:text-sm text-sage-muted leading-relaxed">
                     {card.description}
                   </p>
                 </m.div>
@@ -296,13 +296,13 @@ export default function CareersPage() {
         {/* ==========================================
             3. OPEN POSITIONS SECTION
         ========================================== */}
-        <section id="open-positions" className="space-y-10 scroll-mt-32">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-sage-border pb-8">
+        <section id="open-positions" className="space-y-8 scroll-mt-28">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-sage-border pb-6">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
                 CURRENT VACANCIES
               </span>
-              <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest mt-2">
+              <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest mt-1.5 font-normal">
                 Open Positions
               </h2>
             </div>
@@ -315,10 +315,10 @@ export default function CareersPage() {
                     key={dept}
                     type="button"
                     onClick={() => setSelectedDept(dept)}
-                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                       selectedDept === dept
-                        ? "bg-[rgb(72,125,72)] text-white shadow-sm"
-                        : "bg-sage-card border border-sage-border text-sage-muted hover:text-forest hover:border-[rgb(72,125,72)]/30"
+                        ? "bg-[rgb(72,125,72)] text-white shadow-xs"
+                        : "bg-white border border-sage-border text-sage-muted hover:text-forest hover:border-[rgb(72,125,72)]/30"
                     }`}
                   >
                     {dept}
@@ -336,14 +336,14 @@ export default function CareersPage() {
           )}
 
           {error && !loading && (
-            <div className="p-8 rounded-3xl bg-rose-50 border border-rose-200 text-center text-rose-800 text-sm">
+            <div className="p-6 rounded-2xl bg-rose-50 border border-rose-200 text-center text-rose-800 text-sm">
               {error}
             </div>
           )}
 
           {/* Job List Cards */}
           {!loading && !error && filteredJobs.length > 0 && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {filteredJobs.map((job, idx) => {
                 const isExpanded = expandedJobId === job._id;
                 return (
@@ -353,46 +353,46 @@ export default function CareersPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: idx * 0.05 }}
-                    className="rounded-3xl border border-sage-border bg-sage-card p-6 sm:p-8 shadow-soft transition-all duration-300 hover:border-[rgb(72,125,72)]/40 hover:shadow-md"
+                    className="rounded-2xl border border-sage-border/80 bg-white p-5 sm:p-6 shadow-xs transition-all duration-300 hover:border-site/50"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                      <div className="space-y-3 flex-1">
-                        <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="rounded-full bg-[rgb(72,125,72)]/10 px-3 py-1 text-xs font-semibold text-site">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                      <div className="space-y-2.5 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-[rgb(72,125,72)]/10 px-2.5 py-0.5 text-xs font-semibold text-site">
                             {job.department}
                           </span>
-                          <span className="rounded-full border border-sage-border bg-sage-secondary/50 px-3 py-1 text-xs font-medium text-forest">
+                          <span className="rounded-full border border-sage-border bg-sage-secondary/50 px-2.5 py-0.5 text-xs font-medium text-forest">
                             {job.employmentType}
                           </span>
                           {job.experience && (
                             <span className="inline-flex items-center gap-1 text-xs text-sage-muted">
-                              <Clock className="h-3.5 w-3.5" />
+                              <Clock className="h-3 w-3" />
                               {job.experience}
                             </span>
                           )}
                           {job.location && (
                             <span className="inline-flex items-center gap-1 text-xs text-sage-muted">
-                              <MapPin className="h-3.5 w-3.5" />
+                              <MapPin className="h-3 w-3" />
                               {job.location}
                             </span>
                           )}
                         </div>
 
-                        <h3 className="font-heading text-2xl sm:text-3xl text-forest font-medium">
+                        <h3 className="font-heading text-xl sm:text-2xl text-forest font-normal">
                           {job.title}
                         </h3>
 
-                        <p className="text-sm sm:text-base text-sage-muted leading-relaxed max-w-3xl">
+                        <p className="text-xs sm:text-sm text-sage-muted leading-relaxed max-w-3xl">
                           {job.description}
                         </p>
 
                         {/* Skills Badges */}
                         {Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-1">
+                          <div className="flex flex-wrap gap-1.5 pt-1">
                             {job.requiredSkills.map((skill, sIdx) => (
                               <span
                                 key={sIdx}
-                                className="rounded-lg bg-sage-bg px-2.5 py-1 text-xs font-normal text-forest border border-sage-border/60"
+                                className="rounded-md bg-sage-bg px-2 py-0.5 text-xs font-normal text-forest border border-sage-border/60"
                               >
                                 {skill}
                               </span>
@@ -401,7 +401,7 @@ export default function CareersPage() {
                         )}
                       </div>
 
-                      <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3 shrink-0 pt-2 lg:pt-0">
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2.5 shrink-0 pt-2 lg:pt-0">
                         <Button
                           variant="primary"
                           onClick={() => openApplyModal(job)}
@@ -485,15 +485,15 @@ export default function CareersPage() {
               4. NO VACANCIES FALLBACK
           ========================================== */}
           {!loading && !error && filteredJobs.length === 0 && (
-            <div className="rounded-3xl border border-sage-border bg-sage-card p-10 sm:p-14 text-center max-w-2xl mx-auto space-y-6 shadow-soft">
-              <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgb(72,125,72)]/10 text-site">
-                <Briefcase className="h-8 w-8" />
+            <div className="rounded-2xl border border-sage-border/80 bg-white p-8 sm:p-10 text-center max-w-2xl mx-auto space-y-4 shadow-xs">
+              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[rgb(72,125,72)]/10 text-site">
+                <Briefcase className="h-6 w-6" />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-heading text-2xl sm:text-3xl text-forest">
+              <div className="space-y-1.5">
+                <h3 className="font-heading text-xl sm:text-2xl text-forest font-normal">
                   We don&apos;t have any open positions right now
                 </h3>
-                <p className="text-sm sm:text-base text-sage-muted">
+                <p className="text-xs sm:text-sm text-sage-muted">
                   ...but we&apos;d still love to hear from you. Send us your portfolio and resume for upcoming projects.
                 </p>
               </div>
@@ -507,14 +507,14 @@ export default function CareersPage() {
         {/* ==========================================
             5. FINAL CTA SECTION
         ========================================== */}
-        <section className="rounded-3xl border border-sage-border bg-sage-card p-10 sm:p-16 text-center shadow-soft backdrop-blur-md max-w-4xl mx-auto space-y-6">
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest">
+        <section className="rounded-2xl border border-sage-border/80 bg-white p-8 sm:p-12 text-center shadow-xs max-w-3xl mx-auto space-y-4">
+          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal">
             {ctaHeading}
           </h2>
-          <p className="text-base sm:text-lg text-sage-muted max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-sage-muted max-w-xl mx-auto">
             {ctaDesc}
           </p>
-          <div className="pt-2">
+          <div className="pt-1">
             <Button variant="primary" onClick={() => openApplyModal()}>
               {ctaButtonText}
             </Button>
@@ -543,7 +543,7 @@ export default function CareersPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-2xl rounded-3xl border border-sage-border bg-sage-card p-6 sm:p-10 shadow-2xl z-10 my-8 max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-2xl rounded-2xl border border-sage-border/90 bg-white p-6 sm:p-8 shadow-xl z-10 my-8 max-h-[90vh] overflow-y-auto"
             >
               {/* Close Button */}
               <button

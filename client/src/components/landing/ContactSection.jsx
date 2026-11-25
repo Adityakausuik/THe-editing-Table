@@ -84,22 +84,26 @@ export default function ContactSection() {
             text="Share your project timeline, raw camera specs, and color references. We align on scope and prepare your dedicated editing suite."
           />
 
-          <div className="space-y-4 pt-2">
-            <div className="flex items-start gap-4 rounded-2xl border border-sage-border bg-sage-card p-5 shadow-soft">
-              <ShieldCheck className="h-6 w-6 text-site shrink-0 mt-0.5" />
+          <div className="space-y-2 pt-2">
+            <div className="flex items-start gap-3.5 py-3.5 border-b border-sage-border/70">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
               <div>
-                <p className="font-heading text-lg font-normal text-forest">Strict Confidentiality & NDA</p>
-                <p className="text-xs text-sage-muted mt-1 leading-relaxed">
-                  Your raw assets, high-profile celebrity weddings, and unreleased commercial footage are handled in secure offline environments.
+                <p className="font-heading text-base font-normal text-forest">Strict Confidentiality &amp; NDA</p>
+                <p className="text-xs text-sage-muted mt-0.5 leading-relaxed">
+                  Your raw assets, high-profile weddings, and unreleased commercial footage are handled in secure offline environments.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4 rounded-2xl border border-sage-border bg-sage-card p-5 shadow-soft">
-              <Mail className="h-6 w-6 text-site shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3.5 py-3.5 border-b border-sage-border/70">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                <Mail className="h-4 w-4" />
+              </div>
               <div>
-                <p className="font-heading text-lg font-normal text-forest">Direct Producer Communication</p>
-                <p className="text-xs text-sage-muted mt-1 leading-relaxed">
+                <p className="font-heading text-base font-normal text-forest">Direct Producer Communication</p>
+                <p className="text-xs text-sage-muted mt-0.5 leading-relaxed">
                   You work directly with a dedicated post-production supervisor throughout culling, grading, and final delivery.
                 </p>
               </div>
@@ -109,7 +113,7 @@ export default function ContactSection() {
 
         {/* Editorial Form Card */}
         <form
-          className="rounded-3xl border border-sage-border bg-sage-card p-8 shadow-editorial space-y-5"
+          className="rounded-2xl border border-sage-border/90 bg-white p-6 sm:p-8 space-y-4 shadow-xs"
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >

@@ -19,16 +19,16 @@ export default function StatsSection() {
     : DEFAULT_STATS;
 
   return (
-    <section data-theme="team" className="border-y border-sage-border/60 bg-sage-secondary/50 py-16">
-      <Container className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+    <section data-theme="team" className="border-y border-sage-border/70 bg-sage-secondary/30 py-10 sm:py-14">
+      <Container className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-8 gap-x-4 sm:divide-x sm:divide-sage-border/70">
         {stats.map((stat) => (
           <article
             key={stat.label}
-            className="rounded-3xl border border-sage-border bg-sage-card p-6 text-center shadow-soft transition-all duration-300 hover:border-sage-light/80"
+            className="px-2 sm:px-4 text-center first:pl-0 last:pr-0"
           >
             <Counter value={stat.value} suffix={stat.suffix} />
-            <p className="mt-2 text-sm font-medium text-forest">{stat.label}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-site">Verified Metric</p>
+            <p className="mt-1.5 text-xs sm:text-sm font-medium text-forest">{stat.label}</p>
+            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-site/80">Verified Metric</p>
           </article>
         ))}
       </Container>
@@ -57,7 +57,7 @@ function Counter({ value, suffix }) {
   }, [isInView, value]);
 
   return (
-    <m.p ref={ref} className="font-heading text-4xl sm:text-5xl font-normal text-site">
+    <m.p ref={ref} className="font-heading text-3xl sm:text-4xl font-normal text-site leading-none">
       {displayValue.toLocaleString()}
       {suffix}
     </m.p>

@@ -88,28 +88,28 @@ export default function GlobalReachSection() {
   return (
     <section
       aria-label="Global Reach and International Collaborations"
-      className="relative z-10 border-b border-sage-border/70 bg-sage-bg/95 backdrop-blur-md py-12 sm:py-16 md:py-20 overflow-hidden transition-colors duration-500"
+      className="relative z-10 border-b border-sage-border/70 bg-sage-bg/95 backdrop-blur-md py-10 sm:py-14 overflow-hidden transition-colors duration-500"
     >
       <Container className="text-center">
         {/* Eyebrow Pill */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-sage-border/80 bg-sage-card/90 px-3.5 py-1 text-[11px] sm:text-xs font-medium uppercase tracking-widest text-site shadow-xs mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full border border-sage-border/80 bg-sage-card/90 px-3.5 py-1 text-[11px] sm:text-xs font-medium uppercase tracking-widest text-site shadow-xs mb-3">
           <span className="h-1.5 w-1.5 rounded-full bg-site animate-pulse" />
           Global Reach &amp; Collaborations
         </div>
 
         {/* Section Heading */}
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-serif font-semibold tracking-tight text-forest-900 max-w-4xl mx-auto leading-tight sm:leading-snug">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-normal tracking-tight text-forest max-w-3xl mx-auto leading-snug">
           {data.heading || DEFAULT_GLOBAL_REACH.heading}
         </h2>
 
         {/* Section Description */}
-        <p className="mt-3.5 sm:mt-4 text-sm sm:text-base text-charcoal-600 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm text-sage-muted max-w-2xl mx-auto leading-relaxed">
           {data.description || DEFAULT_GLOBAL_REACH.description}
         </p>
       </Container>
 
       {/* Marquee Ticker Container */}
-      <div className="relative mt-8 sm:mt-12 w-full overflow-hidden">
+      <div className="relative mt-6 sm:mt-8 w-full overflow-hidden">
         {/* Left & Right Elegant Edge Gradient Fades */}
         <div
           aria-hidden="true"
@@ -130,7 +130,7 @@ export default function GlobalReachSection() {
           }}
         >
           {/* Track 1 */}
-          <div className="flex shrink-0 items-center gap-8 sm:gap-12 md:gap-16 pr-8 sm:pr-12 md:pr-16">
+          <div className="flex shrink-0 items-center gap-6 sm:gap-8 md:gap-10 pr-6 sm:pr-8 md:pr-10">
             {baseItems.map((country, idx) => (
               <CountryPill key={`track1-${country.id || country.code}-${idx}`} country={country} />
             ))}
@@ -139,7 +139,7 @@ export default function GlobalReachSection() {
           {/* Track 2 (Exact Duplicate for Seamless Loop) */}
           <div
             aria-hidden="true"
-            className="flex shrink-0 items-center gap-8 sm:gap-12 md:gap-16 pr-8 sm:pr-12 md:pr-16"
+            className="flex shrink-0 items-center gap-6 sm:gap-8 md:gap-10 pr-6 sm:pr-8 md:pr-10"
           >
             {baseItems.map((country, idx) => (
               <CountryPill key={`track2-${country.id || country.code}-${idx}`} country={country} />
@@ -183,17 +183,17 @@ function CountryPill({ country }) {
   const name = country.name || country.code || "Global";
 
   return (
-    <div className="flex items-center gap-4 sm:gap-6 shrink-0 select-none">
-      <div className="group/item flex items-center gap-3 sm:gap-3.5 rounded-full border border-sage-border/90 bg-sage-card px-5 sm:px-6 md:px-7 py-2.5 sm:py-3 md:py-3.5 shadow-sm transition-all duration-300 hover:border-site/60 hover:bg-sage-card hover:shadow-soft hover:-translate-y-0.5">
+    <div className="flex items-center gap-3.5 sm:gap-5 shrink-0 select-none">
+      <div className="group/item flex items-center gap-2.5 sm:gap-3 rounded-full border border-sage-border/90 bg-white px-4 sm:px-5 py-2 sm:py-2.5 shadow-2xs transition-all duration-300 hover:border-site/60 hover:shadow-xs">
         {/* National Flag Graphic with Emoji Fallback */}
-        <span className="relative flex h-5 w-7 sm:h-6 sm:w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-[3px] shadow-2xs border border-sage-border/70 bg-sage-secondary/40">
+        <span className="relative flex h-4 w-6 sm:h-4.5 sm:w-6.5 shrink-0 items-center justify-center overflow-hidden rounded-[2px] shadow-2xs border border-sage-border/70 bg-sage-secondary/40">
           {code && code.length === 2 ? (
             <>
               <img
                 src={`https://flagcdn.com/w40/${code}.png`}
                 srcSet={`https://flagcdn.com/w80/${code}.png 2x`}
-                width="34"
-                height="24"
+                width="28"
+                height="18"
                 alt={`${name} flag`}
                 loading="lazy"
                 className="h-full w-full object-cover"
@@ -203,19 +203,19 @@ function CountryPill({ country }) {
                   if (fallback) fallback.style.display = "inline";
                 }}
               />
-              <span className="fallback-emoji hidden text-base sm:text-lg leading-none" aria-hidden="true">
+              <span className="fallback-emoji hidden text-sm sm:text-base leading-none" aria-hidden="true">
                 {flagEmoji}
               </span>
             </>
           ) : (
-            <span className="text-base sm:text-lg leading-none" aria-hidden="true">
+            <span className="text-sm sm:text-base leading-none" aria-hidden="true">
               {flagEmoji}
             </span>
           )}
         </span>
 
         {/* Country Name */}
-        <span className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-forest-900 group-hover/item:text-site transition-colors whitespace-nowrap">
+        <span className="text-xs sm:text-sm font-medium tracking-wide text-forest group-hover/item:text-site transition-colors whitespace-nowrap">
           {name}
         </span>
       </div>
@@ -223,7 +223,7 @@ function CountryPill({ country }) {
       {/* Elegant Separator */}
       <span
         aria-hidden="true"
-        className="text-xs sm:text-sm md:text-base text-site/70 select-none font-serif tracking-widest px-1 sm:px-2"
+        className="text-xs sm:text-sm text-site/70 select-none font-serif tracking-widest px-1"
       >
         ✦
       </span>

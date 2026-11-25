@@ -149,103 +149,103 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="pt-28 pb-16">
+    <div className="pt-24 pb-14">
       {/* Hero Banner */}
-      <section className="relative py-20 bg-sage-secondary/40 border-b border-sage-border/60">
-        <Container className="max-w-4xl text-center space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-4 py-1.5 backdrop-blur-md">
-            <Sparkles className="h-4 w-4 text-site" />
+      <section className="relative py-14 sm:py-16 bg-sage-secondary/40 border-b border-sage-border/60">
+        <Container className="max-w-4xl text-center space-y-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-3.5 py-1 backdrop-blur-md shadow-xs">
+            <Sparkles className="h-3.5 w-3.5 text-site" />
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-site">
               {contact.heroLabel}
             </span>
           </div>
 
-          <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]">
+          <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
             {contact.heroTitle}
           </h1>
 
-          <p className="text-lg sm:text-xl text-sage-muted max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-sage-muted max-w-2xl mx-auto leading-relaxed">
             {contact.heroDescription}
           </p>
         </Container>
       </section>
 
       {/* Main Form & Info Section */}
-      <section className="py-24">
-        <Container className="grid gap-12 lg:grid-cols-[1fr_1.3fr]">
+      <section className="py-14 sm:py-16">
+        <Container className="grid gap-10 lg:grid-cols-[1fr_1.3fr]">
           {/* Contact Information */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             <SectionHeading
               label={contact.sectionLabel}
               title={contact.sectionTitle}
               align="left"
             />
 
-            <div className="space-y-6 rounded-3xl border border-sage-border bg-sage-card p-8 shadow-soft">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
-                  <Mail className="h-5 w-5" />
+            <div className="space-y-4 rounded-2xl border border-sage-border/80 bg-white p-6 shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                  <Mail className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg text-forest">Direct Email</h3>
-                  <a href={`mailto:${contact.email}`} className="text-sm text-sage-muted hover:text-site transition-colors">
+                  <h3 className="font-heading text-base text-forest">Direct Email</h3>
+                  <a href={`mailto:${contact.email}`} className="text-xs text-sage-muted hover:text-site transition-colors">
                     {contact.email}
                   </a>
                 </div>
               </div>
 
               {contact.phone && (
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
-                    <Phone className="h-5 w-5" />
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                    <Phone className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg text-forest">Phone</h3>
-                    <p className="text-sm text-sage-muted">{contact.phone}</p>
+                    <h3 className="font-heading text-base text-forest">Phone</h3>
+                    <p className="text-xs text-sage-muted">{contact.phone}</p>
                   </div>
                 </div>
               )}
 
               {contact.locations && (
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
-                    <MapPin className="h-5 w-5" />
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                    <MapPin className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg text-forest">Locations</h3>
-                    <p className="text-sm text-sage-muted">{contact.locations}</p>
+                    <h3 className="font-heading text-base text-forest">Locations</h3>
+                    <p className="text-xs text-sage-muted">{contact.locations}</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
-                  <Instagram className="h-5 w-5" />
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                  <Instagram className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg text-forest">Instagram</h3>
+                  <h3 className="font-heading text-base text-forest">Instagram</h3>
                   <a
                     href="https://www.instagram.com/the.editingtable?stkn=MWdrdHZlY21tMmYzcw=="
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-sage-muted hover:text-site transition-colors"
+                    className="text-xs text-sage-muted hover:text-site transition-colors"
                   >
                     @the.editingtable
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage-light/15 text-site">
-                  <Linkedin className="h-5 w-5" />
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sage-secondary border border-sage-border text-site">
+                  <Linkedin className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg text-forest">LinkedIn</h3>
+                  <h3 className="font-heading text-base text-forest">LinkedIn</h3>
                   <a
                     href="https://www.linkedin.com/company/the-editing-table/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-sage-muted hover:text-site transition-colors"
+                    className="text-xs text-sage-muted hover:text-site transition-colors"
                   >
                     The Editing Table
                   </a>
@@ -254,8 +254,8 @@ export default function ContactPage() {
             </div>
 
             {contact.faqs && contact.faqs.length > 0 && (
-              <div className="rounded-3xl border border-sage-border/80 bg-sage-secondary/40 p-8 space-y-3">
-                <h4 className="font-heading text-xl text-forest">{contact.faqTitle}</h4>
+              <div className="rounded-2xl border border-sage-border/80 bg-sage-secondary/30 p-5 space-y-2.5">
+                <h4 className="font-heading text-lg text-forest">{contact.faqTitle}</h4>
                 {contact.faqs.map((faq) => (
                   <p key={faq.question} className="text-xs text-sage-muted leading-relaxed">
                     <strong>{faq.question}</strong> {faq.answer}
@@ -266,8 +266,8 @@ export default function ContactPage() {
           </div>
 
           {/* Enquiry Form */}
-          <div className="rounded-3xl border border-sage-light/40 bg-sage-card p-8 sm:p-10 shadow-editorial space-y-6">
-            <h2 className="font-heading text-3xl text-forest font-normal">Project Inquiry Form</h2>
+          <div className="rounded-2xl border border-sage-border/90 bg-white p-6 sm:p-8 shadow-xs space-y-5">
+            <h2 className="font-heading text-2xl text-forest font-normal">Project Inquiry Form</h2>
 
             {status === "success" && (
               <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 text-sm">

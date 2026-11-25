@@ -58,57 +58,57 @@ export default function ServiceDetailPage() {
       </Container>
 
       {/* Hero Banner */}
-      <section className="relative py-16">
-        <Container className="max-w-4xl space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-4 py-1.5 backdrop-blur-md">
-            <Film className="h-4 w-4 text-site" />
+      <section className="relative py-10 sm:py-12">
+        <Container className="max-w-4xl space-y-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-3.5 py-1 backdrop-blur-md shadow-xs">
+            <Film className="h-3.5 w-3.5 text-site" />
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-site">
               {service.category}
             </span>
           </div>
 
-          <h1 className="font-heading text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
+          <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-normal text-forest leading-tight">
             {service.title}
           </h1>
 
-          <p className="text-xl text-sage-muted leading-relaxed">
+          <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
             {service.description}
           </p>
 
-          <div className="flex flex-wrap gap-6 pt-4 border-t border-sage-border/60">
+          <div className="flex flex-wrap gap-5 pt-3 border-t border-sage-border/60">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-site" />
-              <span className="text-sm font-semibold text-forest">Turnaround: {service.turnaround}</span>
+              <span className="text-xs sm:text-sm font-semibold text-forest">Turnaround: {service.turnaround}</span>
             </div>
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-site" />
-              <span className="text-sm font-semibold text-forest">100% Calibrated & Matched</span>
+              <span className="text-xs sm:text-sm font-semibold text-forest">100% Calibrated & Matched</span>
             </div>
           </div>
         </Container>
       </section>
 
       {/* Deliverables & Features */}
-      <section className="py-16 bg-sage-secondary/30 border-y border-sage-border/60">
-        <Container className="grid gap-12 lg:grid-cols-2">
-          <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-6 shadow-soft">
-            <h2 className="font-heading text-3xl text-forest">Key Features</h2>
-            <ul className="space-y-4">
+      <section className="py-12 sm:py-14 bg-sage-secondary/30 border-y border-sage-border/60">
+        <Container className="grid gap-8 lg:grid-cols-2">
+          <div className="rounded-2xl border border-sage-border/80 bg-white p-6 space-y-4 shadow-xs">
+            <h2 className="font-heading text-xl sm:text-2xl text-forest font-normal">Key Features</h2>
+            <ul className="space-y-3">
               {features.map((feat) => (
-                <li key={feat} className="flex items-start gap-3 text-forest">
-                  <CheckCircle2 className="h-5 w-5 text-site shrink-0 mt-0.5" />
+                <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-forest">
+                  <CheckCircle2 className="h-4 w-4 text-site shrink-0 mt-0.5" />
                   <span>{feat}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-6 shadow-soft">
-            <h2 className="font-heading text-3xl text-forest">Deliverables</h2>
-            <ul className="space-y-4">
+          <div className="rounded-2xl border border-sage-border/80 bg-white p-6 space-y-4 shadow-xs">
+            <h2 className="font-heading text-xl sm:text-2xl text-forest font-normal">Deliverables</h2>
+            <ul className="space-y-3">
               {deliverables.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-forest">
-                  <Sparkles className="h-5 w-5 text-sage-light shrink-0 mt-0.5" />
+                <li key={item} className="flex items-start gap-2.5 text-xs sm:text-sm text-forest">
+                  <Sparkles className="h-4 w-4 text-site shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -118,15 +118,15 @@ export default function ServiceDetailPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 text-center">
-        <Container className="max-w-2xl space-y-6">
-          <h2 className="font-heading text-4xl sm:text-5xl text-forest font-normal">
+      <section className="py-14 text-center">
+        <Container className="max-w-2xl space-y-4">
+          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal">
             Ready to Book {service.title}?
           </h2>
-          <p className="text-sage-muted">
+          <p className="text-xs sm:text-sm text-sage-muted">
             Send us your project details or sample gallery and we will set up a dedicated test edit.
           </p>
-          <div className="flex justify-center gap-4 pt-4">
+          <div className="flex justify-center gap-3.5 pt-2">
             <Button href="/contactus" variant="primary">
               Request Trial Edit
             </Button>

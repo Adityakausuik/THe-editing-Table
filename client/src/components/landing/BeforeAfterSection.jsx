@@ -41,13 +41,13 @@ export default function BeforeAfterSection() {
             text="Drag the interactive slider to experience the dramatic depth, skin-tone precision, and color refinement delivered by our master suites."
           />
 
-          <div className="grid gap-3 sm:grid-cols-2 pt-2">
+          <div className="grid gap-2.5 sm:grid-cols-2 pt-2">
             {improvements.map((item) => (
               <div
                 key={item}
-                className="flex items-center gap-3 rounded-2xl border border-sage-border bg-sage-card/80 px-4 py-3.5 text-xs font-medium text-forest shadow-soft"
+                className="flex items-center gap-2.5 py-2.5 border-b border-sage-border/70 text-xs sm:text-[13px] font-medium text-forest"
               >
-                <Sparkles className="h-4 w-4 text-site shrink-0" />
+                <Sparkles className="h-3.5 w-3.5 text-site shrink-0" />
                 <span>{item}</span>
               </div>
             ))}
@@ -56,13 +56,13 @@ export default function BeforeAfterSection() {
 
         {/* Before / After Slider Frame */}
         <m.div
-          className="relative rounded-3xl border border-sage-border bg-sage-card p-4 shadow-editorial"
-          initial={{ opacity: 0, y: 24 }}
+          className="relative overflow-hidden rounded-2xl border border-sage-border bg-forest select-none shadow-sm"
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-forest select-none">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-forest select-none">
             {/* RAW BEFORE image */}
             <img
               src={beforeImage}

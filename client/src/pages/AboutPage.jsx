@@ -244,18 +244,18 @@ export default function AboutPage() {
   const portraitUrl = mediaUrl(data.profileImage || "/assets/akshay-chhabra-founder.jpg");
 
   return (
-    <div className="pt-28 pb-20 bg-sage-bg text-forest space-y-20 select-none overflow-x-hidden">
+    <div className="pt-24 sm:pt-28 pb-16 bg-sage-bg text-forest space-y-16 overflow-x-hidden">
       {/* 1. HERO SPOTLIGHT & INTRO */}
-      <section className="relative py-14 sm:py-20 bg-sage-secondary/40 border-b border-sage-border/60">
-        <Container className="max-w-5xl text-center space-y-6">
+      <section className="relative py-12 sm:py-16 bg-sage-secondary/30 border-b border-sage-border/60">
+        <Container className="max-w-4xl text-center space-y-4">
           <m.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/90 px-4 py-1.5 backdrop-blur-md shadow-soft"
+            className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-site shadow-xs"
           >
-            <Sparkles className="h-4 w-4 text-site" />
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
+            <Sparkles className="h-3.5 w-3.5 text-site" />
+            <span>
               {data.introBadge || "FOUNDER & CREATIVE DIRECTOR"}
             </span>
           </m.div>
@@ -264,7 +264,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-heading text-5xl sm:text-6xl lg:text-7xl font-normal text-forest leading-[1.08]"
+            className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight"
           >
             {data.introTitle || data.fullName}
           </m.h1>
@@ -273,7 +273,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-xl text-sage-muted max-w-3xl mx-auto leading-relaxed"
+            className="text-xs sm:text-base text-sage-muted max-w-2xl mx-auto leading-relaxed"
           >
             {data.introSubtitle}
           </m.p>
@@ -311,9 +311,9 @@ export default function AboutPage() {
                   });
                 }
               }}
-              className="group relative rounded-3xl overflow-hidden border border-sage-border bg-sage-card p-3 shadow-editorial cursor-pointer transition-all duration-300 hover:shadow-deep"
+              className="group relative rounded-2xl overflow-hidden border border-sage-border bg-white p-2 shadow-xs cursor-pointer transition-all duration-300 hover:border-site/50"
             >
-              <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-forest">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-forest">
                 <img
                   src={portraitUrl}
                   alt={`${data.fullName} - ${data.designation}`}
@@ -323,16 +323,16 @@ export default function AboutPage() {
 
                 {/* Hover Zoom Badge Overlay */}
                 <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-white backdrop-blur-[2px]">
-                  <ZoomIn className="h-6 w-6 text-site animate-pulse" />
+                  <ZoomIn className="h-5 w-5 text-site" />
                   <span className="text-xs font-bold uppercase tracking-widest">Click to Zoom Portrait</span>
                 </div>
 
                 {/* Floating Portrait Badge */}
-                <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/20 bg-forest/80 backdrop-blur-md p-4 text-white space-y-1 text-left">
+                <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/20 bg-forest/85 backdrop-blur-md p-3.5 text-white space-y-0.5 text-left">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-site">
                     {data.designation}
                   </span>
-                  <h3 className="font-heading text-2xl font-semibold">{data.fullName}</h3>
+                  <h3 className="font-heading text-xl font-normal">{data.fullName}</h3>
                   <p className="text-xs text-white/80">{data.location}</p>
                 </div>
               </div>
@@ -446,13 +446,13 @@ export default function AboutPage() {
       </section>
 
       {/* 5. WHAT I DO — CORE RESPONSIBILITIES */}
-      <section className="py-16 bg-sage-secondary/20 border-y border-sage-border/60">
-        <Container className="max-w-[1280px] mx-auto space-y-12">
-          <div className="text-center space-y-3 max-w-3xl mx-auto">
+      <section className="py-14 bg-sage-secondary/20 border-y border-sage-border/60">
+        <Container className="max-w-[1280px] mx-auto space-y-10">
+          <div className="text-center space-y-2.5 max-w-3xl mx-auto">
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
               CORE PRACTICE AREAS
             </span>
-            <h2 className="font-heading text-3xl sm:text-4xl text-forest font-normal">
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal">
               What I Do — Craft &amp; Responsibilities
             </h2>
             <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
@@ -470,19 +470,19 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="rounded-3xl border border-sage-border bg-sage-card p-6 space-y-4 shadow-soft transition-all duration-300 hover:shadow-editorial hover:-translate-y-1 text-left flex flex-col justify-between"
+                  className="rounded-2xl border border-sage-border/80 bg-white p-5 space-y-3.5 shadow-xs transition-all duration-300 hover:border-site/50 text-left flex flex-col justify-between"
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-3.5">
                     <div className="flex items-center justify-between">
-                      <div className="h-11 w-11 rounded-2xl bg-[rgb(72,125,72)]/10 flex items-center justify-center text-site">
-                        <Icon className="h-5 w-5" />
+                      <div className="h-10 w-10 rounded-xl bg-[rgb(72,125,72)]/10 flex items-center justify-center text-site">
+                        <Icon className="h-4.5 w-4.5" />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-site bg-sage-secondary px-2.5 py-0.5 rounded-full border border-[rgb(72,125,72)]/20">
                         {item.tag || "Focus"}
                       </span>
                     </div>
 
-                    <h3 className="font-heading text-xl text-forest font-semibold leading-snug">
+                    <h3 className="font-heading text-lg text-forest font-normal leading-snug">
                       {item.title}
                     </h3>
 
@@ -503,14 +503,14 @@ export default function AboutPage() {
       </section>
 
       {/* 6. THE EDITING TABLE INFRASTRUCTURE */}
-      <section>
+      <section className="py-14 sm:py-16">
         <Container className="max-w-[1280px] mx-auto grid gap-10 lg:grid-cols-[1.2fr_1fr] items-center">
           <div className="space-y-6 text-left">
             <div className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-site">
                 GLOBAL INFRASTRUCTURE
               </span>
-              <h2 className="font-heading text-3xl sm:text-4xl text-forest font-normal leading-tight">
+              <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal leading-tight">
                 {data.companyRoleHeading}
               </h2>
             </div>
@@ -519,38 +519,38 @@ export default function AboutPage() {
               {data.companyRoleText}
             </p>
 
-            <div className="grid gap-4 sm:grid-cols-3 pt-2">
-              <div className="rounded-2xl border border-sage-border bg-sage-card p-4 space-y-1 shadow-soft">
-                <Clock className="h-5 w-5 text-site" />
-                <h4 className="font-heading text-lg text-forest font-semibold">{data.turnaroundHours}</h4>
-                <p className="text-[11px] text-sage-muted uppercase tracking-wider">Fast Turnaround</p>
+            <div className="grid gap-3 sm:grid-cols-3 pt-1">
+              <div className="rounded-xl border border-sage-border/80 bg-white p-3.5 space-y-1 shadow-xs">
+                <Clock className="h-4.5 w-4.5 text-site" />
+                <h4 className="font-heading text-base text-forest font-semibold">{data.turnaroundHours}</h4>
+                <p className="text-[10px] text-sage-muted uppercase tracking-wider">Fast Turnaround</p>
               </div>
 
-              <div className="rounded-2xl border border-sage-border bg-sage-card p-4 space-y-1 shadow-soft">
-                <Globe2 className="h-5 w-5 text-site" />
-                <h4 className="font-heading text-lg text-forest font-semibold">Worldwide</h4>
-                <p className="text-[11px] text-sage-muted uppercase tracking-wider">Calibrated Delivery</p>
+              <div className="rounded-xl border border-sage-border/80 bg-white p-3.5 space-y-1 shadow-xs">
+                <Globe2 className="h-4.5 w-4.5 text-site" />
+                <h4 className="font-heading text-base text-forest font-semibold">Worldwide</h4>
+                <p className="text-[10px] text-sage-muted uppercase tracking-wider">Calibrated Delivery</p>
               </div>
 
-              <div className="rounded-2xl border border-sage-border bg-sage-card p-4 space-y-1 shadow-soft">
-                <Layers className="h-5 w-5 text-site" />
-                <h4 className="font-heading text-lg text-forest font-semibold">DaVinci / ACES</h4>
-                <p className="text-[11px] text-sage-muted uppercase tracking-wider">Color Science</p>
+              <div className="rounded-xl border border-sage-border/80 bg-white p-3.5 space-y-1 shadow-xs">
+                <Layers className="h-4.5 w-4.5 text-site" />
+                <h4 className="font-heading text-base text-forest font-semibold">DaVinci / ACES</h4>
+                <p className="text-[10px] text-sage-muted uppercase tracking-wider">Color Science</p>
               </div>
             </div>
           </div>
 
           {/* Delivery & Security Guarantee Box */}
-          <div className="rounded-3xl border border-sage-border bg-forest p-8 sm:p-10 text-white space-y-6 shadow-deep text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-site">
-              <ShieldCheck className="h-4 w-4" /> Confidential &amp; Calibrated
+          <div className="rounded-2xl border border-forest bg-forest p-6 sm:p-8 text-white space-y-5 shadow-xs text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-site">
+              <ShieldCheck className="h-3.5 w-3.5" /> Confidential &amp; Calibrated
             </div>
 
-            <h3 className="font-heading text-2xl sm:text-3xl font-normal leading-snug">
+            <h3 className="font-heading text-xl sm:text-2xl font-normal leading-snug">
               Encrypted Pipelines &amp; Broadcast Precision
             </h3>
 
-            <ul className="space-y-3 text-xs sm:text-sm text-white/80">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-white/80">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="h-4 w-4 text-site shrink-0 mt-0.5" />
                 <span>DCI-P3 and Rec.709 color-calibrated Flanders Scientific grading monitors.</span>
@@ -565,10 +565,10 @@ export default function AboutPage() {
               </li>
             </ul>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <Link
                 to="/services"
-                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-site hover:text-white transition"
+                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-site hover:text-white transition"
               >
                 <span>Explore Full Service Suite</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -579,17 +579,17 @@ export default function AboutPage() {
       </section>
 
       {/* 7. OUR TEAM & MASTER ARTISTS */}
-      <section id="team" className="py-20 bg-sage-secondary/25 border-y border-sage-border/60">
-        <Container className="max-w-[1280px] mx-auto space-y-12 text-center">
-          <div className="space-y-4 max-w-3xl mx-auto">
+      <section id="team" className="py-14 sm:py-16 bg-sage-secondary/25 border-y border-sage-border/60">
+        <Container className="max-w-[1280px] mx-auto space-y-10 text-center">
+          <div className="space-y-3 max-w-3xl mx-auto">
             <m.div
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/90 px-4 py-1.5 backdrop-blur-md shadow-soft"
+              className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/90 px-3.5 py-1 backdrop-blur-md shadow-xs"
             >
-              <Users className="h-4 w-4 text-site" />
+              <Users className="h-3.5 w-3.5 text-site" />
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-site">
                 THE CREATIVE ENSEMBLE
               </span>
@@ -600,7 +600,7 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-heading text-3xl sm:text-4xl lg:text-5xl text-forest font-normal"
+              className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal"
             >
               Master Artists &amp; Craftsmen
             </m.h2>
@@ -616,7 +616,7 @@ export default function AboutPage() {
             </m.p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-2">
             {teamMembers.map((member, index) => {
               const memberName = member.fullName || member.name || "Artist";
               const memberRole = member.designation || member.role || "Specialist";
@@ -633,7 +633,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="group relative rounded-3xl border border-sage-border bg-sage-card p-6 shadow-soft hover:shadow-editorial transition-all duration-500 flex flex-col items-center text-center overflow-hidden hover:-translate-y-1.5"
+                  className="group relative rounded-2xl border border-sage-border/80 bg-white p-5 shadow-xs hover:border-site/50 transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
                 >
                   {/* Member Portrait with Zoom Modal Trigger */}
                   <div
@@ -656,7 +656,7 @@ export default function AboutPage() {
                         });
                       }
                     }}
-                    className="relative w-44 h-44 sm:w-48 sm:h-48 rounded-2xl overflow-hidden mb-5 bg-forest/5 border border-sage-border group-hover:border-[rgb(72,125,72)]/60 transition-all duration-300 shadow-inner cursor-pointer"
+                    className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-xl overflow-hidden mb-4 bg-forest/5 border border-sage-border group-hover:border-[rgb(72,125,72)]/60 transition-all duration-300 shadow-inner cursor-pointer"
                   >
                     <img
                       src={memberPhoto}
@@ -666,7 +666,7 @@ export default function AboutPage() {
                     />
 
                     <div className="absolute inset-0 bg-forest/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-forest shadow-soft">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-forest shadow-xs">
                         <ZoomIn className="h-3.5 w-3.5 text-site" />
                         <span>Inspect</span>
                       </span>
@@ -679,16 +679,16 @@ export default function AboutPage() {
                   </span>
 
                   {/* Name */}
-                  <h3 className="font-heading text-xl sm:text-2xl text-forest font-normal group-hover:text-site transition-colors leading-snug">
+                  <h3 className="font-heading text-lg sm:text-xl text-forest font-normal group-hover:text-site transition-colors leading-snug">
                     {memberName}
                   </h3>
 
                   {/* Role */}
-                  <p className="text-xs font-semibold text-sage-muted tracking-wide mt-1 mb-3">
+                  <p className="text-xs font-medium text-sage-muted tracking-wide mt-1 mb-2.5">
                     {memberRole}
                   </p>
 
-                  <div className="w-8 h-px bg-sage-border group-hover:w-16 group-hover:bg-[rgb(72,125,72)]/60 transition-all duration-300 mb-3" />
+                  <div className="w-8 h-px bg-sage-border group-hover:w-16 group-hover:bg-[rgb(72,125,72)]/60 transition-all duration-300 mb-2.5" />
 
                   {/* Bio */}
                   {memberBio && (
@@ -697,7 +697,7 @@ export default function AboutPage() {
                     </p>
                   )}
 
-                  <div className="mt-auto pt-4 flex items-center gap-1.5 text-[11px] font-semibold text-site">
+                  <div className="mt-auto pt-3 flex items-center gap-1.5 text-[11px] font-semibold text-site">
                     <CheckCircle2 className="h-3 w-3" />
                     <span>Resident Artist</span>
                   </div>
@@ -709,13 +709,13 @@ export default function AboutPage() {
       </section>
 
       {/* 8. CREATIVE & PRODUCTION PHILOSOPHY */}
-      <section className="py-16 bg-sage-secondary/30 border-y border-sage-border/60">
-        <Container className="max-w-[1280px] mx-auto space-y-12">
-          <div className="text-center space-y-3 max-w-3xl mx-auto">
+      <section className="py-14 sm:py-16 bg-sage-secondary/30 border-y border-sage-border/60">
+        <Container className="max-w-[1280px] mx-auto space-y-10">
+          <div className="text-center space-y-2.5 max-w-3xl mx-auto">
             <span className="text-xs font-semibold uppercase tracking-widest text-site">
               CORE PHILOSOPHY
             </span>
-            <h2 className="font-heading text-3xl sm:text-4xl text-forest font-normal">
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal">
               {data.philosophyHeading}
             </h2>
             <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
@@ -723,19 +723,19 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {data.philosophyPillars.map((pillar, index) => {
               const Icon = PILLAR_ICONS[index % PILLAR_ICONS.length];
               return (
                 <div
                   key={pillar.title}
-                  className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-4 shadow-soft text-left"
+                  className="rounded-2xl border border-sage-border/80 bg-white p-6 space-y-3.5 shadow-xs text-left"
                 >
-                  <div className="h-12 w-12 rounded-2xl bg-[rgb(72,125,72)]/10 flex items-center justify-center text-site">
-                    <Icon className="h-6 w-6" />
+                  <div className="h-10 w-10 rounded-xl bg-[rgb(72,125,72)]/10 flex items-center justify-center text-site">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-heading text-2xl text-forest font-semibold">{pillar.title}</h3>
-                  <p className="text-sm text-sage-muted leading-relaxed">{pillar.description}</p>
+                  <h3 className="font-heading text-xl text-forest font-normal">{pillar.title}</h3>
+                  <p className="text-xs sm:text-sm text-sage-muted leading-relaxed">{pillar.description}</p>
                 </div>
               );
             })}
@@ -744,25 +744,25 @@ export default function AboutPage() {
       </section>
 
       {/* 8. CALL TO ACTION */}
-      <section className="text-center py-12">
-        <Container className="max-w-2xl space-y-6">
-          <h2 className="font-heading text-4xl sm:text-5xl text-forest font-normal">
+      <section className="text-center py-14 sm:py-16">
+        <Container className="max-w-2xl space-y-5">
+          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-forest font-normal">
             Ready to Elevate Your Post-Production?
           </h2>
           <p className="text-sm sm:text-base text-sage-muted leading-relaxed">
             Let&apos;s discuss your upcoming wedding season, editorial campaign, or film project. Work directly with Akshay Chhabra and our specialized team.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 pt-4">
+          <div className="flex flex-wrap justify-center gap-3.5 pt-2">
             <Link
               to="/contactus"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[rgb(72,125,72)] px-8 py-3.5 text-sm font-semibold text-white shadow-soft transition-all hover:bg-[#7C9B69]"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[rgb(72,125,72)] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all hover:bg-[#7C9B69]"
             >
               <span>Connect with Akshay</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               to="/portfolio"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-sage-border bg-sage-card px-8 py-3.5 text-sm font-semibold text-forest hover:border-[rgb(72,125,72)] hover:text-site transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-sage-border bg-white px-6 py-2.5 text-xs sm:text-sm font-semibold text-forest hover:border-[rgb(72,125,72)] hover:text-site transition"
             >
               <span>View Portfolio</span>
             </Link>

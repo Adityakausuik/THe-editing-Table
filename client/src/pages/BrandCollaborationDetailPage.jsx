@@ -57,19 +57,19 @@ export default function BrandCollaborationDetailPage() {
       </Container>
 
       {/* Hero Banner */}
-      <section className="py-12">
-        <Container className="max-w-4xl space-y-6">
+      <section className="py-8 sm:py-10">
+        <Container className="max-w-4xl space-y-5">
           <span className="text-xs font-semibold uppercase tracking-widest text-site">
             {project.category} • {project.brandName}
           </span>
 
-          <h1 className="font-heading text-5xl sm:text-6xl font-normal text-forest leading-[1.1]">
+          <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-normal text-forest leading-tight">
             {project.title}
           </h1>
 
-          <p className="text-xl text-sage-muted leading-relaxed">{project.shortDescription}</p>
+          <p className="text-sm sm:text-base text-sage-muted leading-relaxed">{project.shortDescription}</p>
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             {services.map((srv) => (
               <span key={srv} className="text-xs bg-sage-secondary/70 border border-sage-border px-3 py-1 rounded-full text-forest">
                 {srv}
@@ -81,38 +81,38 @@ export default function BrandCollaborationDetailPage() {
 
       {/* Media Image */}
       {(project.coverImage || project.heroImage) && (
-        <section className="pb-16">
+        <section className="pb-12">
           <Container className="max-w-4xl">
             <img
               src={mediaUrl(project.coverImage || project.heroImage)}
               alt={project.title}
-              className="w-full h-[500px] object-cover rounded-3xl border border-sage-border shadow-editorial"
+              className="w-full h-[300px] sm:h-[420px] object-cover rounded-2xl border border-sage-border shadow-xs"
             />
           </Container>
         </section>
       )}
 
       {/* Case Study Details */}
-      <section className="pb-20">
-        <Container className="max-w-3xl space-y-8">
-          <div className="space-y-4">
-            <h2 className="font-heading text-3xl text-forest">Campaign Overview & Strategy</h2>
-            <p className="text-sage-muted leading-relaxed">{project.fullDescription || project.shortDescription}</p>
+      <section className="pb-16">
+        <Container className="max-w-3xl space-y-6">
+          <div className="space-y-3">
+            <h2 className="font-heading text-xl sm:text-2xl text-forest font-normal">Campaign Overview & Strategy</h2>
+            <p className="text-xs sm:text-sm text-sage-muted leading-relaxed">{project.fullDescription || project.shortDescription}</p>
           </div>
 
-          <div className="rounded-3xl border border-sage-border bg-sage-card p-8 space-y-4 shadow-soft">
-            <h3 className="font-heading text-2xl text-forest">Services Delivered</h3>
-            <ul className="space-y-3">
+          <div className="rounded-2xl border border-sage-border/80 bg-white p-6 space-y-3 shadow-xs">
+            <h3 className="font-heading text-lg text-forest font-normal">Services Delivered</h3>
+            <ul className="space-y-2.5">
               {services.map((srv) => (
-                <li key={srv} className="flex items-center gap-3 text-forest">
-                  <CheckCircle2 className="h-5 w-5 text-site shrink-0" />
+                <li key={srv} className="flex items-center gap-2.5 text-xs sm:text-sm text-forest">
+                  <CheckCircle2 className="h-4 w-4 text-site shrink-0" />
                   <span>{srv}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="pt-8 border-t border-sage-border flex justify-between items-center">
+          <div className="pt-6 border-t border-sage-border flex justify-between items-center">
             <span className="text-xs text-sage-muted">Client: {project.brandName}</span>
             <Button href="/contactus" variant="primary">
               Propose Campaign Edit
