@@ -46,10 +46,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-200 border-b ${
+      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-200 border-b bg-[#F8FBF7] ${
         isScrolled
-          ? "bg-[#F8FBF7]/95 backdrop-blur-md border-[#E3ECE0] shadow-[0_2px_12px_rgba(40,60,35,0.03)]"
-          : "bg-[#F8FBF7] border-[#E3ECE0]/70"
+          ? "border-[#E3ECE0] shadow-[0_2px_12px_rgba(40,60,35,0.04)]"
+          : "border-[#E3ECE0]/70"
       }`}
     >
       <a className="skip-link" href="#main-content">
@@ -123,7 +123,8 @@ export default function Navbar() {
         {isOpen && (
           <m.div
             id="mobile-navigation"
-            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7]/98 backdrop-blur-xl border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto min-[1080px]:hidden flex flex-col justify-between"
+            style={{ backgroundColor: "#F8FBF7" }}
+            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7] border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto min-[1080px]:hidden flex flex-col justify-between shadow-2xl"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
