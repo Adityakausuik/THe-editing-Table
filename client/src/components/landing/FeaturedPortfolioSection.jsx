@@ -242,8 +242,10 @@ export default function FeaturedPortfolioSection() {
 
   return (
     <section
+      id="portfolio"
+      data-section="featured-portfolio"
       aria-label="Featured Portfolio Showcase"
-      className="py-14 sm:py-18 lg:py-22 bg-[#F8FBF7] border-b border-[#E3ECE0]/70 overflow-hidden relative"
+      className="py-14 sm:py-18 lg:py-22 bg-[#F8FBF7] border-b border-[#E3ECE0]/70 overflow-hidden relative scroll-mt-20"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

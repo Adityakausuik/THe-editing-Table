@@ -897,7 +897,21 @@ function createCRUDActions(Model, entityName) {
             category: req.query.category,
             orderField: config.orderField
           });
-          return res.json({ success: true, message: `${entityName} records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+          if (docs && docs.length > 0) {
+            return res.json({ success: true, message: `${entityName} records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+          }
+          const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
+            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
+            entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
+            entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
+            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
+            entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
+            entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
+          return res.json({
+            success: true,
+            message: `${entityName} records retrieved (default fallback)`,
+            data: defaults.map((d) => normalizeDocForClient(d, entityName))
+          });
         }
         if (!isDbConnected()) {
           await connectDatabase().catch(() => {});
@@ -968,7 +982,21 @@ function createCRUDActions(Model, entityName) {
             orderField: config.orderField,
             admin: true
           });
-          return res.json({ success: true, message: `${entityName} admin records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+          if (docs && docs.length > 0) {
+            return res.json({ success: true, message: `${entityName} admin records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+          }
+          const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
+            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
+            entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
+            entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
+            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
+            entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
+            entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
+          return res.json({
+            success: true,
+            message: `${entityName} admin records retrieved (default fallback)`,
+            data: defaults.map((d) => normalizeDocForClient(d, entityName))
+          });
         }
         if (!isDbConnected()) {
           await connectDatabase().catch(() => {});

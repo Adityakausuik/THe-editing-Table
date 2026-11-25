@@ -46,10 +46,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-200 border-b bg-[#F8FBF7] ${
-        isScrolled
-          ? "border-[#E3ECE0] shadow-[0_2px_12px_rgba(40,60,35,0.04)]"
-          : "border-[#E3ECE0]/70"
+      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        isScrolled || isOpen
+          ? "bg-[#F8FBF7]/90 backdrop-blur-md border-b border-[#E3ECE0]/80 shadow-[0_2px_12px_rgba(40,60,35,0.04)]"
+          : "bg-transparent border-b border-transparent shadow-none"
       }`}
     >
       <a className="skip-link" href="#main-content">
@@ -79,6 +79,16 @@ export default function Navbar() {
                 key={link.href}
                 to={link.href}
                 end={link.href === "/"}
+                onClick={(e) => {
+                  if (link.href === "/portfolio" && location.pathname === "/") {
+                    const el = document.getElementById("portfolio") || document.getElementById("featured-portfolio");
+                    if (el) {
+                      e.preventDefault();
+                      el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }
+                  closeMenu();
+                }}
                 className={({ isActive }) =>
                   `group relative inline-flex items-center gap-1 py-1 text-[14px] lg:text-[15px] font-medium no-liquid-control transition-colors duration-200 ${
                     isActive
@@ -143,7 +153,16 @@ export default function Navbar() {
                         : "text-[#2C3B28] hover:text-[#487D48]"
                     }`
                   }
-                  onClick={closeMenu}
+                  onClick={(e) => {
+                    if (link.href === "/portfolio" && location.pathname === "/") {
+                      const el = document.getElementById("portfolio") || document.getElementById("featured-portfolio");
+                      if (el) {
+                        e.preventDefault();
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }
+                    closeMenu();
+                  }}
                 >
                   <span>{link.label}</span>
                   {link.hasChevron && <ChevronDown className="h-4 w-4 opacity-60" />}
