@@ -683,40 +683,82 @@ const DEFAULT_AUTHENTIC_TEAM = [
 
 const DEFAULT_AUTHENTIC_PORTFOLIO = [
   {
+    title: "Cinematic Film Production",
+    slug: "cinematic-film-production",
+    category: "Commercial Film",
+    client: "Arri & Red RAW Cinema",
+    coverImage: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=85",
+    image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    description: "4K RAW cinema camera post-production, multi-camera sync, pacing and DaVinci color grading.",
+    isPublished: true,
+    active: true,
+    order: 1
+  },
+  {
+    title: "Royal Heritage Wedding",
+    slug: "royal-heritage-wedding",
+    category: "Weddings",
+    client: "Luxury Bridal Cinema",
+    coverImage: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=85",
+    image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    description: "Heritage wedding editorial retouching, fine jewelry skin tone preservation, and cinematic color grade.",
+    isPublished: true,
+    active: true,
+    order: 2
+  },
+  {
+    title: "Alpine River Expeditions",
+    slug: "alpine-river-expeditions",
+    category: "Brand Campaign",
+    client: "Outdoor Narrative Films",
+    coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85",
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    description: "Aerial mountain cinematography, natural light color timing, dynamic HDR mastering and sound design.",
+    isPublished: true,
+    active: true,
+    order: 3
+  },
+  {
+    title: "Artisanal Botanical Still",
+    slug: "artisanal-botanical-still",
+    category: "Commercial",
+    client: "Culinary & Beverage Brand",
+    coverImage: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=1200&q=85",
+    image: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
+    description: "High-end product color refinement, glass reflection cleanup, and micro contrast calibration.",
+    isPublished: true,
+    active: true,
+    order: 4
+  },
+  {
     title: "The Glass House Estate",
     slug: "glass-house-estate",
     category: "Photography",
     client: "Editorial Retouching Suite",
     coverImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85",
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "",
     description: "High-end photo editing and micro dodge-and-burn retouching for luxury architectural & editorial imagery.",
     isPublished: true,
     active: true,
-    order: 1
-  },
-  {
-    title: "Tuscan Sun Twilight Vows",
-    slug: "tuscan-sun-twilight-vows",
-    category: "Weddings",
-    client: "Cinematic Wedding Cinema",
-    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    description: "Cinematic 4K wedding highlight edit featuring custom 35mm film color science and audio mastering.",
-    isPublished: true,
-    active: true,
-    order: 2
+    order: 5
   },
   {
     title: "Amalfi Coast Editorial",
     slug: "amalfi-coast-editorial",
     category: "Films",
     client: "Creative Post-Production",
-    coverImage: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=85",
-    image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=85",
+    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     description: "Professional film post-production with Dolby Vision HDR grading, sound design, and master finishing.",
     isPublished: true,
     active: true,
-    order: 3
+    order: 6
   }
 ];
 

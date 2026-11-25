@@ -1,5 +1,6 @@
 import BeforeAfterSection from "../components/landing/BeforeAfterSection.jsx";
 import ContactSection from "../components/landing/ContactSection.jsx";
+import FeaturedPortfolioSection from "../components/landing/FeaturedPortfolioSection.jsx";
 import GlobalReachSection from "../components/landing/GlobalReachSection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
@@ -13,6 +14,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <GlobalReachSection />
+      <FeaturedPortfolioSection />
       <ServicesSection />
       <BeforeAfterSection />
       <ProcessSection />
