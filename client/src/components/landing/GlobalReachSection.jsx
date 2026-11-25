@@ -249,15 +249,6 @@ export default function GlobalReachSection() {
                 );
               })}
             </div>
-
-            {/* Bottom Subtle Helper Text with Lines */}
-            <div className="pt-2 flex items-center justify-center gap-3 sm:gap-4 select-none">
-              <span className="h-[1px] w-8 sm:w-14 bg-[#CBD6C5]" aria-hidden="true" />
-              <p className="font-serif italic text-xs sm:text-[13px] text-[#78866A] tracking-wide text-center">
-                {GLOBAL_REACH_CONFIG.bottomHint}
-              </p>
-              <span className="h-[1px] w-8 sm:w-14 bg-[#CBD6C5]" aria-hidden="true" />
-            </div>
           </div>
         </div>
       </Container>
