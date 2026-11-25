@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "../ui/Button.jsx";
+import { apiFetch, mediaUrl } from "../../lib/api.js";
 
 /**
  * The Editing Table – hero section.
  * Drag (or use arrow keys on) the playhead to compare raw vs. edited footage.
  * Clean hero: floating software badges removed.
+ * Background Video: Dynamic admin-managed cinematic hero video layer.
  */
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600&display=swap');
@@ -84,7 +86,14 @@ h1 .script{color:#9FAAA0;text-shadow:0 .03em .1em rgba(72,125,72,.18)}
   .bold{font-size:clamp(1.3rem,5.5vw,1.65rem)}
 }
 @media (max-height:680px) and (orientation:landscape){.hero{padding-block:12px}.stage{gap:12px}.panel{padding-top:16px}}
-@media (prefers-reduced-motion:reduce){.panel,.script,.bold,.brand>*{animation:none}.cta,.head::after,.tc{transition:none}.ring{display:none}}`;
+@media (prefers-reduced-motion:reduce){.panel,.script,.bold,.brand>*{animation:none}.cta,.head::after,.tc{transition:none}.ring{display:none}}
+.et-hero[data-has-video="true"] h1 .bold{color:#ffffff;background:linear-gradient(180deg,#ffffff 0%,#d1fae5 55%,#a7f3d0 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 .05em .15em rgba(0,0,0,.7))}
+.et-hero[data-has-video="true"] h1 .script{color:#f8fafc;text-shadow:0 .04em .15em rgba(0,0,0,.7)}
+.et-hero[data-has-video="true"] .rawcopy{opacity:.9}
+.et-hero[data-has-video="true"] .rawcopy .bold{color:#e2e8f0;filter:drop-shadow(0 .04em .1em rgba(0,0,0,.6))}
+.et-hero[data-has-video="true"] .rawcopy .script{color:#cbd5e1}
+.et-hero[data-has-video="true"] .brand h2{color:#ffffff;text-shadow:0 2px 8px rgba(0,0,0,0.6)}
+.et-hero[data-has-video="true"] .brand p{color:#f1f5f9;text-shadow:0 1px 4px rgba(0,0,0,0.6)}`;
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -98,11 +107,56 @@ export default function HeroSection({
   const panelRef = useRef(null);
   const headRef = useRef(null);
   const tcRef = useRef(null);
+  const bgVideoRef = useRef(null);
   const pct = useRef(0);
   const raf = useRef(0);
   const dragging = useRef(false);
   const [grab, setGrab] = useState(false);
   const [rings, setRings] = useState([]);
+  const [heroVideo, setHeroVideo] = useState(null);
+
+  // Fetch active hero background video
+  const fetchActiveHeroVideo = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/v1/hero-video/active");
+      if (res?.data && (res.data.videoUrl || res.data.posterUrl)) {
+        setHeroVideo(res.data);
+      } else {
+        setHeroVideo(null);
+      }
+    } catch {
+      // Non-blocking fallback to minimal presentation
+      setHeroVideo(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveHeroVideo();
+
+    // Listen for live CMS updates via BroadcastChannel
+    if (typeof BroadcastChannel === "function") {
+      const channel = new BroadcastChannel("editing-table-cms");
+      channel.onmessage = (e) => {
+        if (e.data?.key === "hero-video") {
+          fetchActiveHeroVideo();
+        }
+      };
+      return () => {
+        try {
+          channel.close();
+        } catch {
+          // ignore
+        }
+      };
+    }
+  }, [fetchActiveHeroVideo]);
+
+  // Adjust playback velocity
+  useEffect(() => {
+    if (bgVideoRef.current && heroVideo?.playbackSpeed) {
+      bgVideoRef.current.playbackRate = heroVideo.playbackSpeed;
+    }
+  }, [heroVideo]);
 
   const setPos = useCallback((p) => {
     const v = Math.max(0, Math.min(100, p));
@@ -169,9 +223,53 @@ export default function HeroSection({
   };
 
   return (
-    <div className="et-hero" ref={rootRef}>
+    <div
+      className="et-hero"
+      ref={rootRef}
+      data-has-video={Boolean(heroVideo?.videoUrl || heroVideo?.posterUrl)}
+    >
       <style>{CSS}</style>
       <main className="hero">
+        {/* Dynamic Hero Background Video Layer */}
+        {heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+            {heroVideo.videoUrl && !prefersReducedMotion() ? (
+              <video
+                ref={bgVideoRef}
+                className="h-full w-full object-cover"
+                style={{
+                  objectPosition: heroVideo.videoPosition || "center"
+                }}
+                autoPlay={heroVideo.playbackSettings?.autoplay ?? true}
+                muted={heroVideo.playbackSettings?.muted ?? true}
+                loop={heroVideo.playbackSettings?.loop ?? true}
+                playsInline={heroVideo.playbackSettings?.playsInline ?? true}
+                poster={heroVideo.posterUrl ? mediaUrl(heroVideo.posterUrl) : undefined}
+              >
+                {heroVideo.mobileVideoUrl && (
+                  <source src={mediaUrl(heroVideo.mobileVideoUrl)} media="(max-width: 768px)" type="video/mp4" />
+                )}
+                <source src={mediaUrl(heroVideo.videoUrl)} type={heroVideo.videoType || "video/mp4"} />
+              </video>
+            ) : heroVideo.posterUrl ? (
+              <img
+                src={mediaUrl(heroVideo.posterUrl)}
+                alt=""
+                className="h-full w-full object-cover"
+                style={{ objectPosition: heroVideo.videoPosition || "center" }}
+              />
+            ) : null}
+
+            {/* Adjustable Darkness Overlay */}
+            <div
+              className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
+              style={{
+                opacity: typeof heroVideo.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.35
+              }}
+            />
+          </div>
+        )}
+
         <div className="stage">
           <section
             ref={panelRef}

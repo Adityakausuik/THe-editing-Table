@@ -77,6 +77,7 @@ function notifyAuthSessionExpired(path) {
 }
 
 function cmsEventKey(rawUrl = "") {
+  if (rawUrl.includes("/hero-video")) return "hero-video";
   if (rawUrl.includes("/hero-slides")) return "hero-slides";
   if (rawUrl.includes("/partners")) return "partners";
   if (rawUrl.includes("/services")) return "services";

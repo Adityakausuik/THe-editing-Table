@@ -9,7 +9,7 @@ let database;
 export const REQUIRED_POSTGRES_TABLES = Object.freeze([
   "aboutmes", "adminactivitylogs", "auditlogs", "blogposts", "brandcollaborations",
   "careerscontents", "contactemails", "contactoffices", "contactphones", "contactsettings",
-  "emailotps", "enquiries", "heroslides", "jobs", "jobapplications", "media", "media_upload_parts",
+  "emailotps", "enquiries", "herobackgroundvideos", "heroslides", "jobs", "jobapplications", "media", "media_upload_parts",
   "media_upload_sessions", "migration_runs", "mongo_migration_extras", "mongo_migration_mixed_bson",
   "partners", "photoshowcaseitems", "photoshowcasesettings", "portfolioitems", "reviews",
   "schema_migrations", "securitypolicies", "services", "sessions", "sitesettings", "teammembers",

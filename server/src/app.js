@@ -24,6 +24,7 @@ import cmsRoutes from "./routes/cms.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import heroSlideRoutes from "./routes/heroSlide.routes.js";
+import { adminHeroVideoRouter, publicHeroVideoRouter } from "./routes/heroBackground.routes.js";
 import { adminVideoShowcaseRouter, publicVideoShowcaseRouter } from "./routes/videoShowcase.routes.js";
 import { adminPhotoShowcaseRouter, publicPhotoShowcaseRouter } from "./routes/photoShowcase.routes.js";
 import { adminContactRouter, publicContactRouter } from "./routes/contact.routes.js";
@@ -354,6 +355,12 @@ export function createApp() {
 
   app.use(`${API_PREFIX}/v1/cms/hero-slides`, heroSlideRoutes);
   app.use(`${API_PREFIX}/cms/hero-slides`, heroSlideRoutes);
+
+  // Hero Background Video Routes
+  app.use(`${API_PREFIX}/v1/hero-video`, publicHeroVideoRouter);
+  app.use(`${API_PREFIX}/hero-video`, publicHeroVideoRouter);
+  app.use(`${API_PREFIX}/v1/admin/hero-video`, adminHeroVideoRouter);
+  app.use(`${API_PREFIX}/admin/hero-video`, adminHeroVideoRouter);
 
   app.use(`${API_PREFIX}/v1/cms`, cmsRoutes);
   app.use(`${API_PREFIX}/cms`, cmsRoutes);

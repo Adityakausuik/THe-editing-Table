@@ -37,6 +37,7 @@ const navSections = [
   {
     title: "Content Modules",
     items: [
+      { label: "Hero Video Manager", path: "/admin/hero-video", icon: Video },
       { label: "Working Partners", path: "/admin/partners", icon: Briefcase },
       { label: "Services Suite", path: "/admin/services", icon: Grid },
       { label: "Portfolio Showcase", path: "/admin/portfolio", icon: Images },
