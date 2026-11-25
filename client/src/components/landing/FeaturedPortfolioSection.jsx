@@ -93,9 +93,7 @@ export default function FeaturedPortfolioSection() {
   const [isPaused, setIsPaused] = useState(false);
   const [activeVideoModal, setActiveVideoModal] = useState(null);
 
-  // Touch swipe tracking refs
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const sliderRef = useRef(null);
   const pauseTimerRef = useRef(null);
 
   // Fetch actual published portfolio items from Admin Portfolio CMS
@@ -112,7 +110,7 @@ export default function FeaturedPortfolioSection() {
         setPortfolioItems(DEFAULT_FEATURED_PORTFOLIO);
       }
     } catch {
-      // Fallback stays as default curated items
+      // Safe offline fallback
       setPortfolioItems(DEFAULT_FEATURED_PORTFOLIO);
     } finally {
       setLoading(false);
@@ -122,7 +120,7 @@ export default function FeaturedPortfolioSection() {
   useEffect(() => {
     fetchPortfolio();
 
-    // Subscribe to live CMS changes
+    // Subscribe to live CMS changes via WebSocket
     const unsub = typeof subscribeToCmsChanges === "function"
       ? subscribeToCmsChanges((entity) => {
           if (!entity || entity === "portfolio" || entity === "PortfolioItem" || entity === "settings") {
@@ -162,22 +160,7 @@ export default function FeaturedPortfolioSection() {
     return portfolioItems.length > 0 ? portfolioItems : DEFAULT_FEATURED_PORTFOLIO;
   }, [portfolioItems]);
 
-  // Determine items per view responsively
-  // Desktop shows 4 items; tablet shows 2-3; mobile shows 1-2.
   const totalItems = items.length;
-  // Maximum slide start index so we don't show blank cards when totalItems >= 4
-  const maxSlideIndex = Math.max(0, totalItems - 1);
-
-  // Slide navigation handlers
-  const handlePrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev === 0 ? maxSlideIndex : prev - 1));
-    triggerInteractionPause();
-  }, [maxSlideIndex]);
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev >= maxSlideIndex ? 0 : prev + 1));
-    triggerInteractionPause();
-  }, [maxSlideIndex]);
 
   // Pause automatic rotation temporarily on user interaction
   const triggerInteractionPause = () => {
@@ -188,39 +171,72 @@ export default function FeaturedPortfolioSection() {
     }, 7000);
   };
 
+  // Scroll to a specific card index smoothly
+  const scrollToIndex = useCallback((index) => {
+    if (!sliderRef.current) return;
+    const container = sliderRef.current;
+    const cards = container.querySelectorAll(".portfolio-card");
+    if (cards[index]) {
+      const cardLeft = cards[index].offsetLeft;
+      container.scrollTo({ left: cardLeft, behavior: "smooth" });
+      setCurrentIndex(index);
+    }
+  }, []);
+
+  // Slide navigation handlers
+  const handlePrev = useCallback(() => {
+    triggerInteractionPause();
+    const prevIdx = (currentIndex - 1) < 0 ? totalItems - 1 : currentIndex - 1;
+    scrollToIndex(prevIdx);
+  }, [currentIndex, totalItems, scrollToIndex]);
+
+  const handleNext = useCallback(() => {
+    triggerInteractionPause();
+    const nextIdx = (currentIndex + 1) >= totalItems ? 0 : currentIndex + 1;
+    scrollToIndex(nextIdx);
+  }, [currentIndex, totalItems, scrollToIndex]);
+
   // Automatic sequential slider rotation (every 4.5 seconds)
   useEffect(() => {
     if (isPaused || totalItems <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxSlideIndex ? 0 : prev + 1));
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) >= totalItems ? 0 : prev + 1;
+        if (sliderRef.current) {
+          const cards = sliderRef.current.querySelectorAll(".portfolio-card");
+          if (cards[next]) {
+            sliderRef.current.scrollTo({ left: cards[next].offsetLeft, behavior: "smooth" });
+          }
+        }
+        return next;
+      });
     }, 4500);
 
     return () => clearInterval(interval);
-  }, [isPaused, totalItems, maxSlideIndex]);
+  }, [isPaused, totalItems]);
 
-  // Touch swipe support for mobile/tablet
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-    triggerInteractionPause();
-  };
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) {
-        handleNext();
-      } else {
-        handlePrev();
+  // Sync index on manual user scroll/swipe
+  const handleScroll = () => {
+    if (!sliderRef.current) return;
+    const container = sliderRef.current;
+    const scrollLeft = container.scrollLeft;
+    const cards = container.querySelectorAll(".portfolio-card");
+    let closestIndex = 0;
+    let minDiff = Infinity;
+    cards.forEach((card, i) => {
+      const diff = Math.abs(card.offsetLeft - scrollLeft);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
       }
+    });
+    if (closestIndex !== currentIndex) {
+      setCurrentIndex(closestIndex);
     }
   };
 
-  // Compute pagination dots count (up to 4-5 dots)
+  // Compute pagination dots count (up to 4 dots)
   const paginationCount = Math.min(4, Math.max(1, totalItems));
   const activeDotIndex = currentIndex % paginationCount;
 
@@ -235,7 +251,7 @@ export default function FeaturedPortfolioSection() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_2.4fr] xl:grid-cols-[1fr_2.6fr] items-center gap-8 sm:gap-10 lg:gap-10 xl:gap-12">
           {/* ================= LEFT SIDE: Content & Action ================= */}
           <div className="flex flex-col justify-center space-y-4 sm:space-y-5 max-w-lg lg:max-w-none">
-            {/* Eyebrow Label with subtle horizontal line accents */}
+            {/* Small label: FEATURED WORK */}
             <div className="flex items-center gap-3 select-none">
               <span className="h-[1px] w-6 sm:w-10 bg-[#CBD6C5]" aria-hidden="true" />
               <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#78866A]">
@@ -244,12 +260,12 @@ export default function FeaturedPortfolioSection() {
               <span className="h-[1px] w-6 sm:w-10 bg-[#CBD6C5]" aria-hidden="true" />
             </div>
 
-            {/* Main Heading in Deep Forest Green (#263D2D) */}
+            {/* Main Heading: Stories We’ve Brought to Life */}
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-normal tracking-tight text-[#263D2D] leading-[1.18]">
               Stories We’ve Brought to Life
             </h2>
 
-            {/* Supporting Description in Soft Grey (#777D76) */}
+            {/* Description: A curated selection of our latest photo and video work — from brand films to cinematic campaigns. */}
             <p className="text-xs sm:text-sm text-[#777D76] leading-relaxed max-w-sm">
               A curated selection of our latest photo and video work — from brand films to cinematic campaigns.
             </p>
@@ -267,7 +283,7 @@ export default function FeaturedPortfolioSection() {
           </div>
 
           {/* ================= RIGHT SIDE: Horizontal Media Slider ================= */}
-          <div className="relative w-full flex flex-col justify-center">
+          <div className="relative w-full flex flex-col justify-center min-w-0">
             {/* Slider Stage with Arrow Navigation Buttons */}
             <div className="relative flex items-center gap-2 sm:gap-3 w-full">
               {/* Previous Slide Arrow Button */}
@@ -282,80 +298,74 @@ export default function FeaturedPortfolioSection() {
 
               {/* Slider Viewport Window */}
               <div
-                className="w-full overflow-hidden select-none touch-pan-y"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                ref={sliderRef}
+                onScroll={handleScroll}
+                onTouchStart={triggerInteractionPause}
+                className="w-full flex overflow-x-auto scroll-smooth no-scrollbar select-none snap-x snap-mandatory gap-3 sm:gap-3.5 lg:gap-4 py-1"
+                style={{ scrollbarWidth: "none" }}
               >
-                <div
-                  className="flex transition-transform duration-500 ease-out gap-3 sm:gap-3.5 lg:gap-4"
-                  style={{
-                    transform: `translateX(-${currentIndex * (100 / Math.min(4, totalItems)) * 0.35}%)`
-                  }}
-                >
-                  {items.map((item, idx) => {
-                    const imageUrl = item.coverImage || item.image || item.thumbnail;
-                    const hasVideo = Boolean(item.videoUrl);
-                    const imageSrc = imageUrl ? mediaUrl(imageUrl) : DEFAULT_FEATURED_PORTFOLIO[idx % DEFAULT_FEATURED_PORTFOLIO.length].coverImage;
+                {items.map((item, idx) => {
+                  const imageUrl = item.coverImage || item.image || item.thumbnail;
+                  const hasVideo = Boolean(item.videoUrl);
+                  const imageSrc = imageUrl ? mediaUrl(imageUrl) : DEFAULT_FEATURED_PORTFOLIO[idx % DEFAULT_FEATURED_PORTFOLIO.length].coverImage;
 
-                    return (
+                  return (
+                    <div
+                      key={item._id || item.id || idx}
+                      className="portfolio-card group relative shrink-0 snap-start w-[70%] xs:w-[55%] sm:w-[45%] md:w-[32%] lg:w-[calc(25%-12px)] xl:w-[calc(25%-12px)] transition-all duration-300"
+                    >
+                      {/* Elegant Rounded Rectangular Media Card (3:4 aspect ratio) */}
                       <div
-                        key={item._id || item.id || idx}
-                        className="group relative shrink-0 w-[70%] xs:w-[55%] sm:w-[45%] md:w-[32%] lg:w-[calc(25%-12px)] xl:w-[calc(25%-12px)] transition-all duration-300"
+                        onClick={() => {
+                          if (hasVideo) {
+                            setActiveVideoModal({
+                              title: item.title,
+                              videoUrl: item.videoUrl,
+                              category: item.category
+                            });
+                          }
+                        }}
+                        className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl lg:rounded-3xl bg-[#E8EFE5] border border-[#E3ECE0] shadow-xs ${
+                          hasVideo ? "cursor-pointer" : ""
+                        }`}
                       >
-                        {/* Elegant Rounded Rectangular Media Card (3:4 aspect ratio) */}
-                        <div
-                          onClick={() => {
-                            if (hasVideo) {
-                              setActiveVideoModal({
-                                title: item.title,
-                                videoUrl: item.videoUrl,
-                                category: item.category
-                              });
-                            }
+                        {/* Media Image */}
+                        <img
+                          src={imageSrc}
+                          alt={item.title || "Portfolio showcase project"}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = DEFAULT_FEATURED_PORTFOLIO[0].coverImage;
                           }}
-                          className={`relative aspect-[3/4] w-full overflow-hidden rounded-2xl lg:rounded-3xl bg-[#E8EFE5] border border-[#E3ECE0] shadow-xs ${
-                            hasVideo ? "cursor-pointer" : ""
-                          }`}
-                        >
-                          {/* Media Image */}
-                          <img
-                            src={imageSrc}
-                            alt={item.title || "Portfolio showcase project"}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = DEFAULT_FEATURED_PORTFOLIO[0].coverImage;
-                            }}
-                          />
+                        />
 
-                          {/* Subtle Editorial Gradient Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-75 transition-opacity duration-300" />
+                        {/* Subtle Editorial Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-75 transition-opacity duration-300" />
 
-                          {/* Video Play Indicator Overlay at Bottom-Right */}
-                          {hasVideo && (
-                            <div
-                              className="absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-black/40 border border-white/70 text-white backdrop-blur-md transition-all duration-300 group-hover:bg-[#263D2D] group-hover:scale-110 shadow-soft"
-                              aria-label="Play project video"
-                            >
-                              <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white ml-0.5" />
-                            </div>
-                          )}
-
-                          {/* Subtle Category & Title Badge on Hover/Mobile */}
-                          <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            {item.category && (
-                              <span className="inline-block text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-white bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20">
-                                {item.category}
-                              </span>
-                            )}
+                        {/* Video Play Indicator Overlay at Bottom-Right */}
+                        {hasVideo && (
+                          <div
+                            className="absolute bottom-3 right-3 sm:bottom-3.5 sm:right-3.5 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-black/40 border border-white/70 text-white backdrop-blur-md transition-all duration-300 group-hover:bg-[#263D2D] group-hover:scale-110 shadow-soft"
+                            aria-label="Play project video"
+                          >
+                            <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white ml-0.5" />
                           </div>
+                        )}
+
+                        {/* Subtle Category & Title Badge on Hover/Mobile */}
+                        <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {item.category && (
+                            <span className="inline-block text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-white bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20">
+                              {item.category}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Next Slide Arrow Button */}
@@ -396,7 +406,7 @@ export default function FeaturedPortfolioSection() {
                   key={idx}
                   type="button"
                   onClick={() => {
-                    setCurrentIndex(idx);
+                    scrollToIndex(idx);
                     triggerInteractionPause();
                   }}
                   aria-label={`Jump to slide ${idx + 1}`}
