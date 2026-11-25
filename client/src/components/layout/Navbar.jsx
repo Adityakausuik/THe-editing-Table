@@ -107,7 +107,7 @@ export default function Navbar() {
 
         {/* Mobile Hamburger Toggle Button */}
         <button
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#1B3322] hover:bg-[#1B3322]/5 transition-colors min-[1080px]:hidden no-liquid-control"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#1B3322] hover:bg-[#1B3322]/5 transition-colors min-[1080px]:hidden no-liquid-control touch-manipulation"
           type="button"
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={isOpen}
@@ -124,20 +124,20 @@ export default function Navbar() {
           <m.div
             id="mobile-navigation"
             style={{ backgroundColor: "#F8FBF7" }}
-            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7] border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto min-[1080px]:hidden flex flex-col justify-between shadow-2xl"
+            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7] border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto overflow-x-hidden min-[1080px]:hidden flex flex-col justify-between shadow-2xl"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <nav className="flex flex-col gap-4 py-2" aria-label="Mobile navigation">
+            <nav className="flex flex-col gap-3 py-2" aria-label="Mobile navigation">
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
                   to={link.href}
                   end={link.href === "/"}
                   className={({ isActive }) =>
-                    `flex items-center justify-between py-2 text-[17px] font-medium transition-colors no-liquid-control ${
+                    `flex items-center justify-between py-2.5 min-h-[44px] text-[17px] font-medium transition-colors no-liquid-control ${
                       isActive
                         ? "text-[#1B3322] font-semibold border-b-2 border-[#487D48] w-fit"
                         : "text-[#2C3B28] hover:text-[#487D48]"

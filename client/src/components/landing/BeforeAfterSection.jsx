@@ -91,10 +91,10 @@ export default function BeforeAfterSection() {
             </div>
 
             {/* Badges */}
-            <div className="absolute top-4 left-4 rounded-full border border-sage-light/40 bg-sage-card/90 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-site backdrop-blur-md shadow-soft z-10">
+            <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 rounded-full border border-sage-light/40 bg-sage-card/90 px-2.5 sm:px-3.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-site backdrop-blur-md shadow-soft z-10">
               Graded Master
             </div>
-            <div className="absolute top-4 right-4 rounded-full border border-white/30 bg-forest/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md z-10">
+            <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 rounded-full border border-white/30 bg-forest/80 px-2.5 sm:px-3.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md z-10">
               Raw Neutral
             </div>
 
@@ -103,8 +103,8 @@ export default function BeforeAfterSection() {
               className="absolute top-0 bottom-0 w-0.5 bg-sage-light shadow-[0_0_12px_rgb(72,125,72)] pointer-events-none z-10"
               style={{ left: `${position}%` }}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-sage-light bg-sage-card text-site shadow-sage">
-                <SlidersHorizontal className="h-4 w-4" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 border-sage-light bg-sage-card text-site shadow-sage">
+                <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
             </div>
 
