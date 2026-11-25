@@ -41,15 +41,65 @@ export function mapHeroBackgroundRow(row) {
   };
 }
 
+export const HERO_BACKGROUND_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS "herobackgroundvideos" (
+  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
+  "title" TEXT DEFAULT 'Hero Background Video',
+  "video_url" TEXT DEFAULT '',
+  "mobile_video_url" TEXT DEFAULT '',
+  "poster_url" TEXT DEFAULT '',
+  "video_type" TEXT DEFAULT 'video/mp4',
+  "status" TEXT NOT NULL DEFAULT 'draft',
+  "playback_settings" JSONB DEFAULT '{"autoplay": true, "muted": true, "loop": true, "playsInline": true}'::jsonb,
+  "overlay_opacity" DOUBLE PRECISION DEFAULT 0.35,
+  "video_position" TEXT DEFAULT 'center',
+  "playback_speed" DOUBLE PRECISION DEFAULT 1.0,
+  "file_metadata" JSONB DEFAULT '{}'::jsonb,
+  "version" INTEGER DEFAULT 1,
+  "version_notes" TEXT DEFAULT '',
+  "created_by" TEXT DEFAULT '',
+  "updated_by" TEXT DEFAULT '',
+  "published_at" TIMESTAMPTZ,
+  "created_at" TIMESTAMPTZ DEFAULT now(),
+  "updated_at" TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS "idx_herobackgroundvideos_status" ON "herobackgroundvideos" ("status");
+CREATE INDEX IF NOT EXISTS "idx_herobackgroundvideos_created_at" ON "herobackgroundvideos" ("created_at" DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_herobackgroundvideos_single_published" ON "herobackgroundvideos" ("status") WHERE "status" = 'published';
+`;
+
+let ensureTablePromise = null;
+export async function ensureHeroBackgroundTable(pool) {
+  if (!ensureTablePromise) {
+    ensureTablePromise = pool.query(HERO_BACKGROUND_TABLE_SQL).catch((err) => {
+      ensureTablePromise = null;
+      throw err;
+    });
+  }
+  return ensureTablePromise;
+}
+
 /**
  * Get active published hero background configuration for the public homepage.
  */
 export async function getActiveHeroBackground() {
   const pool = getPostgresPool();
-  const res = await pool.query(
-    `SELECT * FROM "herobackgroundvideos" WHERE "status" = 'published' LIMIT 1`
-  );
-  return mapHeroBackgroundRow(res.rows[0]);
+  try {
+    const res = await pool.query(
+      `SELECT * FROM "herobackgroundvideos" WHERE "status" = 'published' LIMIT 1`
+    );
+    return mapHeroBackgroundRow(res.rows[0]);
+  } catch (err) {
+    if (err?.code === "42P01" || err?.message?.includes("does not exist")) {
+      await ensureHeroBackgroundTable(pool);
+      const res = await pool.query(
+        `SELECT * FROM "herobackgroundvideos" WHERE "status" = 'published' LIMIT 1`
+      );
+      return mapHeroBackgroundRow(res.rows[0]);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -57,6 +107,7 @@ export async function getActiveHeroBackground() {
  */
 export async function getAdminHeroBackground() {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   // 1. Look for draft first (work in progress)
   const draftRes = await pool.query(
     `SELECT * FROM "herobackgroundvideos" WHERE "status" = 'draft' ORDER BY "updated_at" DESC LIMIT 1`
@@ -89,6 +140,7 @@ export async function getHeroBackgroundById(id) {
  */
 export async function listHeroBackgroundHistory({ page = 1, limit = 20 } = {}) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const pageNum = Math.max(1, Number(page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(limit) || 20));
   const offset = (pageNum - 1) * pageSize;
@@ -116,6 +168,7 @@ export async function listHeroBackgroundHistory({ page = 1, limit = 20 } = {}) {
  */
 export async function saveHeroBackgroundDraft(data, user) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const userId = user?.id || user?._id || user?.email || "admin";
 
   // Check if a draft exists
@@ -215,6 +268,7 @@ export async function saveHeroBackgroundDraft(data, user) {
  */
 export async function publishHeroBackground(id, user) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const client = await pool.connect();
   const userId = user?.id || user?._id || user?.email || "admin";
 
@@ -271,6 +325,7 @@ export async function publishHeroBackground(id, user) {
  */
 export async function unpublishHeroBackground(id, user) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const userId = user?.id || user?._id || user?.email || "admin";
 
   const res = await pool.query(
@@ -298,6 +353,7 @@ export async function unpublishHeroBackground(id, user) {
  */
 export async function restoreHeroBackgroundVersion(versionId, user) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const client = await pool.connect();
   const userId = user?.id || user?._id || user?.email || "admin";
 
@@ -383,6 +439,7 @@ export async function restoreHeroBackgroundVersion(versionId, user) {
  */
 export async function deleteHeroBackgroundVersion(id) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const targetRes = await pool.query(
     `SELECT * FROM "herobackgroundvideos" WHERE "_id" = $1 LIMIT 1`,
     [String(id)]
@@ -413,6 +470,7 @@ export async function deleteHeroBackgroundVersion(id) {
  */
 export async function removeAssetFromDraft(assetType, user) {
   const pool = getPostgresPool();
+  await ensureHeroBackgroundTable(pool);
   const userId = user?.id || user?._id || user?.email || "admin";
 
   let columnToClear;
