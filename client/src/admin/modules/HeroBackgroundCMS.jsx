@@ -8,6 +8,7 @@ import {
   History,
   Image,
   Layers,
+  Link,
   Loader2,
   Monitor,
   Play,
@@ -20,10 +21,12 @@ import {
   Upload,
   Volume2,
   VolumeX,
-  XCircle
+  XCircle,
+  Youtube
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
 
 const PLAYBACK_SPEED_OPTIONS = [
   { label: "0.5x (Slow Motion)", value: 0.5 },
@@ -39,6 +42,20 @@ const POSITION_OPTIONS = [
   { label: "Top Focused", value: "top" },
   { label: "Bottom Focused", value: "bottom" }
 ];
+
+export function getYouTubeId(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
+  if (shortMatch) return shortMatch[1];
+  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
+  if (watchMatch) return watchMatch[1];
+  const embedMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
+  if (embedMatch) return embedMatch[1];
+  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i);
+  if (shortsMatch) return shortsMatch[1];
+  return null;
+}
 
 function formatBytes(bytes, decimals = 1) {
   if (!bytes || bytes === 0) return "0 B";
@@ -78,13 +95,24 @@ export default function HeroBackgroundCMS() {
     overlayOpacity: 0.35,
     videoPosition: "center",
     playbackSpeed: 1.0,
-    versionNotes: ""
+    versionNotes: "",
+    fileMetadata: {}
   });
+
+  // URL inputs state
+  const [desktopUrlInput, setDesktopUrlInput] = useState("");
+  const [mobileUrlInput, setMobileUrlInput] = useState("");
+  const [posterUrlInput, setPosterUrlInput] = useState("");
 
   // Upload progress states
   const [uploadingDesktop, setUploadingDesktop] = useState(false);
+  const [desktopProgress, setDesktopProgress] = useState(0);
+
   const [uploadingMobile, setUploadingMobile] = useState(false);
+  const [mobileProgress, setMobileProgress] = useState(0);
+
   const [uploadingPoster, setUploadingPoster] = useState(false);
+  const [posterProgress, setPosterProgress] = useState(0);
 
   // Preview interactive state
   const [previewDevice, setPreviewDevice] = useState("desktop"); // "desktop" | "mobile"
@@ -125,6 +153,9 @@ export default function HeroBackgroundCMS() {
           versionNotes: source.versionNotes || "",
           fileMetadata: source.fileMetadata || {}
         });
+        if (source.videoUrl) setDesktopUrlInput(source.videoUrl);
+        if (source.mobileVideoUrl) setMobileUrlInput(source.mobileVideoUrl);
+        if (source.posterUrl) setPosterUrlInput(source.posterUrl);
       }
     } catch (err) {
       console.error("Failed to load hero configuration:", err);
@@ -166,64 +197,82 @@ export default function HeroBackgroundCMS() {
     }
   }, [form.playbackSpeed, form.videoUrl, form.mobileVideoUrl, previewDevice]);
 
-  // Handle direct file uploads via our dedicated verified endpoints
-  const handleFileUpload = async (e, type) => {
+  // Handle URL application (e.g. YouTube link or direct video link)
+  const handleApplyUrl = (type, urlToApply) => {
+    if (!urlToApply || !urlToApply.trim()) {
+      showAlert("error", "Please enter a valid video or image URL.");
+      return;
+    }
+    const clean = urlToApply.trim();
+    const ytId = getYouTubeId(clean);
+
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        ...(type === "desktop" ? { videoUrl: clean, videoType: ytId ? "video/youtube" : "video/mp4" } : {}),
+        ...(type === "mobile" ? { mobileVideoUrl: clean } : {}),
+        ...(type === "poster" ? { posterUrl: clean } : {})
+      };
+      return updated;
+    });
+
+    if (ytId) {
+      showAlert("success", `YouTube link recognized (ID: ${ytId}) and applied to ${type} video! Click "Save Draft" or "Publish".`);
+    } else {
+      showAlert("success", `${type.charAt(0).toUpperCase() + type.slice(1)} URL applied to draft!`);
+    }
+  };
+
+  // Handle Chunked File Upload (avoiding Vercel serverless 4.5MB payload limit)
+  const handleChunkedUpload = async (e, type) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Reset input so re-selecting same file works
     e.target.value = "";
 
-    const formData = new FormData();
-    let endpoint = "";
-
-    if (type === "desktop") {
-      if (!file.type.includes("mp4") && !file.type.includes("webm")) {
-        showAlert("error", "Desktop video must be an MP4 or WebM file.");
-        return;
-      }
-      formData.append("video", file);
-      endpoint = "/api/v1/admin/hero-video/upload/desktop";
-      setUploadingDesktop(true);
-    } else if (type === "mobile") {
-      if (!file.type.includes("mp4") && !file.type.includes("webm")) {
-        showAlert("error", "Mobile video must be an MP4 or WebM file.");
-        return;
-      }
-      formData.append("video", file);
-      endpoint = "/api/v1/admin/hero-video/upload/mobile";
-      setUploadingMobile(true);
-    } else if (type === "poster") {
-      if (!file.type.startsWith("image/")) {
-        showAlert("error", "Poster must be a valid image file (JPG, PNG, WebP).");
-        return;
-      }
-      formData.append("poster", file);
-      endpoint = "/api/v1/admin/hero-video/upload/poster";
-      setUploadingPoster(true);
-    }
-
     try {
-      const res = await apiFetch(endpoint, {
-        method: "POST",
-        body: formData
-      });
+      if (type === "desktop") {
+        setUploadingDesktop(true);
+        setDesktopProgress(0);
+      } else if (type === "mobile") {
+        setUploadingMobile(true);
+        setMobileProgress(0);
+      } else if (type === "poster") {
+        setUploadingPoster(true);
+        setPosterProgress(0);
+      }
 
-      if (res?.data?.draft) {
-        const d = res.data.draft;
+      const onProgress = (pct) => {
+        if (type === "desktop") setDesktopProgress(pct);
+        if (type === "mobile") setMobileProgress(pct);
+        if (type === "poster") setPosterProgress(pct);
+      };
+
+      const result = await uploadFileInChunks(file, "hero", onProgress);
+      if (result?.url) {
         setForm((prev) => ({
           ...prev,
-          id: d._id || d.id,
-          videoUrl: d.videoUrl || prev.videoUrl,
-          mobileVideoUrl: d.mobileVideoUrl ?? prev.mobileVideoUrl,
-          posterUrl: d.posterUrl ?? prev.posterUrl,
-          fileMetadata: d.fileMetadata || prev.fileMetadata
+          ...(type === "desktop" ? { videoUrl: result.url, videoType: file.type || "video/mp4" } : {}),
+          ...(type === "mobile" ? { mobileVideoUrl: result.url } : {}),
+          ...(type === "poster" ? { posterUrl: result.url } : {}),
+          fileMetadata: {
+            ...(prev.fileMetadata || {}),
+            [type]: {
+              filename: result.filename || file.name,
+              originalName: file.name,
+              size: file.size,
+              mimeType: file.type,
+              uploadedAt: new Date().toISOString()
+            }
+          }
         }));
-        showAlert("success", `${type.charAt(0).toUpperCase() + type.slice(1)} asset uploaded and saved to draft!`);
+        if (type === "desktop") setDesktopUrlInput(result.url);
+        if (type === "mobile") setMobileUrlInput(result.url);
+        if (type === "poster") setPosterUrlInput(result.url);
+        showAlert("success", `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded and added to draft!`);
       }
     } catch (err) {
-      console.error(`Upload error for ${type}:`, err);
-      showAlert("error", err.message || `Failed to upload ${type} asset.`);
+      console.error(`Chunked upload error for ${type}:`, err);
+      showAlert("error", err.message || `Failed to upload ${type}.`);
     } finally {
       if (type === "desktop") setUploadingDesktop(false);
       if (type === "mobile") setUploadingMobile(false);
@@ -237,18 +286,19 @@ export default function HeroBackgroundCMS() {
       return;
     }
     try {
-      const res = await apiFetch(`/api/v1/admin/hero-video/asset/${type}`, {
+      await apiFetch(`/api/v1/admin/hero-video/asset/${type}`, {
         method: "DELETE"
       });
-      if (res?.data) {
-        setForm((prev) => ({
-          ...prev,
-          ...(type === "desktop" ? { videoUrl: "" } : {}),
-          ...(type === "mobile" ? { mobileVideoUrl: "" } : {}),
-          ...(type === "poster" ? { posterUrl: "" } : {})
-        }));
-        showAlert("success", `${type.charAt(0).toUpperCase() + type.slice(1)} asset removed from draft.`);
-      }
+      setForm((prev) => ({
+        ...prev,
+        ...(type === "desktop" ? { videoUrl: "" } : {}),
+        ...(type === "mobile" ? { mobileVideoUrl: "" } : {}),
+        ...(type === "poster" ? { posterUrl: "" } : {})
+      }));
+      if (type === "desktop") setDesktopUrlInput("");
+      if (type === "mobile") setMobileUrlInput("");
+      if (type === "poster") setPosterUrlInput("");
+      showAlert("success", `${type.charAt(0).toUpperCase() + type.slice(1)} asset removed from draft.`);
     } catch (err) {
       console.error(`Failed to remove ${type}:`, err);
       showAlert("error", err.message || `Failed to remove ${type} asset.`);
@@ -279,7 +329,7 @@ export default function HeroBackgroundCMS() {
   // Publish draft to live website
   const handlePublish = async () => {
     if (!form.videoUrl && !form.posterUrl) {
-      showAlert("error", "Please upload at least a desktop video or a fallback poster image before publishing.");
+      showAlert("error", "Please configure at least a video URL/file or a fallback poster image before publishing.");
       return;
     }
 
@@ -303,7 +353,7 @@ export default function HeroBackgroundCMS() {
       if (res?.data) {
         setActiveConfig(res.data);
         showAlert("success", `Version ${res.data.version} is now LIVE on the homepage!`);
-        loadConfig();
+        await loadConfig();
       }
     } catch (err) {
       console.error("Publish error:", err);
@@ -327,7 +377,7 @@ export default function HeroBackgroundCMS() {
       if (res?.success) {
         setActiveConfig(null);
         showAlert("success", "Active hero background video unpublished. Homepage reverted to minimal mode.");
-        loadConfig();
+        await loadConfig();
       }
     } catch (err) {
       console.error("Unpublish error:", err);
@@ -379,10 +429,11 @@ export default function HeroBackgroundCMS() {
     }
   };
 
-  // Current preview source
+  // Current preview source and YouTube detection
   const currentVideoSrc = previewDevice === "mobile" && form.mobileVideoUrl
     ? form.mobileVideoUrl
     : form.videoUrl;
+  const currentYouTubeId = getYouTubeId(currentVideoSrc);
 
   if (loading) {
     return (
@@ -416,7 +467,7 @@ export default function HeroBackgroundCMS() {
             )}
           </div>
           <p className="mt-1 text-sm text-sage-muted max-w-2xl">
-            Upload desktop and mobile background footage, preview text readability with live opacity simulation, fine-tune playback parameters, and publish seamlessly to production.
+            Upload footage or paste a YouTube / video link, preview text contrast with live darkness simulation, fine-tune playback speed &amp; focal alignment, and publish live to production.
           </p>
         </div>
 
@@ -508,7 +559,7 @@ export default function HeroBackgroundCMS() {
           {/* LEFT COLUMN: Upload Dropzones & Controls (5 Cols) */}
           <div className="space-y-6 lg:col-span-5">
             {/* 1. Desktop Video Asset Card */}
-            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm">
+            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-emerald-950/5">
                 <div className="flex items-center gap-2.5">
                   <div className="rounded-lg bg-emerald-50 p-2 text-emerald-800">
@@ -516,79 +567,105 @@ export default function HeroBackgroundCMS() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-950">Desktop Background Video</h3>
-                    <p className="text-xs text-sage-muted">Primary 16:9 cinematic loop (MP4, WebM up to 100MB)</p>
+                    <p className="text-xs text-sage-muted">Paste a YouTube / video link or upload an MP4/WebM file</p>
                   </div>
                 </div>
                 {form.videoUrl && (
                   <span className="rounded-md bg-emerald-100/80 px-2 py-0.5 text-[11px] font-medium text-emerald-900">
-                    Configured
+                    {getYouTubeId(form.videoUrl) ? "YouTube Video" : "Configured"}
                   </span>
                 )}
               </div>
 
-              <div className="mt-4">
-                {form.videoUrl ? (
-                  <div className="space-y-3">
-                    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-                      <video
-                        src={mediaUrl(form.videoUrl)}
-                        className="h-full w-full object-cover"
-                        muted
-                        loop
-                        playsInline
-                        autoPlay
+              {/* Paste URL Input Option */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-950 mb-1.5 flex items-center gap-1.5">
+                  <Link className="h-3.5 w-3.5 text-emerald-700" />
+                  Paste Video or YouTube Link
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. https://youtu.be/TtsdZnNNEII or .mp4 URL"
+                    value={desktopUrlInput}
+                    onChange={(e) => setDesktopUrlInput(e.target.value)}
+                    className="flex-1 rounded-xl border border-emerald-950/15 bg-white px-3 py-2 text-xs text-emerald-950 placeholder:text-sage-muted/60 focus:border-emerald-800 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyUrl("desktop", desktopUrlInput)}
+                    className="rounded-xl bg-emerald-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-950 transition shrink-0"
+                  >
+                    Apply Link
+                  </button>
+                </div>
+                <p className="text-[11px] text-sage-muted mt-1">
+                  Supports YouTube links (e.g. <span className="font-mono text-emerald-900">https://youtu.be/TtsdZnNNEII</span>), Vimeo, or any MP4/WebM web URL.
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-emerald-950/10" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-sage-muted">or upload file</span>
+                <div className="h-px flex-1 bg-emerald-950/10" />
+              </div>
+
+              {/* Chunked Upload Dropzone */}
+              <div>
+                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-4 text-center cursor-pointer hover:bg-emerald-50/40 transition">
+                  <Upload className="h-6 w-6 text-emerald-700/60 mb-1.5" />
+                  <span className="text-xs font-semibold text-emerald-950">
+                    {uploadingDesktop
+                      ? `Uploading Video (${Math.round(desktopProgress * 100)}%)...`
+                      : "Upload Video File (Chunked MP4 / WebM)"}
+                  </span>
+                  {uploadingDesktop ? (
+                    <div className="w-48 bg-emerald-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div
+                        className="bg-emerald-700 h-full transition-all duration-300"
+                        style={{ width: `${desktopProgress * 100}%` }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-sage-muted">
-                      <span className="truncate max-w-[200px]" title={form.videoUrl}>
-                        {form.fileMetadata?.desktop?.filename || form.videoUrl.split("/").pop()}
-                      </span>
-                      {form.fileMetadata?.desktop?.size && (
-                        <span>{formatBytes(form.fileMetadata.desktop.size)}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 pt-1">
-                      <label className="flex-1 cursor-pointer rounded-xl border border-emerald-900/15 bg-white px-3 py-2 text-center text-xs font-semibold text-emerald-950 shadow-sm transition hover:bg-emerald-50/50">
-                        {uploadingDesktop ? "Uploading..." : "Replace Desktop Video"}
-                        <input
-                          type="file"
-                          accept="video/mp4,video/webm"
-                          onChange={(e) => handleFileUpload(e, "desktop")}
-                          disabled={uploadingDesktop}
-                          className="hidden"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAsset("desktop")}
-                        className="rounded-xl border border-red-200 bg-red-50/40 p-2 text-red-600 transition hover:bg-red-100/60"
-                        title="Remove Desktop Video"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-6 text-center cursor-pointer hover:bg-emerald-50/40 transition">
-                    <Upload className="h-8 w-8 text-emerald-700/60 mb-2" />
-                    <span className="text-xs font-semibold text-emerald-950">
-                      {uploadingDesktop ? "Uploading & Verifying Video..." : "Upload Desktop Video (MP4 / WebM)"}
-                    </span>
-                    <span className="text-[11px] text-sage-muted mt-1">Recommended: 1080p, H.264/WebM, under 50MB</span>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm"
-                      onChange={(e) => handleFileUpload(e, "desktop")}
-                      disabled={uploadingDesktop}
-                      className="hidden"
-                    />
-                  </label>
-                )}
+                  ) : (
+                    <span className="text-[11px] text-sage-muted mt-0.5">Reliable chunked upload handles large video files</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={(e) => handleChunkedUpload(e, "desktop")}
+                    disabled={uploadingDesktop}
+                    className="hidden"
+                  />
+                </label>
               </div>
+
+              {/* Current Asset Status & Remove Button */}
+              {form.videoUrl && (
+                <div className="rounded-xl border border-emerald-950/10 bg-emerald-50/40 p-3 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 truncate pr-2">
+                    {getYouTubeId(form.videoUrl) ? (
+                      <Youtube className="h-4 w-4 text-red-600 shrink-0" />
+                    ) : (
+                      <FileVideo className="h-4 w-4 text-emerald-700 shrink-0" />
+                    )}
+                    <span className="truncate max-w-[220px] font-mono text-[11px] text-emerald-950" title={form.videoUrl}>
+                      {form.videoUrl}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAsset("desktop")}
+                    className="rounded-lg border border-red-200 bg-red-50/60 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 transition shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 2. Mobile Video Asset Card */}
-            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm">
+            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-emerald-950/5">
                 <div className="flex items-center gap-2.5">
                   <div className="rounded-lg bg-emerald-50 p-2 text-emerald-800">
@@ -596,7 +673,7 @@ export default function HeroBackgroundCMS() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-950">Mobile Video (Optional)</h3>
-                    <p className="text-xs text-sage-muted">Optimized 9:16 portrait cut for mobile devices</p>
+                    <p className="text-xs text-sage-muted">9:16 portrait cut optimized for mobile visitors</p>
                   </div>
                 </div>
                 {form.mobileVideoUrl ? (
@@ -610,69 +687,75 @@ export default function HeroBackgroundCMS() {
                 )}
               </div>
 
-              <div className="mt-4">
-                {form.mobileVideoUrl ? (
-                  <div className="space-y-3">
-                    <div className="relative aspect-[9/16] max-h-56 mx-auto overflow-hidden rounded-xl bg-black">
-                      <video
-                        src={mediaUrl(form.mobileVideoUrl)}
-                        className="h-full w-full object-cover"
-                        muted
-                        loop
-                        playsInline
-                        autoPlay
+              {/* Paste URL */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-950 mb-1.5 flex items-center gap-1.5">
+                  <Link className="h-3.5 w-3.5 text-emerald-700" />
+                  Paste Mobile Video URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://... or .mp4 URL"
+                    value={mobileUrlInput}
+                    onChange={(e) => setMobileUrlInput(e.target.value)}
+                    className="flex-1 rounded-xl border border-emerald-950/15 bg-white px-3 py-2 text-xs text-emerald-950 placeholder:text-sage-muted/60 focus:border-emerald-800 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyUrl("mobile", mobileUrlInput)}
+                    className="rounded-xl bg-emerald-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-950 transition shrink-0"
+                  >
+                    Apply Link
+                  </button>
+                </div>
+              </div>
+
+              {/* Chunked Upload */}
+              <div>
+                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-4 text-center cursor-pointer hover:bg-emerald-50/40 transition">
+                  <Smartphone className="h-6 w-6 text-emerald-700/60 mb-1" />
+                  <span className="text-xs font-semibold text-emerald-950">
+                    {uploadingMobile
+                      ? `Uploading (${Math.round(mobileProgress * 100)}%)...`
+                      : "Upload Mobile 9:16 Video (Optional)"}
+                  </span>
+                  {uploadingMobile && (
+                    <div className="w-48 bg-emerald-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div
+                        className="bg-emerald-700 h-full transition-all duration-300"
+                        style={{ width: `${mobileProgress * 100}%` }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-sage-muted">
-                      <span className="truncate max-w-[200px]" title={form.mobileVideoUrl}>
-                        {form.fileMetadata?.mobile?.filename || form.mobileVideoUrl.split("/").pop()}
-                      </span>
-                      {form.fileMetadata?.mobile?.size && (
-                        <span>{formatBytes(form.fileMetadata.mobile.size)}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 pt-1">
-                      <label className="flex-1 cursor-pointer rounded-xl border border-emerald-900/15 bg-white px-3 py-2 text-center text-xs font-semibold text-emerald-950 shadow-sm transition hover:bg-emerald-50/50">
-                        {uploadingMobile ? "Uploading..." : "Replace Mobile Video"}
-                        <input
-                          type="file"
-                          accept="video/mp4,video/webm"
-                          onChange={(e) => handleFileUpload(e, "mobile")}
-                          disabled={uploadingMobile}
-                          className="hidden"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAsset("mobile")}
-                        className="rounded-xl border border-red-200 bg-red-50/40 p-2 text-red-600 transition hover:bg-red-100/60"
-                        title="Remove Mobile Video"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-5 text-center cursor-pointer hover:bg-emerald-50/40 transition">
-                    <Smartphone className="h-6 w-6 text-emerald-700/60 mb-2" />
-                    <span className="text-xs font-semibold text-emerald-950">
-                      {uploadingMobile ? "Uploading Mobile Video..." : "Upload Mobile 9:16 Video (Optional)"}
-                    </span>
-                    <span className="text-[11px] text-sage-muted mt-1">If omitted, desktop video scales responsively</span>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm"
-                      onChange={(e) => handleFileUpload(e, "mobile")}
-                      disabled={uploadingMobile}
-                      className="hidden"
-                    />
-                  </label>
-                )}
+                  )}
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={(e) => handleChunkedUpload(e, "mobile")}
+                    disabled={uploadingMobile}
+                    className="hidden"
+                  />
+                </label>
               </div>
+
+              {form.mobileVideoUrl && (
+                <div className="rounded-xl border border-emerald-950/10 bg-emerald-50/40 p-3 flex items-center justify-between text-xs">
+                  <span className="truncate max-w-[220px] font-mono text-[11px] text-emerald-950" title={form.mobileVideoUrl}>
+                    {form.mobileVideoUrl}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAsset("mobile")}
+                    className="rounded-lg border border-red-200 bg-red-50/60 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 transition shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 3. Fallback Poster Image */}
-            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm">
+            <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-emerald-950/5">
                 <div className="flex items-center gap-2.5">
                   <div className="rounded-lg bg-emerald-50 p-2 text-emerald-800">
@@ -680,7 +763,7 @@ export default function HeroBackgroundCMS() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-950">Fallback Poster Image</h3>
-                    <p className="text-xs text-sage-muted">Shown while loading or when motion is reduced</p>
+                    <p className="text-xs text-sage-muted">Displayed while loading or when motion is reduced</p>
                   </div>
                 </div>
                 {form.posterUrl && (
@@ -690,62 +773,71 @@ export default function HeroBackgroundCMS() {
                 )}
               </div>
 
-              <div className="mt-4">
-                {form.posterUrl ? (
-                  <div className="space-y-3">
-                    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-gray-100">
-                      <img
-                        src={mediaUrl(form.posterUrl)}
-                        alt="Hero poster fallback"
-                        className="h-full w-full object-cover"
+              {/* Paste Poster URL */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-950 mb-1.5 flex items-center gap-1.5">
+                  <Link className="h-3.5 w-3.5 text-emerald-700" />
+                  Paste Poster Image URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://... image URL (JPG / PNG / WebP)"
+                    value={posterUrlInput}
+                    onChange={(e) => setPosterUrlInput(e.target.value)}
+                    className="flex-1 rounded-xl border border-emerald-950/15 bg-white px-3 py-2 text-xs text-emerald-950 placeholder:text-sage-muted/60 focus:border-emerald-800 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyUrl("poster", posterUrlInput)}
+                    className="rounded-xl bg-emerald-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-950 transition shrink-0"
+                  >
+                    Apply Link
+                  </button>
+                </div>
+              </div>
+
+              {/* Chunked Upload Poster */}
+              <div>
+                <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-4 text-center cursor-pointer hover:bg-emerald-50/40 transition">
+                  <Image className="h-6 w-6 text-emerald-700/60 mb-1" />
+                  <span className="text-xs font-semibold text-emerald-950">
+                    {uploadingPoster
+                      ? `Uploading (${Math.round(posterProgress * 100)}%)...`
+                      : "Upload Poster Image File"}
+                  </span>
+                  {uploadingPoster && (
+                    <div className="w-48 bg-emerald-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div
+                        className="bg-emerald-700 h-full transition-all duration-300"
+                        style={{ width: `${posterProgress * 100}%` }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-sage-muted">
-                      <span className="truncate max-w-[200px]" title={form.posterUrl}>
-                        {form.fileMetadata?.poster?.filename || form.posterUrl.split("/").pop()}
-                      </span>
-                      {form.fileMetadata?.poster?.size && (
-                        <span>{formatBytes(form.fileMetadata.poster.size)}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 pt-1">
-                      <label className="flex-1 cursor-pointer rounded-xl border border-emerald-900/15 bg-white px-3 py-2 text-center text-xs font-semibold text-emerald-950 shadow-sm transition hover:bg-emerald-50/50">
-                        {uploadingPoster ? "Uploading..." : "Replace Poster Image"}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) => handleFileUpload(e, "poster")}
-                          disabled={uploadingPoster}
-                          className="hidden"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAsset("poster")}
-                        className="rounded-xl border border-red-200 bg-red-50/40 p-2 text-red-600 transition hover:bg-red-100/60"
-                        title="Remove Poster Image"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-900/20 bg-emerald-50/20 p-5 text-center cursor-pointer hover:bg-emerald-50/40 transition">
-                    <Image className="h-6 w-6 text-emerald-700/60 mb-2" />
-                    <span className="text-xs font-semibold text-emerald-950">
-                      {uploadingPoster ? "Uploading Poster..." : "Upload Poster Image (JPG / PNG / WebP)"}
-                    </span>
-                    <span className="text-[11px] text-sage-muted mt-1">Recommended: 1920x1080 sharp high-res frame</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => handleFileUpload(e, "poster")}
-                      disabled={uploadingPoster}
-                      className="hidden"
-                    />
-                  </label>
-                )}
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => handleChunkedUpload(e, "poster")}
+                    disabled={uploadingPoster}
+                    className="hidden"
+                  />
+                </label>
               </div>
+
+              {form.posterUrl && (
+                <div className="rounded-xl border border-emerald-950/10 bg-emerald-50/40 p-3 flex items-center justify-between text-xs">
+                  <span className="truncate max-w-[220px] font-mono text-[11px] text-emerald-950" title={form.posterUrl}>
+                    {form.posterUrl}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAsset("poster")}
+                    className="rounded-lg border border-red-200 bg-red-50/60 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 transition shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 4. Fine-Tuning Settings Card */}
@@ -882,7 +974,7 @@ export default function HeroBackgroundCMS() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. 4K wedding highlight reel with 35% contrast overlay"
+                  placeholder="e.g. YouTube wedding highlight reel with 35% contrast overlay"
                   value={form.versionNotes}
                   onChange={(e) => setForm((p) => ({ ...p, versionNotes: e.target.value }))}
                   className="w-full rounded-xl border border-emerald-950/15 bg-white px-3 py-2 text-xs text-emerald-950 placeholder:text-sage-muted/60 focus:border-emerald-800 focus:outline-none"
@@ -903,6 +995,11 @@ export default function HeroBackgroundCMS() {
                   <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-900">
                     {previewDevice === "desktop" ? "16:9 Desktop" : "9:16 Mobile"}
                   </span>
+                  {currentYouTubeId && (
+                    <span className="inline-flex items-center gap-1 rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                      <Youtube className="h-3 w-3" /> YouTube Active
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -935,14 +1032,16 @@ export default function HeroBackgroundCMS() {
                   </div>
 
                   {/* Audio preview toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMuted(!previewMuted)}
-                    className="rounded-xl border border-emerald-950/10 p-1.5 text-sage-muted hover:text-emerald-950 transition"
-                    title={previewMuted ? "Unmute Preview Audio" : "Mute Preview Audio"}
-                  >
-                    {previewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-emerald-800" />}
-                  </button>
+                  {!currentYouTubeId && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMuted(!previewMuted)}
+                      className="rounded-xl border border-emerald-950/10 p-1.5 text-sage-muted hover:text-emerald-950 transition"
+                      title={previewMuted ? "Unmute Preview Audio" : "Mute Preview Audio"}
+                    >
+                      {previewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-emerald-800" />}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -956,7 +1055,20 @@ export default function HeroBackgroundCMS() {
                   }`}
                 >
                   {/* 1. Underlying Video Player */}
-                  {currentVideoSrc ? (
+                  {currentYouTubeId ? (
+                    <iframe
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none border-0"
+                      style={{
+                        width: "max(100%, 177.78vh)",
+                        height: "max(100%, 56.25vw)",
+                        minWidth: "100%",
+                        minHeight: "100%"
+                      }}
+                      src={`https://www.youtube-nocookie.com/embed/${currentYouTubeId}?autoplay=1&mute=1&loop=1&playlist=${currentYouTubeId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1`}
+                      title="Hero Simulator"
+                      allow="autoplay; encrypted-media"
+                    />
+                  ) : currentVideoSrc ? (
                     <video
                       ref={videoRef}
                       key={`${currentVideoSrc}-${previewDevice}`}
@@ -980,7 +1092,7 @@ export default function HeroBackgroundCMS() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-zinc-500 p-4 text-center">
                       <FileVideo className="h-10 w-10 mb-2 opacity-40" />
                       <p className="text-xs font-medium">No video or poster selected</p>
-                      <p className="text-[11px] opacity-70">Upload an asset on the left to see live preview</p>
+                      <p className="text-[11px] opacity-70">Paste a YouTube link or upload a video on the left</p>
                     </div>
                   )}
 
@@ -990,7 +1102,7 @@ export default function HeroBackgroundCMS() {
                     style={{ opacity: form.overlayOpacity }}
                   />
 
-                  {/* 3. Hero Typography Mockup Layer (matching live HeroSection.jsx typography) */}
+                  {/* 3. Hero Typography Mockup Layer */}
                   <div className="relative z-10 px-4 text-center select-none pointer-events-none">
                     <div className="flex items-baseline justify-center gap-1.5">
                       <span
@@ -1058,31 +1170,14 @@ export default function HeroBackgroundCMS() {
               </div>
             </div>
 
-            {/* Status & Deployment Card */}
-            <div className="rounded-2xl border border-emerald-950/10 bg-emerald-50/40 p-5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-950 mb-2">
-                Production Deployment Workflow
+            {/* Quick Helper Tips */}
+            <div className="rounded-2xl border border-emerald-950/10 bg-emerald-50/40 p-5 space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-950">
+                YouTube &amp; Cloud Video Support
               </h4>
-              <ul className="space-y-1.5 text-xs text-sage-muted">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
-                  <span>
-                    Saving as <strong>Draft</strong> keeps changes isolated in the database without affecting active visitors.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
-                  <span>
-                    Clicking <strong>Publish to Live</strong> atomically swaps the homepage background video in Neon PostgreSQL and broadcasts instant cache invalidation.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
-                  <span>
-                    Previous publications are permanently archived with full rollback capabilities in the <strong>Version History</strong> tab.
-                  </span>
-                </li>
-              </ul>
+              <p className="text-xs text-sage-muted leading-relaxed">
+                You can paste full YouTube URLs like <code className="bg-white/80 px-1 py-0.5 rounded text-emerald-900 border border-emerald-950/10">https://youtu.be/TtsdZnNNEII?si=...</code> directly into the link input. The system automatically formats the stream for seamless, muted background looping.
+              </p>
             </div>
           </div>
         </div>
@@ -1137,6 +1232,7 @@ export default function HeroBackgroundCMS() {
                   {historyList.map((item) => {
                     const itemId = item._id || item.id;
                     const isItemPublished = item.status === "published";
+                    const isYt = getYouTubeId(item.videoUrl);
                     return (
                       <tr key={itemId} className="hover:bg-emerald-50/30 transition">
                         <td className="py-3.5 px-3 font-mono font-bold text-emerald-950">
@@ -1168,12 +1264,13 @@ export default function HeroBackgroundCMS() {
                           <div className="flex items-center gap-2">
                             {item.videoUrl && (
                               <a
-                                href={mediaUrl(item.videoUrl)}
+                                href={isYt ? item.videoUrl : mediaUrl(item.videoUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 hover:underline"
                               >
-                                <Monitor className="h-3 w-3" /> Video
+                                {isYt ? <Youtube className="h-3 w-3 text-red-600" /> : <Monitor className="h-3 w-3" />}
+                                {isYt ? "YouTube" : "Video"}
                               </a>
                             )}
                             {item.mobileVideoUrl && (

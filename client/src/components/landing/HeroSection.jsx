@@ -99,6 +99,20 @@ const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+export function getYouTubeId(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
+  if (shortMatch) return shortMatch[1];
+  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
+  if (watchMatch) return watchMatch[1];
+  const embedMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
+  if (embedMatch) return embedMatch[1];
+  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i);
+  if (shortsMatch) return shortsMatch[1];
+  return null;
+}
+
 export default function HeroSection({
   ctaHref = "/contactus",
   ctaLabel = "Start a Project",
@@ -222,6 +236,8 @@ export default function HeroSection({
     if (d) { e.preventDefault(); stop(); setPos(pct.current + d); }
   };
 
+  const youtubeId = getYouTubeId(heroVideo?.videoUrl);
+
   return (
     <div
       className="et-hero"
@@ -233,7 +249,22 @@ export default function HeroSection({
         {/* Dynamic Hero Background Video Layer */}
         {heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-            {heroVideo.videoUrl && !prefersReducedMotion() ? (
+            {youtubeId && !prefersReducedMotion() ? (
+              <div className="relative w-full h-full overflow-hidden pointer-events-none">
+                <iframe
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none border-0"
+                  style={{
+                    width: "max(100%, 177.78vh)",
+                    height: "max(100%, 56.25vw)",
+                    minWidth: "100%",
+                    minHeight: "100%"
+                  }}
+                  src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1`}
+                  title="Hero Background Video"
+                  allow="autoplay; encrypted-media"
+                />
+              </div>
+            ) : heroVideo.videoUrl && !prefersReducedMotion() ? (
               <video
                 ref={bgVideoRef}
                 className="h-full w-full object-cover"
