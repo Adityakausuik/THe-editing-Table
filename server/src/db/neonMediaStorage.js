@@ -1,0 +1,413 @@
+import crypto from "node:crypto";
+import path from "node:path";
+import { getPostgresPool } from "./postgres.js";
+import { sanitizeFilename } from "../utils/fileUtils.js";
+
+export const NEON_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunk slices for streaming efficiency
+
+/**
+ * Extracts normalized subpath from a requested URL or path.
+ */
+export function normalizeMediaPath(inputPath = "") {
+  let subPath = String(inputPath || "").trim().replace(/\\/g, "/");
+  subPath = subPath.replace(/^\/+/, "").replace(/^api\//, "").replace(/^uploads\//, "");
+  return subPath;
+}
+
+/**
+ * Looks up a media item in Neon PostgreSQL by path, url, filename, or _id.
+ */
+export async function getMediaMetadata(identifier) {
+  if (!identifier) return null;
+  const pool = getPostgresPool();
+  const raw = String(identifier).trim();
+  const normalized = normalizeMediaPath(raw);
+  const asUploadUrl = `/uploads/${normalized}`;
+
+  const query = `
+    SELECT 
+      "_id", "filename", "original_name", "mime_type", "size", 
+      "url", "path", "category", "alt_text", "checksum", 
+      "width", "height", "duration", "upload_status", "total_chunks", 
+      "is_video", "uploaded_by", "created_at", "updated_at"
+    FROM "media"
+    WHERE "path" = $1 OR "url" = $2 OR "filename" = $3 OR "_id" = $4
+    LIMIT 1;
+  `;
+
+  const result = await pool.query(query, [normalized, asUploadUrl, normalized, raw]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Streams media binary data from Neon PostgreSQL media_chunks to HTTP response,
+ * fully supporting HTTP 206 Partial Content (Range requests) for smooth video playback.
+ */
+export async function streamMediaFromNeon(req, res, media) {
+  if (!media) return false;
+
+  const fileSize = Number(media.size);
+  const mimeType = media.mime_type || "application/octet-stream";
+  const checksum = media.checksum || media._id;
+  const etag = `"${checksum}"`;
+
+  res.setHeader("Accept-Ranges", "bytes");
+  res.setHeader("ETag", etag);
+
+  // Conditional request (304 Not Modified)
+  if (req.headers["if-none-match"] === etag) {
+    res.status(304).end();
+    return true;
+  }
+
+  const range = req.headers.range;
+
+  if (range && /^bytes=\d*-\d*$/.test(range)) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parts[0] ? parseInt(parts[0], 10) : 0;
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    if (start >= fileSize || end >= fileSize || start > end) {
+      res.setHeader("Content-Range", `bytes */${fileSize}`);
+      res.status(416).end();
+      return true;
+    }
+
+    const chunkLength = end - start + 1;
+    res.status(206);
+    res.setHeader("Content-Range", `bytes ${start}-${end}/${fileSize}`);
+    res.setHeader("Content-Length", chunkLength);
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+
+    if (req.method === "HEAD") {
+      res.end();
+      return true;
+    }
+
+    // Query only chunks overlapping [start, end]
+    const pool = getPostgresPool();
+    const query = `
+      SELECT "chunk_index", "offset_start", "offset_end", "data"
+      FROM "media_chunks"
+      WHERE "media_id" = $1 AND "offset_start" <= $2 AND "offset_end" >= $3
+      ORDER BY "chunk_index" ASC;
+    `;
+
+    const chunkRows = await pool.query(query, [media._id, end, start]);
+
+    for (const chunk of chunkRows.rows) {
+      if (res.writableEnded || res.destroyed) break;
+
+      const chunkStart = Number(chunk.offset_start);
+      const chunkEnd = Number(chunk.offset_end);
+
+      // Slice the exact sub-range needed from this chunk
+      const sliceOffsetStart = Math.max(0, start - chunkStart);
+      const sliceOffsetEnd = Math.min(chunk.data.length, end - chunkStart + 1);
+
+      if (sliceOffsetStart < sliceOffsetEnd) {
+        const slice = chunk.data.subarray(sliceOffsetStart, sliceOffsetEnd);
+        res.write(slice);
+      }
+    }
+    res.end();
+    return true;
+  }
+
+  // Full file streaming (200 OK)
+  res.status(200);
+  res.setHeader("Content-Length", fileSize);
+  res.setHeader("Content-Type", mimeType);
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+
+  if (req.method === "HEAD") {
+    res.end();
+    return true;
+  }
+
+  const pool = getPostgresPool();
+  const query = `
+    SELECT "data"
+    FROM "media_chunks"
+    WHERE "media_id" = $1
+    ORDER BY "chunk_index" ASC;
+  `;
+
+  const chunksResult = await pool.query(query, [media._id]);
+
+  for (const chunk of chunksResult.rows) {
+    if (res.writableEnded || res.destroyed) break;
+    res.write(chunk.data);
+  }
+  res.end();
+  return true;
+}
+
+/**
+ * Saves a complete buffer into Neon PostgreSQL with chunked storage in media_chunks.
+ * Preserves original quality without lossy downscaling or forced compression.
+ */
+export async function saveMediaBufferToNeon({
+  buffer,
+  originalName = "media",
+  mimeType,
+  folder = "general",
+  uploadedBy = null,
+  width = null,
+  height = null,
+  duration = null,
+  altText = ""
+}) {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    throw new Error("Invalid or empty media buffer.");
+  }
+
+  const pool = getPostgresPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const size = buffer.length;
+    const isVideo = mimeType.startsWith("video/");
+    const { cleanName, uniqueSuffix } = sanitizeFilename(originalName);
+    const ext = path.extname(originalName) || (isVideo ? ".mp4" : ".webp");
+    const filename = `${cleanName}-${uniqueSuffix}${ext}`;
+    const mediaPath = `${folder}/${filename}`;
+    const mediaUrl = `/uploads/${folder}/${filename}`;
+    const mediaId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+
+    const overallHash = crypto.createHash("sha256").update(buffer).digest("hex");
+    const totalChunks = Math.ceil(size / NEON_CHUNK_SIZE);
+
+    // 1. Insert media record
+    await client.query(
+      `INSERT INTO "media" (
+        "_id", "filename", "original_name", "mime_type", "size", 
+        "url", "path", "category", "alt_text", "checksum", 
+        "width", "height", "duration", "upload_status", "total_chunks", 
+        "is_video", "uploaded_by", "created_at", "updated_at"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'completed', $14, $15, $16, now(), now())`,
+      [
+        mediaId, filename, originalName, mimeType, size,
+        mediaUrl, mediaPath, folder, altText || originalName, overallHash,
+        width, height, duration, totalChunks, isVideo, uploadedBy
+      ]
+    );
+
+    // 2. Insert chunks into media_chunks
+    let offset = 0;
+    for (let index = 0; index < totalChunks; index++) {
+      const startByte = index * NEON_CHUNK_SIZE;
+      const endByte = Math.min((index + 1) * NEON_CHUNK_SIZE, size);
+      const chunkData = buffer.subarray(startByte, endByte);
+      const chunkSize = chunkData.length;
+      const offsetStart = offset;
+      const offsetEnd = offset + chunkSize - 1;
+      const chunkHash = crypto.createHash("sha256").update(chunkData).digest("hex");
+
+      await client.query(
+        `INSERT INTO "media_chunks" (
+          "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [mediaId, index, chunkSize, offsetStart, offsetEnd, chunkData, chunkHash]
+      );
+
+      offset += chunkSize;
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      _id: mediaId,
+      id: mediaId,
+      filename,
+      originalName,
+      mimeType,
+      size,
+      url: mediaUrl,
+      path: mediaPath,
+      category: folder,
+      altText: altText || originalName,
+      checksum: overallHash,
+      width,
+      height,
+      duration,
+      isVideo,
+      totalChunks
+    };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Commits a multi-part chunked upload directly into Neon PostgreSQL.
+ * Transfers chunks from media_upload_parts into media_chunks and establishes
+ * the persistent media record with full metadata and checksum.
+ */
+export async function commitChunkedUploadToNeon({
+  uploadId,
+  userId,
+  folder = "general",
+  originalName = "upload",
+  mimeType,
+  size,
+  width = null,
+  height = null,
+  duration = null,
+  altText = ""
+}) {
+  const pool = getPostgresPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Verify upload session
+    const sessionRes = await client.query(
+      `SELECT "part_count", "total_size", "mime_type", "folder", "expires_at" 
+       FROM "media_upload_sessions" 
+       WHERE "upload_id" = $1 AND "user_id" = $2 AND "expires_at" > now() 
+       FOR UPDATE`,
+      [uploadId, String(userId)]
+    );
+
+    const session = sessionRes.rows[0];
+    if (!session) {
+      const err = new Error("Upload session not found or expired.");
+      err.status = 404;
+      throw err;
+    }
+
+    // 2. Fetch all parts in order
+    const partsRes = await client.query(
+      `SELECT "part_index", "data" 
+       FROM "media_upload_parts" 
+       WHERE "upload_id" = $1 
+       ORDER BY "part_index" ASC`,
+      [uploadId]
+    );
+
+    const partCount = Number(session.part_count);
+    if (partsRes.rowCount !== partCount) {
+      const err = new Error(`Upload incomplete. Expected ${partCount} parts, found ${partsRes.rowCount}.`);
+      err.status = 400;
+      throw err;
+    }
+
+    // Verify chunk continuity and calculate overall hash & offsets
+    const hash = crypto.createHash("sha256");
+    let calculatedTotalSize = 0;
+
+    for (let i = 0; i < partCount; i++) {
+      const part = partsRes.rows[i];
+      if (Number(part.part_index) !== i) {
+        const err = new Error(`Missing chunk at index ${i}.`);
+        err.status = 400;
+        throw err;
+      }
+      calculatedTotalSize += part.data.length;
+      hash.update(part.data);
+    }
+
+    if (calculatedTotalSize !== Number(size)) {
+      const err = new Error(`Uploaded file size (${calculatedTotalSize} B) does not match expected size (${size} B).`);
+      err.status = 400;
+      throw err;
+    }
+
+    const overallHash = hash.digest("hex");
+    const isVideo = mimeType.startsWith("video/");
+    const { cleanName, uniqueSuffix } = sanitizeFilename(originalName);
+    const ext = path.extname(originalName) || (isVideo ? ".mp4" : ".webp");
+    const filename = `${cleanName}-${uniqueSuffix}${ext}`;
+    const mediaPath = `${folder}/${filename}`;
+    const mediaUrl = `/uploads/${folder}/${filename}`;
+    const mediaId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+
+    // 3. Insert into "media"
+    await client.query(
+      `INSERT INTO "media" (
+        "_id", "filename", "original_name", "mime_type", "size", 
+        "url", "path", "category", "alt_text", "checksum", 
+        "width", "height", "duration", "upload_status", "total_chunks", 
+        "is_video", "uploaded_by", "created_at", "updated_at"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'completed', $14, $15, $16, now(), now())`,
+      [
+        mediaId, filename, originalName, mimeType, calculatedTotalSize,
+        mediaUrl, mediaPath, folder, altText || originalName, overallHash,
+        width, height, duration, partCount, isVideo, userId
+      ]
+    );
+
+    // 4. Copy parts to "media_chunks"
+    let runningOffset = 0;
+    for (let i = 0; i < partCount; i++) {
+      const part = partsRes.rows[i];
+      const chunkSize = part.data.length;
+      const offsetStart = runningOffset;
+      const offsetEnd = runningOffset + chunkSize - 1;
+      const chunkHash = crypto.createHash("sha256").update(part.data).digest("hex");
+
+      await client.query(
+        `INSERT INTO "media_chunks" (
+          "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [mediaId, i, chunkSize, offsetStart, offsetEnd, part.data, chunkHash]
+      );
+
+      runningOffset += chunkSize;
+    }
+
+    // 5. Cleanup temporary session and parts
+    await client.query(`DELETE FROM "media_upload_sessions" WHERE "upload_id" = $1`, [uploadId]);
+
+    await client.query("COMMIT");
+
+    return {
+      _id: mediaId,
+      id: mediaId,
+      filename,
+      originalName,
+      mimeType,
+      size: calculatedTotalSize,
+      url: mediaUrl,
+      path: mediaPath,
+      category: folder,
+      altText: altText || originalName,
+      checksum: overallHash,
+      width,
+      height,
+      duration,
+      isVideo,
+      totalChunks: partCount
+    };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Deletes media and its binary chunks from Neon PostgreSQL.
+ */
+export async function deleteMediaFromNeon(identifier) {
+  if (!identifier) return false;
+  const pool = getPostgresPool();
+  const raw = String(identifier).trim();
+  const normalized = normalizeMediaPath(raw);
+  const asUploadUrl = `/uploads/${normalized}`;
+
+  const result = await pool.query(
+    `DELETE FROM "media" WHERE "path" = $1 OR "url" = $2 OR "filename" = $3 OR "_id" = $4`,
+    [normalized, asUploadUrl, normalized, raw]
+  );
+  return result.rowCount > 0;
+}

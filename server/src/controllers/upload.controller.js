@@ -6,7 +6,6 @@ import { ALLOWED_MODULE_FOLDERS, safeDeleteFile } from "../utils/fileUtils.js";
 import { cleanupExpiredUploadParts, deleteUploadParts, readUploadParts, saveUploadPart } from "../utils/gridfs.js";
 import { randomUUID } from "node:crypto";
 import { env } from "../config/env.js";
-import { getBlobToken, isBlobStorageConfigured } from "../utils/blobStorage.js";
 import {
   buildPostgresMediaUploadPartCount,
   createPostgresMediaUploadSession,
@@ -16,6 +15,7 @@ import {
 } from "../db/mediaUploadRepository.js";
 import { createPostgresMediaRecord, createPostgresMediaRecords } from "../db/mediaRepository.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
+import { commitChunkedUploadToNeon, saveMediaBufferToNeon } from "../db/neonMediaStorage.js";
 
 function usesPostgres() {
   return isPostgresSelected();
@@ -54,6 +54,23 @@ export async function uploadSingleMedia(req, res, next) {
     }
 
     const folder = req.body.folder || req.query.folder || "general";
+
+    if (usesPostgres()) {
+      const saved = await saveMediaBufferToNeon({
+        buffer: req.file.buffer,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        folder,
+        uploadedBy: req.user?.id,
+        altText: req.body.altText || req.file.originalname
+      });
+      return res.status(201).json({
+        success: true,
+        message: "File uploaded and stored in Neon PostgreSQL successfully.",
+        data: saved
+      });
+    }
+
     const saved = await processAndSaveFile(req.file, folder);
 
     try {
@@ -68,9 +85,7 @@ export async function uploadSingleMedia(req, res, next) {
         altText: req.body.altText || req.file.originalname,
         uploadedBy: req.user?.id
       };
-      const media = usesPostgres()
-        ? await createPostgresMediaRecord(Media, payload)
-        : await Media.create(payload);
+      const media = await Media.create(payload);
       Object.assign(saved, media.toObject?.() || media);
     } catch (dbErr) {
       safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true });
@@ -209,20 +224,37 @@ export async function finishChunkedUpload(req, res, next) {
     if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
       return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
     }
-    const chunkCount = Math.ceil(validation.size / UPLOAD_CHUNK_SIZE);
-    let buffer;
-    if (usesPostgres()) {
-      const upload = await readPostgresMediaUpload({ uploadId, userId: req.user?.id });
-      if (upload.folder !== folder || upload.mime_type !== validation.mimeType || Number(upload.total_size) !== validation.size || Number(upload.part_count) !== chunkCount) {
-        const error = new Error("Upload metadata does not match the started upload session.");
-        error.status = 400;
-        throw error;
-      }
-      buffer = upload.buffer;
-    } else buffer = await readUploadParts(uploadId, chunkCount, validation.size);
+
     const safeOriginalName = String(originalName || "upload").slice(0, 240);
+
+    // Neon PostgreSQL: Streamlined direct transfer from upload parts to persistent media chunks
+    if (usesPostgres()) {
+      const saved = await commitChunkedUploadToNeon({
+        uploadId,
+        userId: req.user?.id,
+        folder,
+        originalName: safeOriginalName,
+        mimeType: validation.mimeType,
+        size: validation.size,
+        altText: safeOriginalName
+      });
+      console.info(`[upload] Stored ${validation.isVideo ? "video" : "image"} in Neon PostgreSQL`, {
+        id: saved._id,
+        size: validation.size,
+        folder
+      });
+      return res.status(201).json({
+        success: true,
+        message: "File uploaded and stored in Neon PostgreSQL successfully.",
+        data: saved
+      });
+    }
+
+    const chunkCount = Math.ceil(validation.size / UPLOAD_CHUNK_SIZE);
+    const buffer = await readUploadParts(uploadId, chunkCount, validation.size);
     const file = { originalname: safeOriginalName, mimetype: validation.mimeType, size: buffer.length, buffer };
     const saved = await processAndSaveFile(file, folder);
+
     try {
       const payload = {
         filename: saved.filename,
@@ -235,14 +267,13 @@ export async function finishChunkedUpload(req, res, next) {
         altText: safeOriginalName,
         uploadedBy: req.user?.id
       };
-      const media = usesPostgres()
-        ? await createPostgresMediaRecord(Media, payload)
-        : await Media.create(payload);
+      const media = await Media.create(payload);
       Object.assign(saved, media.toObject?.() || media);
     } catch (dbErr) {
       safeDeleteFile(saved.url, { allowPostgresBlobDeletion: true });
       throw dbErr;
     }
+
     console.info(`[upload] Completed ${validation.isVideo ? "video" : "image"} upload`, {
       requestId: req.get("x-vercel-id") || undefined,
       size: validation.size,
@@ -280,7 +311,7 @@ export async function getUploadConfig(req, res) {
   return res.json({
     success: true,
     data: {
-      directBlobAvailable: isBlobStorageConfigured("public"),
+      storageBackend: usesPostgres() ? "neon-postgres" : "mongodb-gridfs",
       chunkSize: UPLOAD_CHUNK_SIZE,
       allowedImageTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
       allowedVideoTypes: ["video/mp4", "video/quicktime", "video/webm"]
@@ -289,56 +320,11 @@ export async function getUploadConfig(req, res) {
 }
 
 export async function generateBlobClientToken(req, res) {
-  try {
-    if (!isBlobStorageConfigured("public")) {
-      return res.status(503).json({
-        success: false,
-        message: "Direct blob storage is not configured on this environment.",
-        code: "BLOB_STORAGE_NOT_CONFIGURED"
-      });
-    }
-
-    const { handleUpload } = await import("@vercel/blob/client");
-    const jsonResponse = await handleUpload({
-      body: req.body,
-      request: req,
-      token: getBlobToken("public"),
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
-        let payloadObj = {};
-        try {
-          if (clientPayload) payloadObj = JSON.parse(clientPayload);
-        } catch {}
-        const folder = payloadObj.folder || "general";
-        if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
-          throw new Error("Invalid upload target folder.");
-        }
-
-        return {
-          allowedContentTypes: [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif",
-            "video/mp4",
-            "video/quicktime",
-            "video/webm"
-          ],
-          tokenPayload: JSON.stringify({
-            userId: req.user?.id,
-            folder
-          }),
-          addRandomSuffix: true
-        };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        console.info("[blob:client] Direct upload completed:", blob.url);
-      }
-    });
-
-    return res.json(jsonResponse);
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
-  }
+  return res.status(410).json({
+    success: false,
+    message: "Direct Vercel Blob tokens are deprecated. Media is uploaded directly to Neon PostgreSQL chunked storage.",
+    code: "BLOB_STORAGE_DEPRECATED"
+  });
 }
 
 export async function recordUploadedMedia(req, res, next) {

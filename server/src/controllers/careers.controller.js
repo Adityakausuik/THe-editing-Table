@@ -22,7 +22,9 @@ import JobApplication from "../models/JobApplication.model.js";
 import { safeDeleteFile } from "../utils/fileUtils.js";
 import { deleteVercelBlob, getVercelBlob, isVercelBlobUrl } from "../utils/blobStorage.js";
 import { Readable } from "node:stream";
+import fs from "node:fs";
 import { isPostgresSelected } from "../config/databaseMode.js";
+import { deleteMediaFromNeon, getMediaMetadata, streamMediaFromNeon } from "../db/neonMediaStorage.js";
 
 function isDbConnected() {
   return mongoose.connection.readyState === 1;
@@ -256,7 +258,8 @@ export async function submitApplication(req, res, next) {
         ? await createPostgresRecord(JobApplication, payload)
         : await JobApplication.create(payload);
     } catch (error) {
-      if (usesPostgres() && isVercelBlobUrl(savedResume.url)) await deleteVercelBlob(savedResume.url).catch(() => {});
+      if (usesPostgres() && savedResume?.url) await deleteMediaFromNeon(savedResume.url).catch(() => {});
+      if (!usesPostgres() && isVercelBlobUrl(savedResume.url)) await deleteVercelBlob(savedResume.url).catch(() => {});
       throw error;
     }
 
@@ -635,16 +638,28 @@ export async function downloadApplicationResume(req, res, next) {
       "X-Content-Type-Options": "nosniff"
     });
 
+    if (usesPostgres()) {
+      const media = await getMediaMetadata(application.resume.url || application.resume.filename);
+      if (media) {
+        return streamMediaFromNeon(req, res, media);
+      }
+    }
+
     if (isVercelBlobUrl(application.resume.url)) {
       const blob = await getVercelBlob(application.resume.url, "private");
       if (!blob || blob.status !== 200 || !blob.stream) return res.status(404).end();
       const stream = typeof blob.stream.pipe === "function" ? blob.stream : Readable.fromWeb(blob.stream);
       return stream.pipe(res);
     }
-    return res.status(503).json({
+
+    if (application.resume.path && fs.existsSync(application.resume.path)) {
+      return fs.createReadStream(application.resume.path).pipe(res);
+    }
+
+    return res.status(404).json({
       success: false,
-      code: "RESUME_STORAGE_NOT_MIGRATED",
-      message: "This resume is not available in the configured private storage service."
+      code: "RESUME_NOT_FOUND",
+      message: "The requested resume file could not be found."
     });
   } catch (error) {
     next(error);
@@ -721,7 +736,9 @@ export async function deleteApplication(req, res, next) {
     }
 
     // Safely delete uploaded resume file
-    if (!usesPostgres() && application.resume?.url) {
+    if (usesPostgres() && application.resume?.url) {
+      await deleteMediaFromNeon(application.resume.url).catch(() => {});
+    } else if (!usesPostgres() && application.resume?.url) {
       safeDeleteFile(application.resume.url);
     }
 

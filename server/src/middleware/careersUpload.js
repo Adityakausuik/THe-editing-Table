@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { ensureUploadDirectories, isServerlessEnvironment, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
-import { isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
+import { saveMediaBufferToNeon } from "../db/neonMediaStorage.js";
 
 const memoryStorage = multer.memoryStorage();
 
@@ -50,16 +50,22 @@ export async function processAndSaveResume(file) {
   const filename = `${cleanName}-${uniqueSuffix}${ext}`;
   const mimeType = file.mimetype || (ext === ".pdf" ? "application/pdf" : "application/msword");
 
-  if (isBlobStorageConfigured("private")) {
-    const blob = await putVercelBlob(`resumes/${filename}`, file.buffer, { access: "private", contentType: mimeType });
-    return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, originalName: file.originalname, size: file.size, mimeType };
-  }
-
-  if (isServerlessEnvironment()) {
-    const error = new Error("Durable resume storage is unavailable. Configure the deployment's private Blob store.");
-    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
-    error.status = 503;
-    throw error;
+  if (isPostgresSelected()) {
+    const saved = await saveMediaBufferToNeon({
+      buffer: file.buffer,
+      originalName: file.originalname,
+      mimeType,
+      folder: "resumes",
+      altText: "Job application resume"
+    });
+    return {
+      filename: saved.filename,
+      url: saved.url,
+      path: saved.path,
+      originalName: file.originalname,
+      size: file.size,
+      mimeType
+    };
   }
 
   ensureUploadDirectories();

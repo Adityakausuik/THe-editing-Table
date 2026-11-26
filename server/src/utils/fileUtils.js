@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { deleteFromGridFS } from "./gridfs.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 import { deleteVercelBlob, isVercelBlobUrl } from "./blobStorage.js";
+import { deleteMediaFromNeon } from "../db/neonMediaStorage.js";
 
 // Comprehensive detection for Vercel and AWS Lambda serverless runtime environments
 export function isServerlessEnvironment() {
@@ -171,6 +172,8 @@ export function safeDeleteFile(relativePathOrUrl, { allowPostgresBlobDeletion = 
         const thumbRelative = uploadsRelativePath.replace(ext, `-thumb${ext}`);
         deleteFromGridFS(thumbRelative).catch(() => {});
       }
+    } else {
+      deleteMediaFromNeon(uploadsRelativePath).catch(() => {});
     }
 
     return deletedFromDisk;

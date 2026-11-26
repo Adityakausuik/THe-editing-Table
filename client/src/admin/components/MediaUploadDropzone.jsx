@@ -11,8 +11,8 @@ import {
 } from "../../utils/mediaUtils.js";
 
 /**
- * Uploads a file either directly via @vercel/blob/client (when configured)
- * or via resilient chunked pipeline (with 3MB slices, retries, and cancellation).
+ * Uploads a file via resilient Neon PostgreSQL chunked pipeline
+ * (3MB slices, automatic retries, progress tracking, and user cancellation).
  */
 export async function uploadFileInChunks(file, folder, onProgress = () => {}, signal = null) {
   const mimeType = normalizeClientMimeType(file);
@@ -23,49 +23,7 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}, si
     throw new Error("Unsupported file type. Please choose a JPG, PNG, WEBP, GIF, MP4, MOV, or WebM file.");
   }
 
-  // Check if direct Blob upload is available in this environment
-  try {
-    const configRes = await apiFetch("/api/v1/upload/config").catch(() => null);
-    if (configRes?.data?.directBlobAvailable) {
-      try {
-        const { upload } = await import("@vercel/blob/client");
-        const newBlob = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/v1/upload/blob/token",
-          clientPayload: JSON.stringify({ folder }),
-          abortSignal: signal || undefined,
-          onUploadProgress: (progressEvent) => {
-            if (typeof progressEvent?.percentage === "number") {
-              onProgress(progressEvent.percentage / 100);
-            }
-          }
-        });
-
-        const recordRes = await apiFetch("/api/v1/upload/record-media", {
-          method: "POST",
-          body: JSON.stringify({
-            url: newBlob.url,
-            filename: file.name,
-            originalName: file.name,
-            mimeType: file.type || mimeType,
-            size: file.size,
-            folder
-          }),
-          signal
-        });
-
-        return recordRes?.data || { url: newBlob.url, filename: file.name, size: file.size };
-      } catch (blobErr) {
-        if (signal?.aborted || blobErr?.name === "AbortError") throw blobErr;
-        console.warn("[upload] Direct Blob upload unavailable, falling back to chunked pipeline:", blobErr.message);
-      }
-    }
-  } catch (err) {
-    if (signal?.aborted || err?.name === "AbortError") throw err;
-    console.warn("[upload] Server config check failed, proceeding with chunked pipeline:", err.message);
-  }
-
-  // Resumable chunked upload pipeline (safe for Vercel 4.5MB payload limit & local dev)
+  // Resumable chunked upload pipeline directly into Neon PostgreSQL
   const started = await apiFetch("/api/v1/upload/chunked/start", {
     method: "POST",
     body: JSON.stringify({

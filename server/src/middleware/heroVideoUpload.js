@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
 import { ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
+import { isPostgresSelected } from "../config/databaseMode.js";
+import { saveMediaBufferToNeon } from "../db/neonMediaStorage.js";
 
 import { normalizeMimeType } from "./upload.js";
 
@@ -146,28 +147,29 @@ export async function saveHeroAsset(file, assetType = "desktop") {
     throw err;
   }
 
-  const useBlob = isBlobStorageConfigured("public");
   const folder = `hero/${assetType}`;
   const { cleanName, uniqueSuffix, ext } = sanitizeFilename(file.originalname);
   const fileExt = ext || (format === "jpeg" ? ".jpg" : `.${format}`);
   const finalFilename = `${cleanName}-${uniqueSuffix}${fileExt}`;
 
-  if (useBlob) {
-    const blob = await putVercelBlob(`${folder}/${finalFilename}`, file.buffer, {
-      access: "public",
-      contentType: file.mimetype,
-      multipart: isVideo
-    });
-    return {
-      url: blob.url,
-      pathname: blob.pathname,
-      filename: finalFilename,
+  if (isPostgresSelected()) {
+    const saved = await saveMediaBufferToNeon({
+      buffer: file.buffer,
       originalName: file.originalname,
       mimeType: file.mimetype,
-      size: file.size,
+      folder,
+      altText: `${assetType} hero asset`
+    });
+    return {
+      url: saved.url,
+      pathname: saved.path,
+      filename: saved.filename,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+      size: saved.size,
       isVideo,
       format,
-      storageType: "blob"
+      storageType: "neon-postgres"
     };
   }
 

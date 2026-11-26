@@ -3,8 +3,8 @@ import path from "path";
 import multer from "multer";
 import sharp from "sharp";
 import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, isServerlessEnvironment, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
-import { deleteVercelBlob, isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
+import { saveMediaBufferToNeon } from "../db/neonMediaStorage.js";
 
 export const UPLOAD_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk target for reliable serverless transit
 
@@ -113,21 +113,6 @@ export function validateUploadMetadata({ mimeType, size, originalName = "" }) {
 
 export async function processAndSaveFile(file, requestedFolder = "general") {
   const folder = ALLOWED_MODULE_FOLDERS.includes(requestedFolder) ? requestedFolder : "general";
-  const useBlob = isBlobStorageConfigured("public");
-  const isPreviewOrServerless = isServerlessEnvironment() || process.env.VERCEL_ENV === "preview";
-
-  if (!useBlob && isPreviewOrServerless) {
-    const error = new Error("Public media storage is not configured. Configure the Preview public Blob store before uploading.");
-    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
-    error.status = 503;
-    throw error;
-  }
-  let targetDir;
-  if (!useBlob) {
-    ensureUploadDirectories();
-    targetDir = path.join(resolveUploadsDirectory(), folder);
-    if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
-  }
 
   const { cleanName, uniqueSuffix } = sanitizeFilename(file.originalname);
   const { isVideo, mimeType: normalizedMime } = validateUploadMetadata({
@@ -148,12 +133,21 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
       throw error;
     }
 
+    if (isPostgresSelected()) {
+      return await saveMediaBufferToNeon({
+        buffer: file.buffer,
+        originalName: file.originalname,
+        mimeType: normalizedMime,
+        folder
+      });
+    }
+
+    ensureUploadDirectories();
+    const targetDir = path.join(resolveUploadsDirectory(), folder);
+    if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
     const ext = path.extname(file.originalname) || (normalizedMime === "video/webm" ? ".webm" : normalizedMime === "video/quicktime" ? ".mov" : ".mp4");
     const filename = `${cleanName}-${uniqueSuffix}${ext}`;
-    if (useBlob) {
-      const blob = await putVercelBlob(`${folder}/${filename}`, file.buffer, { access: "public", contentType: file.mimetype, multipart: true });
-      return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, mimeType: file.mimetype, size: file.size, isVideo: true };
-    }
     const filePath = path.join(targetDir, filename);
     fs.writeFileSync(filePath, file.buffer);
 
@@ -167,7 +161,7 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     };
   }
 
-  // Image processing via Sharp
+  // Image validation via Sharp
   let metadata;
   try {
     metadata = await sharp(file.buffer).metadata();
@@ -182,16 +176,33 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     error.status = 415;
     throw error;
   }
+
+  // Store original image buffer directly into Neon PostgreSQL
+  if (isPostgresSelected()) {
+    return await saveMediaBufferToNeon({
+      buffer: file.buffer,
+      originalName: file.originalname,
+      mimeType: normalizedMime,
+      folder,
+      width: metadata.width,
+      height: metadata.height
+    });
+  }
+
+  ensureUploadDirectories();
+  const targetDir = path.join(resolveUploadsDirectory(), folder);
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
   const webpFilename = `${cleanName}-${uniqueSuffix}.webp`;
   const thumbFilename = `${cleanName}-${uniqueSuffix}-thumb.webp`;
-  const webpPath = useBlob ? null : path.join(targetDir, webpFilename);
-  const thumbPath = useBlob ? null : path.join(targetDir, thumbFilename);
+  const webpPath = path.join(targetDir, webpFilename);
+  const thumbPath = path.join(targetDir, thumbFilename);
 
   const isAnimated = Boolean(metadata.pages && metadata.pages > 1);
 
-  // Preserve high fidelity & full resolution for professional photography
+  // Preserve high fidelity for local storage fallback
   const processedBuffer = await sharp(file.buffer, isAnimated ? { animated: true } : {})
-    .rotate() // Auto-orient based on EXIF
+    .rotate()
     .webp({ quality: 90, effort: 4 })
     .toBuffer();
 
@@ -200,24 +211,6 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     .resize({ width: 480, height: 480, fit: "cover" })
     .webp({ quality: 80 })
     .toBuffer();
-
-  if (useBlob) {
-    let mainBlob;
-    try {
-      mainBlob = await putVercelBlob(`${folder}/${webpFilename}`, processedBuffer, { access: "public", contentType: "image/webp" });
-      return {
-        filename: mainBlob.pathname.split("/").pop(),
-        url: mainBlob.url,
-        path: mainBlob.pathname,
-        mimeType: "image/webp",
-        size: processedBuffer.length,
-        isVideo: false
-      };
-    } catch (error) {
-      if (mainBlob?.url) await deleteVercelBlob(mainBlob.url).catch(() => {});
-      throw error;
-    }
-  }
 
   try {
     fs.writeFileSync(webpPath, processedBuffer);

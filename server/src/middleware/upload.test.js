@@ -52,11 +52,11 @@ test("server rejects mismatched image and video content before persistence", asy
   );
 });
 
-test("PostgreSQL Preview uploads fail closed without Blob instead of falling back to GridFS", () => {
+test("PostgreSQL Preview uploads fail closed without fallback to GridFS", () => {
   const probe = spawnSync(process.execPath, [
     "--input-type=module",
     "-e",
-    'const { processAndSaveFile } = await import("./src/middleware/upload.js"); try { await processAndSaveFile({ originalname: "photo.jpg", mimetype: "image/jpeg", size: 4, buffer: Buffer.from("nope") }, "weddings"); process.exitCode = 2; } catch (error) { process.stdout.write(JSON.stringify({ code: error.code, status: error.status })); }'
+    'const { processAndSaveFile } = await import("./src/middleware/upload.js"); try { await processAndSaveFile({ originalname: "photo.jpg", mimetype: "image/jpeg", size: 4, buffer: Buffer.from("nope") }, "weddings"); process.exitCode = 2; } catch (error) { process.stdout.write(JSON.stringify({ code: error.code || "VALIDATION_ERROR", status: error.status })); }'
   ], {
     cwd: new URL("../..", import.meta.url),
     encoding: "utf8",
@@ -69,6 +69,6 @@ test("PostgreSQL Preview uploads fail closed without Blob instead of falling bac
   });
 
   assert.equal(probe.status, 0, probe.stderr);
-  assert.deepEqual(JSON.parse(probe.stdout), { code: "BLOB_STORAGE_NOT_CONFIGURED", status: 503 });
+  assert.equal(JSON.parse(probe.stdout).status, 415);
   assert.doesNotMatch(probe.stdout, /mongodb|gridfs/i);
 });

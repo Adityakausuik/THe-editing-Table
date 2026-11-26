@@ -65,13 +65,15 @@ router.get("/", async (req, res) => {
     await connectGridFs().catch(() => {});
   }
 
+  const mediaStorageReady = postgresSelected && postgresStatus === "connected" && schemaStatus === "ready";
+
   const readiness = buildHealthReadiness({
     postgresSelected,
     postgresStatus,
     schemaStatus,
     mongoConnected: connected,
     postgresAuthEnabled: isPostgresAuthEnabled(),
-    mediaStorageReady: false,
+    mediaStorageReady,
     publicBlobConfigured: isBlobStorageConfigured("public"),
     privateBlobConfigured: isBlobStorageConfigured("private"),
     cronConfigured: Boolean(env.CRON_SECRET)
@@ -145,7 +147,8 @@ router.get("/", async (req, res) => {
         schemaStatus: postgresSelected ? schemaStatus : "not_selected",
         missingTables: postgresSelected ? missingTables : [],
         configured: Boolean(env.DATABASE_URL),
-        readyForTraffic: postgresSelected && readiness.status === "ok"
+        readyForTraffic: postgresSelected && readiness.status === "ok",
+        neonMediaStorageConfigured: postgresSelected && Boolean(env.DATABASE_URL)
       },
       adminUser: adminInfo,
       securityPolicy: policyInfo,

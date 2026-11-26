@@ -31,6 +31,7 @@ import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
 import { ensureUploadDirectories, resolveUploadsDirectory } from "./utils/fileUtils.js";
 import { sanitizeStudio } from "./utils/sanitizeStudio.js";
+import { getMediaMetadata, streamMediaFromNeon } from "./db/neonMediaStorage.js";
 import {
   beginTwoFactorSetup,
   login,
@@ -211,6 +212,23 @@ export function createApp() {
       }
     } catch {
       // Read-only serverless filesystem or a missing local development asset.
+    }
+
+    // 2. Stream from Neon PostgreSQL media_chunks
+    if (isPostgresSelected()) {
+      try {
+        const media = await getMediaMetadata(subPath);
+        if (media) {
+          const streamed = await streamMediaFromNeon(req, res, media);
+          if (streamed) return;
+        }
+      } catch (neonErr) {
+        console.error("[media:stream] Streaming error:", neonErr);
+        if (!res.headersSent) {
+          return res.status(500).json({ success: false, message: "Media streaming failed." });
+        }
+        return;
+      }
     }
 
     return next();

@@ -36,29 +36,48 @@ function requireBlobToken(access) {
 
 export async function putVercelBlob(pathname, body, { access = "public", contentType, multipart = false, addRandomSuffix = true, allowOverwrite = false } = {}) {
   const token = requireBlobToken(access);
-  const { put } = await import("@vercel/blob");
-  return put(pathname, body, {
-    access,
-    token,
-    contentType,
-    multipart,
-    addRandomSuffix,
-    allowOverwrite,
-    cacheControlMaxAge: access === "public" ? 31_536_000 : 60
-  });
+  try {
+    const { put } = await import("@vercel/blob");
+    return put(pathname, body, {
+      access,
+      token,
+      contentType,
+      multipart,
+      addRandomSuffix,
+      allowOverwrite,
+      cacheControlMaxAge: access === "public" ? 31_536_000 : 60
+    });
+  } catch (err) {
+    const error = new Error(`Vercel Blob storage is deprecated: ${err.message}`);
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
 }
 
 export async function getVercelBlob(url, access = "private") {
   const token = requireBlobToken(access);
-  const { get } = await import("@vercel/blob");
-  return get(url, { access, token });
+  try {
+    const { get } = await import("@vercel/blob");
+    return get(url, { access, token });
+  } catch (err) {
+    const error = new Error(`Vercel Blob storage is deprecated: ${err.message}`);
+    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
+    error.status = 503;
+    throw error;
+  }
 }
 
 export async function deleteVercelBlob(url) {
   if (!isVercelBlobUrl(url)) return false;
   const access = getBlobAccess(url);
   const token = requireBlobToken(access);
-  const { del } = await import("@vercel/blob");
-  await del(url, { token });
-  return true;
+  try {
+    const { del } = await import("@vercel/blob");
+    await del(url, { token });
+    return true;
+  } catch (err) {
+    console.warn(`[Blob Warning] Vercel Blob deletion skipped: ${err.message}`);
+    return false;
+  }
 }
