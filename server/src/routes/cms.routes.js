@@ -5,11 +5,9 @@ import {
   getDashboardStats,
   servicesCMS,
   portfolioCMS,
-  weddingGalleryCMS,
   collaborationsCMS,
   blogCMS,
   teamCMS,
-  partnersCMS,
   getEnquiries,
   updateEnquiryStatus,
   deleteEnquiry,
@@ -55,8 +53,6 @@ router.get("/settings", getSiteSettings);
 // Register Module Routes
 registerModuleRoutes("services", servicesCMS);
 registerModuleRoutes("portfolio", portfolioCMS);
-registerModuleRoutes("wedding-gallery", weddingGalleryCMS);
-registerModuleRoutes("wedding", weddingGalleryCMS);
 
 // Global Reach Countries & Marquee (must precede generic /collaborations/:id)
 router.get("/collaborations/global-reach", getGlobalReachSettings);
@@ -70,7 +66,6 @@ registerModuleRoutes("collaborations", collaborationsCMS);
 registerModuleRoutes("blog", blogCMS);
 registerModuleRoutes("blogs", blogCMS);
 registerModuleRoutes("team", teamCMS);
-registerModuleRoutes("partners", partnersCMS);
 
 // About Me Content Endpoints
 router.get("/about-me", getPublicAboutMe);

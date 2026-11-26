@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS "careerscontents" (
   "hero__heading" TEXT DEFAULT 'Build Your Career With Us',
   "hero__description" TEXT DEFAULT 'Join our passionate team of visionary colorists, editors, retouching artists, and creative technologists crafting timeless visual stories for premier filmmakers and creators worldwide.',
   "hero__badge" TEXT DEFAULT 'JOIN OUR CREATIVE TEAM',
-  "why_join_us" JSONB DEFAULT '[{"id":"card-1","title":"Creative & Collaborative Environment","description":"Work alongside senior filmmakers, colorists, and post-production leads who respect and nurture artistic vision.","icon":"Users","active":true,"order":0},{"id":"card-2","title":"Work on Exciting Projects","description":"From luxury destination weddings to high-fashion campaigns and cinematic documentaries with global reach.","icon":"Film","active":true,"order":1},{"id":"card-3","title":"Learn & Grow","description":"Continuous mentorship in advanced DaVinci Resolve color science, 35mm film emulation, and high-fashion retouching.","icon":"Sparkles","active":true,"order":2},{"id":"card-4","title":"Flexible & Supportive Culture","description":"Healthy work-life balance, flexible schedules, and dedicated post-production suites designed for artistic focus.","icon":"Heart","active":true,"order":3},{"id":"card-5","title":"Be Part of a Growing Team","description":"Shape the trajectory of our rapidly expanding team as we pioneer bespoke editorial post-production worldwide.","icon":"TrendingUp","active":true,"order":4}]'::jsonb,
+  "why_join_us" JSONB DEFAULT '[{"id":"card-1","title":"Creative & Collaborative Environment","description":"Work alongside senior filmmakers, colorists, and post-production leads who respect and nurture artistic vision.","icon":"Users","active":true,"order":0},{"id":"card-2","title":"Work on Exciting Projects","description":"From luxury destination weddings to high-fashion campaigns and cinematic documentaries with global reach.","icon":"Film","active":true,"order":1},{"id":"card-3","title":"Learn & Grow","description":"Continuous mentorship in advanced DaVinci Resolve color science, 35mm film emulation, and high-fashion retouching.","icon":"Award","active":true,"order":2},{"id":"card-4","title":"Flexible & Supportive Culture","description":"Healthy work-life balance, flexible schedules, and dedicated post-production suites designed for artistic focus.","icon":"Heart","active":true,"order":3},{"id":"card-5","title":"Be Part of a Growing Team","description":"Shape the trajectory of our rapidly expanding team as we pioneer bespoke editorial post-production worldwide.","icon":"TrendingUp","active":true,"order":4}]'::jsonb,
   "cta__heading" TEXT DEFAULT 'Don''t See the Right Opening?',
   "cta__description" TEXT DEFAULT 'We are always on the lookout for exceptional talent. Submit your portfolio and resume to join our talent roster.',
   "cta__button_text" TEXT DEFAULT 'Send Your Resume',
@@ -287,6 +287,32 @@ CREATE TABLE IF NOT EXISTS "enquiries" (
   "updated_at" TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS "herobackgroundvideos" (
+  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
+  "title" TEXT DEFAULT 'Hero Background Video',
+  "video_url" TEXT DEFAULT '',
+  "mobile_video_url" TEXT DEFAULT '',
+  "poster_url" TEXT DEFAULT '',
+  "video_type" TEXT DEFAULT 'video/mp4',
+  "status" TEXT DEFAULT 'draft',
+  "playback_settings__autoplay" BOOLEAN DEFAULT TRUE,
+  "playback_settings__muted" BOOLEAN DEFAULT TRUE,
+  "playback_settings__loop" BOOLEAN DEFAULT TRUE,
+  "playback_settings__plays_inline" BOOLEAN DEFAULT TRUE,
+  "overlay_opacity" DOUBLE PRECISION DEFAULT 0.35,
+  "video_position" TEXT DEFAULT 'center',
+  "playback_speed" DOUBLE PRECISION DEFAULT 1,
+  "file_metadata" JSONB,
+  "version" DOUBLE PRECISION DEFAULT 1,
+  "version_notes" TEXT DEFAULT '',
+  "created_by" TEXT DEFAULT '',
+  "updated_by" TEXT DEFAULT '',
+  "published_at" TIMESTAMPTZ DEFAULT NULL,
+  "__v" INTEGER NOT NULL DEFAULT 0,
+  "created_at" TIMESTAMPTZ,
+  "updated_at" TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS "heroslides" (
   "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
   "slide_number" DOUBLE PRECISION DEFAULT 1,
@@ -378,89 +404,6 @@ CREATE TABLE IF NOT EXISTS "media" (
   "updated_at" TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS "partners" (
-  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
-  "name" TEXT NOT NULL,
-  "category" TEXT DEFAULT 'Production House',
-  "location_tag" TEXT DEFAULT 'Global',
-  "logo" TEXT DEFAULT '',
-  "image" TEXT DEFAULT '',
-  "website" TEXT DEFAULT 'https://theeditingtable.com',
-  "order" DOUBLE PRECISION DEFAULT 0,
-  "active" BOOLEAN DEFAULT TRUE,
-  "__v" INTEGER NOT NULL DEFAULT 0,
-  "created_at" TIMESTAMPTZ,
-  "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS "photoshowcaseitems" (
-  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
-  "title" TEXT NOT NULL,
-  "slug" TEXT NOT NULL,
-  "description" TEXT,
-  "property_name" TEXT,
-  "location" TEXT,
-  "category" TEXT DEFAULT 'High-End Photo Retouching',
-  "tags" JSONB,
-  "image__public_id" TEXT,
-  "image__url" TEXT,
-  "image__path" TEXT,
-  "image__alt_text" TEXT,
-  "mobile_image__public_id" TEXT,
-  "mobile_image__url" TEXT,
-  "mobile_image__path" TEXT,
-  "mobile_image__alt_text" TEXT,
-  "badge_text" TEXT,
-  "cta_text" TEXT,
-  "cta_url" TEXT,
-  "open_in_new_tab" BOOLEAN DEFAULT FALSE,
-  "order" DOUBLE PRECISION DEFAULT 0,
-  "is_featured" BOOLEAN DEFAULT FALSE,
-  "is_active" BOOLEAN DEFAULT TRUE,
-  "views" DOUBLE PRECISION DEFAULT 0,
-  "clicks" DOUBLE PRECISION DEFAULT 0,
-  "published_at" TIMESTAMPTZ,
-  "expires_at" TIMESTAMPTZ,
-  "deleted_at" TIMESTAMPTZ DEFAULT NULL,
-  "created_by" TEXT,
-  "updated_by" TEXT,
-  "__v" INTEGER NOT NULL DEFAULT 0,
-  "created_at" TIMESTAMPTZ,
-  "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS "photoshowcasesettings" (
-  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
-  "settings_key" TEXT DEFAULT 'photo-showcase',
-  "heading" TEXT DEFAULT 'Masterpiece High-End Photo Retouching & Color Suite',
-  "subheading" TEXT DEFAULT 'Bespoke architectural imagery, high-end editorial photo retouching, and luxury property portfolios crafted with precision.',
-  "show_section" BOOLEAN DEFAULT TRUE,
-  "show_subheading" BOOLEAN DEFAULT TRUE,
-  "alignment" TEXT DEFAULT 'center',
-  "heading_color" TEXT DEFAULT '#2F3A2F',
-  "text_color" TEXT DEFAULT '#687567',
-  "background_color" TEXT DEFAULT '#F8FBF7',
-  "section_padding_top" DOUBLE PRECISION DEFAULT 80,
-  "section_padding_bottom" DOUBLE PRECISION DEFAULT 80,
-  "max_width" DOUBLE PRECISION DEFAULT 1440,
-  "autoplay" BOOLEAN DEFAULT TRUE,
-  "autoplay_delay" DOUBLE PRECISION DEFAULT 5000,
-  "infinite_loop" BOOLEAN DEFAULT TRUE,
-  "pause_on_hover" BOOLEAN DEFAULT TRUE,
-  "card_radius" DOUBLE PRECISION DEFAULT 24,
-  "show_arrows" BOOLEAN DEFAULT TRUE,
-  "show_pagination" BOOLEAN DEFAULT TRUE,
-  "cta_text" TEXT DEFAULT 'Explore Full Gallery',
-  "cta_url" TEXT DEFAULT '/portfolio',
-  "cta_visible" BOOLEAN DEFAULT TRUE,
-  "cta_new_tab" BOOLEAN DEFAULT FALSE,
-  "anchor_id" TEXT DEFAULT 'photo-showcase',
-  "updated_by" TEXT,
-  "__v" INTEGER NOT NULL DEFAULT 0,
-  "created_at" TIMESTAMPTZ,
-  "updated_at" TIMESTAMPTZ
-);
-
 CREATE TABLE IF NOT EXISTS "portfolioitems" (
   "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
   "title" TEXT NOT NULL,
@@ -538,7 +481,7 @@ CREATE TABLE IF NOT EXISTS "services" (
   "turnaround" TEXT DEFAULT '48-72 Hours',
   "features" JSONB,
   "deliverables" JSONB,
-  "icon" TEXT DEFAULT 'Sparkles',
+  "icon" TEXT DEFAULT 'Film',
   "order" DOUBLE PRECISION DEFAULT 0,
   "is_published" BOOLEAN DEFAULT TRUE,
   "__v" INTEGER NOT NULL DEFAULT 0,
@@ -753,29 +696,10 @@ CREATE TABLE IF NOT EXISTS "videoshowcasesettings" (
   "cta_url" TEXT DEFAULT '/portfolio',
   "cta_visible" BOOLEAN DEFAULT TRUE,
   "cta_new_tab" BOOLEAN DEFAULT FALSE,
-  "seo_title" TEXT DEFAULT 'Scroll-Stopping Real Estate Videos',
-  "seo_description" TEXT DEFAULT 'Cinematic property walkthroughs, drone films and social media videos.',
+  "seo_title" TEXT DEFAULT 'Creative Post-Production & Visual Storytelling | The Editing Table',
+  "seo_description" TEXT DEFAULT 'Wedding films, reels, brand videos, color grading, photo editing, and professional post-production built to turn raw footage into stories worth watching.',
   "anchor_id" TEXT DEFAULT 'video-showcase',
   "updated_by" TEXT,
-  "__v" INTEGER NOT NULL DEFAULT 0,
-  "created_at" TIMESTAMPTZ,
-  "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS "weddinggalleryitems" (
-  "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
-  "title" TEXT NOT NULL,
-  "category" TEXT DEFAULT 'Portraits',
-  "location" TEXT DEFAULT '',
-  "couple_names" TEXT DEFAULT '',
-  "caption" TEXT DEFAULT '',
-  "image" TEXT NOT NULL,
-  "cover_image" TEXT DEFAULT '',
-  "gallery" JSONB,
-  "story_summary" TEXT DEFAULT '',
-  "is_featured" BOOLEAN DEFAULT FALSE,
-  "order" DOUBLE PRECISION DEFAULT 0,
-  "is_published" BOOLEAN DEFAULT TRUE,
   "__v" INTEGER NOT NULL DEFAULT 0,
   "created_at" TIMESTAMPTZ,
   "updated_at" TIMESTAMPTZ
@@ -881,6 +805,9 @@ CREATE INDEX IF NOT EXISTS "idx_emailotps_expires_at" ON "emailotps" ("expires_a
 CREATE INDEX IF NOT EXISTS "idx_enquiries_created_at" ON "enquiries" ("created_at" DESC);
 
 
+CREATE INDEX IF NOT EXISTS "idx_herobackgroundvideos_status" ON "herobackgroundvideos" ("status" ASC);
+
+
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_heroslides_slide_key" ON "heroslides" ("slide_key" ASC);
 
 CREATE INDEX IF NOT EXISTS "idx_heroslides_order" ON "heroslides" ("order" ASC);
@@ -905,31 +832,6 @@ CREATE INDEX IF NOT EXISTS "idx_jobapplications_status_created_at" ON "jobapplic
 
 
 CREATE INDEX IF NOT EXISTS "idx_media_category" ON "media" ("category" ASC);
-
-
-CREATE INDEX IF NOT EXISTS "idx_partners_active_order" ON "partners" ("active" ASC, "order" ASC);
-
-
-CREATE UNIQUE INDEX IF NOT EXISTS "idx_photoshowcaseitems_slug" ON "photoshowcaseitems" ("slug" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_category" ON "photoshowcaseitems" ("category" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_order" ON "photoshowcaseitems" ("order" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_is_featured" ON "photoshowcaseitems" ("is_featured" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_is_active" ON "photoshowcaseitems" ("is_active" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_deleted_at" ON "photoshowcaseitems" ("deleted_at" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_is_active_deleted_at_order" ON "photoshowcaseitems" ("is_active" ASC, "deleted_at" ASC, "order" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_category_is_active" ON "photoshowcaseitems" ("category" ASC, "is_active" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_photoshowcaseitems_is_featured_is_active" ON "photoshowcaseitems" ("is_featured" ASC, "is_active" ASC);
-
-
-CREATE UNIQUE INDEX IF NOT EXISTS "idx_photoshowcasesettings_settings_key" ON "photoshowcasesettings" ("settings_key" ASC);
 
 
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_portfolioitems_slug" ON "portfolioitems" ("slug" ASC);
@@ -1036,11 +938,6 @@ CREATE INDEX IF NOT EXISTS "idx_videoshowcaseitems_created_at" ON "videoshowcase
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_videoshowcasesettings_settings_key" ON "videoshowcasesettings" ("settings_key" ASC);
 
 
-CREATE INDEX IF NOT EXISTS "idx_weddinggalleryitems_category" ON "weddinggalleryitems" ("category" ASC);
-
-CREATE INDEX IF NOT EXISTS "idx_weddinggalleryitems_is_published" ON "weddinggalleryitems" ("is_published" ASC);
-
-
 CREATE INDEX IF NOT EXISTS "idx_workinghours_order" ON "workinghours" ("order" ASC);
 
 CREATE INDEX IF NOT EXISTS "idx_workinghours_status" ON "workinghours" ("status" ASC);
@@ -1074,15 +971,10 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_e
 
 
 
+
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_jobapplications_job_id') THEN ALTER TABLE "jobapplications" ADD CONSTRAINT "idx_fk_jobapplications_job_id" FOREIGN KEY ("job_id") REFERENCES "jobs" ("_id") ON DELETE SET NULL; END IF; END $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_media_uploaded_by') THEN ALTER TABLE "media" ADD CONSTRAINT "idx_fk_media_uploaded_by" FOREIGN KEY ("uploaded_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
-
-
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_photoshowcaseitems_created_by') THEN ALTER TABLE "photoshowcaseitems" ADD CONSTRAINT "idx_fk_photoshowcaseitems_created_by" FOREIGN KEY ("created_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_photoshowcaseitems_updated_by') THEN ALTER TABLE "photoshowcaseitems" ADD CONSTRAINT "idx_fk_photoshowcaseitems_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
-
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_photoshowcasesettings_updated_by') THEN ALTER TABLE "photoshowcasesettings" ADD CONSTRAINT "idx_fk_photoshowcasesettings_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
 
 
 
@@ -1103,7 +995,6 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_v
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_videoshowcaseitems_updated_by') THEN ALTER TABLE "videoshowcaseitems" ADD CONSTRAINT "idx_fk_videoshowcaseitems_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_videoshowcasesettings_updated_by') THEN ALTER TABLE "videoshowcasesettings" ADD CONSTRAINT "idx_fk_videoshowcasesettings_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
-
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_workinghours_created_by') THEN ALTER TABLE "workinghours" ADD CONSTRAINT "idx_fk_workinghours_created_by" FOREIGN KEY ("created_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'idx_fk_workinghours_updated_by') THEN ALTER TABLE "workinghours" ADD CONSTRAINT "idx_fk_workinghours_updated_by" FOREIGN KEY ("updated_by") REFERENCES "users" ("_id") ON DELETE SET NULL; END IF; END $$;

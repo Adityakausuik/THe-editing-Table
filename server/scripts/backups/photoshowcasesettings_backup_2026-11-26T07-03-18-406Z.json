@@ -1,0 +1,33 @@
+[
+  {
+    "_id": "6abce103f313d10a644d86fc",
+    "settings_key": "photo-showcase",
+    "heading": "Masterpiece High-End Photo Retouching & Color Suite",
+    "subheading": "Bespoke architectural imagery, high-end editorial photo retouching, and luxury property portfolios crafted with precision.",
+    "show_section": true,
+    "show_subheading": true,
+    "alignment": "center",
+    "heading_color": "#2F3A2F",
+    "text_color": "#687567",
+    "background_color": "#F8FBF7",
+    "section_padding_top": 80,
+    "section_padding_bottom": 80,
+    "max_width": 1440,
+    "autoplay": true,
+    "autoplay_delay": 5000,
+    "infinite_loop": true,
+    "pause_on_hover": true,
+    "card_radius": 24,
+    "show_arrows": true,
+    "show_pagination": true,
+    "cta_text": "Explore Full Gallery",
+    "cta_url": "/portfolio",
+    "cta_visible": true,
+    "cta_new_tab": false,
+    "anchor_id": "photo-showcase",
+    "updated_by": null,
+    "__v": 0,
+    "created_at": "2026-09-30T10:14:27.928Z",
+    "updated_at": "2026-09-30T10:14:27.928Z"
+  }
+]

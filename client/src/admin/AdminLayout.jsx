@@ -1,10 +1,8 @@
 /* global sessionStorage */
 import {
   Briefcase,
-  Camera,
   FileText,
   Grid,
-  Image,
   Images,
   LayoutDashboard,
   Loader2,
@@ -38,11 +36,8 @@ const navSections = [
     title: "Content Modules",
     items: [
       { label: "Hero Video Manager", path: "/admin/hero-video", icon: Video },
-      { label: "Working Partners", path: "/admin/partners", icon: Briefcase },
       { label: "Services Suite", path: "/admin/services", icon: Grid },
       { label: "Portfolio Showcase", path: "/admin/portfolio", icon: Images },
-      { label: "Photo Showcase", path: "/admin/photo-showcase", icon: Camera },
-      { label: "Wedding Gallery", path: "/admin/wedding-gallery", icon: Image },
       { label: "Brand Collaborations", path: "/admin/collaborations", icon: Briefcase },
       { label: "Blog Journal", path: "/admin/blog", icon: FileText },
       { label: "About Profile", path: "/admin/about-me", icon: UserCheck },

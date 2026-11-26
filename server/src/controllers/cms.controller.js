@@ -3,11 +3,9 @@ import { isValidId } from "../utils/ids.js";
 import { connectDatabase } from "../config/db.js";
 import Service from "../models/Service.model.js";
 import PortfolioItem from "../models/PortfolioItem.model.js";
-import WeddingGalleryItem from "../models/WeddingGalleryItem.model.js";
 import BrandCollaboration from "../models/BrandCollaboration.model.js";
 import BlogPost from "../models/BlogPost.model.js";
 import TeamMember from "../models/TeamMember.model.js";
-import Partner from "../models/Partner.model.js";
 import Enquiry from "../models/Enquiry.model.js";
 import SiteSetting from "../models/SiteSetting.model.js";
 import AuditLog from "../models/AuditLog.model.js";
@@ -66,25 +64,6 @@ const ENTITY_CONFIG = {
       if (!next.coverImage && next.image) next.coverImage = next.image;
       if (!next.slug && next.title) next.slug = slugify(next.title);
       delete next.active;
-      return next;
-    }
-  },
-  WeddingGalleryItem: {
-    publicFilter: { isPublished: true },
-    orderField: "order",
-    publishField: "isPublished",
-    normalizePayload(payload = {}) {
-      const next = { ...payload };
-      if (next.active !== undefined && next.isPublished === undefined) next.isPublished = Boolean(next.active);
-      if (!next.image && next.imageUrl) next.image = next.imageUrl;
-      if (!next.image && next.src) next.image = next.src;
-      if (!next.image && next.coverImage) next.image = next.coverImage;
-      if (!next.coverImage && next.image) next.coverImage = next.image;
-      if (next.coupleName !== undefined && next.coupleNames === undefined) next.coupleNames = next.coupleName;
-      delete next.active;
-      delete next.imageUrl;
-      delete next.src;
-      delete next.coupleName;
       return next;
     }
   },
@@ -154,19 +133,6 @@ const ENTITY_CONFIG = {
       delete next.role;
       delete next.bio;
       delete next.avatar;
-      return next;
-    }
-  },
-  Partner: {
-    publicFilter: { active: true },
-    orderField: "order",
-    publishField: "active",
-    normalizePayload(payload = {}) {
-      const next = { ...payload };
-      const img = next.image || next.logo || next.logoUrl || next.imageUrl || next.thumbnail || "";
-      const normalizedImg = img ? String(img).replace(/\\/g, "/") : "";
-      next.image = normalizedImg;
-      next.logo = normalizedImg;
       return next;
     }
   }
@@ -278,13 +244,6 @@ function normalizeDocForClient(doc, entityName) {
     item.active = item.isPublished !== false;
     item.coverImage = item.coverImage || item.image || "";
   }
-  if (entityName === "WeddingGalleryItem") {
-    item.active = item.isPublished !== false;
-    item.imageUrl = item.imageUrl || item.image || "";
-    item.src = item.src || item.image || "";
-    item.coverImage = item.coverImage || item.image || "";
-    item.coupleName = item.coupleName || item.coupleNames || "";
-  }
   if (entityName === "BrandCollaboration") {
     item.active = item.published !== false;
     item.order = item.displayOrder ?? 0;
@@ -304,12 +263,6 @@ function normalizeDocForClient(doc, entityName) {
     item.bio = item.bio || item.shortBio || item.fullBio || "";
     item.avatar = item.avatar || item.profileImage || "";
     item.image = item.image || item.profileImage || "";
-  }
-  if (entityName === "Partner") {
-    const img = item.image || item.logo || item.logoUrl || item.imageUrl || item.thumbnail || "";
-    const normalizedImg = img ? String(img).replace(/\\/g, "/") : "";
-    item.image = normalizedImg;
-    item.logo = normalizedImg;
   }
 
   return item;
@@ -366,9 +319,7 @@ export async function getDashboardStats(req, res) {
             newEnquiries: 0,
             totalBlogPosts: 0,
             totalPortfolioItems: 0,
-            totalGalleryItems: 0,
-            totalTeamMembers: 0,
-            totalPartners: 0
+            totalTeamMembers: 0
           },
           recentLogs: [],
           recentEnquiries: []
@@ -376,15 +327,13 @@ export async function getDashboardStats(req, res) {
       });
     }
 
-    const [enquiriesCount, newEnquiries, blogCount, portfolioCount, galleryCount, teamCount, partnerCount] =
+    const [enquiriesCount, newEnquiries, blogCount, portfolioCount, teamCount] =
       await Promise.all([
         Enquiry.countDocuments().catch(() => 0),
         Enquiry.countDocuments({ status: "new" }).catch(() => 0),
         BlogPost.countDocuments().catch(() => 0),
         PortfolioItem.countDocuments().catch(() => 0),
-        WeddingGalleryItem.countDocuments().catch(() => 0),
-        TeamMember.countDocuments().catch(() => 0),
-        Partner.countDocuments().catch(() => 0)
+        TeamMember.countDocuments().catch(() => 0)
       ]);
 
     const recentLogs = await AuditLog.find().sort({ createdAt: -1 }).limit(10).catch(() => []);
@@ -396,9 +345,7 @@ export async function getDashboardStats(req, res) {
         newEnquiries,
         totalBlogPosts: blogCount,
         totalPortfolioItems: portfolioCount,
-        totalGalleryItems: galleryCount,
-        totalTeamMembers: teamCount,
-        totalPartners: partnerCount
+        totalTeamMembers: teamCount
       },
       recentLogs,
       recentEnquiries
@@ -526,99 +473,6 @@ const DEFAULT_AUTHENTIC_SERVICES = [
     image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1200&q=85",
     isPublished: true,
     order: 8
-  }
-];
-
-const DEFAULT_AUTHENTIC_PARTNERS = [
-  {
-    name: "Atelier Vance Cinema",
-    category: "Luxury Wedding Films",
-    locationTag: "🇺🇸 🇫🇷 New York • Paris",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=85",
-    website: "https://ateliervance.com",
-    order: 1,
-    active: true
-  },
-  {
-    name: "Maison de L'Amour",
-    category: "Editorial Film House",
-    locationTag: "🇬🇧 🇮🇹 London • Amalfi",
-    image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=85",
-    website: "https://maisondelamour.com",
-    order: 2,
-    active: true
-  },
-  {
-    name: "Aura Creative House",
-    category: "Commercial & Fashion Post",
-    locationTag: "🇺🇸 🇯🇵 Los Angeles • Tokyo",
-    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85",
-    website: "https://auracreative.com",
-    order: 3,
-    active: true
-  },
-  {
-    name: "Vogue Lumière House",
-    category: "High-Fashion & Runway Cinema",
-    locationTag: "🇮🇹 Milan • Lake Como",
-    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 4,
-    active: true
-  },
-  {
-    name: "Al-Mirage Creative",
-    category: "Royal Wedding Films & Commercials",
-    locationTag: "🇦🇪 Dubai • Abu Dhabi",
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 5,
-    active: true
-  },
-  {
-    name: "Heritage & Crown Productions",
-    category: "Grand Heritage Wedding Cinema",
-    locationTag: "🇮🇳 Mumbai • Udaipur",
-    image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 6,
-    active: true
-  },
-  {
-    name: "St. Moritz Motion Arts",
-    category: "Alpine & Destination Films",
-    locationTag: "🇨🇭 Zurich • St. Moritz",
-    image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 7,
-    active: true
-  },
-  {
-    name: "Riviera Cinema Collective",
-    category: "Festival & Editorial Post",
-    locationTag: "🇫🇷 🇲🇨 Cannes • Monaco",
-    image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 8,
-    active: true
-  },
-  {
-    name: "Pacific Harbor Films",
-    category: "Commercial & Narrative Color",
-    locationTag: "🇦🇺 Sydney • Melbourne",
-    image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
-    logo: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=85",
-    website: "/portfolio",
-    order: 9,
-    active: true
   }
 ];
 
@@ -762,35 +616,6 @@ const DEFAULT_AUTHENTIC_PORTFOLIO = [
   }
 ];
 
-const DEFAULT_AUTHENTIC_WEDDINGS = [
-  {
-    title: "Villa d'Este Lakeside Celebration",
-    coupleName: "Julian & Vivienne",
-    coupleNames: "Julian & Vivienne",
-    location: "Lake Como, Italy",
-    category: "Destination Wedding",
-    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    imageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-    isPublished: true,
-    active: true,
-    order: 1
-  },
-  {
-    title: "Château de Chantilly Grandeur",
-    coupleName: "Antoine & Camille",
-    coupleNames: "Antoine & Camille",
-    location: "Paris, France",
-    category: "Royal Wedding",
-    coverImage: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85",
-    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85",
-    imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85",
-    isPublished: true,
-    active: true,
-    order: 2
-  }
-];
-
 const DEFAULT_AUTHENTIC_COLLABORATIONS = [
   {
     brandName: "Atelier Vance Cinema",
@@ -901,10 +726,8 @@ function createCRUDActions(Model, entityName) {
             return res.json({ success: true, message: `${entityName} records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
           }
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
-            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
-            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
           return res.json({
@@ -919,10 +742,8 @@ function createCRUDActions(Model, entityName) {
 
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
-            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
-            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
           return res.json({
@@ -936,13 +757,6 @@ function createCRUDActions(Model, entityName) {
           const count = await Model.countDocuments().catch(() => 0);
           if (count === 0) {
             await Model.insertMany(DEFAULT_AUTHENTIC_SERVICES).catch(() => null);
-          }
-        }
-
-        if (entityName === "Partner") {
-          const count = await Model.countDocuments().catch(() => 0);
-          if (count === 0) {
-            await Model.insertMany(DEFAULT_AUTHENTIC_PARTNERS).catch(() => null);
           }
         }
 
@@ -986,10 +800,8 @@ function createCRUDActions(Model, entityName) {
             return res.json({ success: true, message: `${entityName} admin records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
           }
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
-            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
-            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
           return res.json({
@@ -1004,10 +816,8 @@ function createCRUDActions(Model, entityName) {
 
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
-            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
-            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
           return res.json({
@@ -1056,10 +866,8 @@ function createCRUDActions(Model, entityName) {
         }
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
-            entityName === "Partner" ? DEFAULT_AUTHENTIC_PARTNERS :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
-            entityName === "WeddingGalleryItem" ? DEFAULT_AUTHENTIC_WEDDINGS :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
           const match = defaults.find((d) => String(d._id) === String(req.params.id) || d.slug === req.params.id);
@@ -1305,11 +1113,9 @@ function createCRUDActions(Model, entityName) {
 
 export const servicesCMS = createCRUDActions(Service, "Service");
 export const portfolioCMS = createCRUDActions(PortfolioItem, "PortfolioItem");
-export const weddingGalleryCMS = createCRUDActions(WeddingGalleryItem, "WeddingGalleryItem");
 export const collaborationsCMS = createCRUDActions(BrandCollaboration, "BrandCollaboration");
 export const blogCMS = createCRUDActions(BlogPost, "BlogPost");
 export const teamCMS = createCRUDActions(TeamMember, "TeamMember");
-export const partnersCMS = createCRUDActions(Partner, "Partner");
 
 // --- ENQUIRIES MANAGEMENT ---
 export async function getEnquiries(req, res) {

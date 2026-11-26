@@ -2,22 +2,18 @@ import BlogPost from "../models/BlogPost.model.js";
 import BrandCollaboration from "../models/BrandCollaboration.model.js";
 import HeroSlide from "../models/HeroSlide.model.js";
 import Media from "../models/Media.model.js";
-import Partner from "../models/Partner.model.js";
 import PortfolioItem from "../models/PortfolioItem.model.js";
 import Review from "../models/Review.model.js";
 import Service from "../models/Service.model.js";
 import TeamMember from "../models/TeamMember.model.js";
-import WeddingGalleryItem from "../models/WeddingGalleryItem.model.js";
 import { safeDeleteFile } from "./fileUtils.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 
 const CONTENT_MODELS = [
   HeroSlide,
-  Partner,
   Service,
   PortfolioItem,
   Review,
-  WeddingGalleryItem,
   BrandCollaboration,
   BlogPost,
   TeamMember

@@ -59,9 +59,9 @@ export async function isPostgresMediaReferenced(url) {
   const tables = [
     "aboutmes", "adminactivitylogs", "blogposts", "brandcollaborations", "careerscontents",
     "contactemails", "contactoffices", "contactphones", "contactsettings", "enquiries",
-    "heroslides", "jobs", "jobapplications", "partners", "photoshowcaseitems",
+    "heroslides", "jobs", "jobapplications",
     "portfolioitems", "reviews", "services", "teammembers", "videoanalytics",
-    "videoshowcaseitems", "videoshowcasesettings", "weddinggalleryitems", "workinghours"
+    "videoshowcaseitems", "videoshowcasesettings", "workinghours"
   ];
   const pool = getPostgresPool();
   for (const table of tables) {

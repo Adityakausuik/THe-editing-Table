@@ -26,7 +26,6 @@ import reviewRoutes from "./routes/review.routes.js";
 import heroSlideRoutes from "./routes/heroSlide.routes.js";
 import { adminHeroVideoRouter, publicHeroVideoRouter } from "./routes/heroBackground.routes.js";
 import { adminVideoShowcaseRouter, publicVideoShowcaseRouter } from "./routes/videoShowcase.routes.js";
-import { adminPhotoShowcaseRouter, publicPhotoShowcaseRouter } from "./routes/photoShowcase.routes.js";
 import { adminContactRouter, publicContactRouter } from "./routes/contact.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import careersRoutes from "./routes/careers.routes.js";
@@ -379,12 +378,6 @@ export function createApp() {
   app.use(`${API_PREFIX}/video-showcase`, publicVideoShowcaseRouter);
   app.use(`${API_PREFIX}/v1/admin/video-showcase`, adminVideoShowcaseRouter);
   app.use(`${API_PREFIX}/admin/video-showcase`, adminVideoShowcaseRouter);
-
-  // Photo Showcase Routes
-  app.use(`${API_PREFIX}/v1/photo-showcase`, publicPhotoShowcaseRouter);
-  app.use(`${API_PREFIX}/photo-showcase`, publicPhotoShowcaseRouter);
-  app.use(`${API_PREFIX}/v1/admin/photo-showcase`, adminPhotoShowcaseRouter);
-  app.use(`${API_PREFIX}/admin/photo-showcase`, adminPhotoShowcaseRouter);
 
   // Contact Info Routes (Public & Admin)
   app.use(`${API_PREFIX}/v1/contact`, publicContactRouter);

@@ -8,9 +8,7 @@ export const POSTGRES_DASHBOARD_STATS_QUERY = `SELECT
   (SELECT COUNT(*) FROM "enquiries" WHERE "status" = 'new')::integer AS "new_enquiries",
   (SELECT COUNT(*) FROM "blogposts")::integer AS "total_blog_posts",
   (SELECT COUNT(*) FROM "portfolioitems")::integer AS "total_portfolio_items",
-  (SELECT COUNT(*) FROM "weddinggalleryitems")::integer AS "total_gallery_items",
-  (SELECT COUNT(*) FROM "teammembers")::integer AS "total_team_members",
-  (SELECT COUNT(*) FROM "partners")::integer AS "total_partners"`;
+  (SELECT COUNT(*) FROM "teammembers")::integer AS "total_team_members"`;
 
 export async function getPostgresDashboardData() {
   const pool = getPostgresPool();
@@ -26,9 +24,7 @@ export async function getPostgresDashboardData() {
       newEnquiries: Number(stats.new_enquiries || 0),
       totalBlogPosts: Number(stats.total_blog_posts || 0),
       totalPortfolioItems: Number(stats.total_portfolio_items || 0),
-      totalGalleryItems: Number(stats.total_gallery_items || 0),
-      totalTeamMembers: Number(stats.total_team_members || 0),
-      totalPartners: Number(stats.total_partners || 0)
+      totalTeamMembers: Number(stats.total_team_members || 0)
     },
     recentLogs: logsResult.rows.map((row) => mapPostgresCmsRow(AuditLog, row)),
     recentEnquiries: enquiriesResult.rows.map((row) => mapPostgresCmsRow(Enquiry, row))

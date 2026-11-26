@@ -1,4 +1,4 @@
-import { Briefcase, FileText, Image, Images, Mail, Plus, RotateCcw } from "lucide-react";
+import { Briefcase, FileText, Images, Mail, Plus, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api.js";
@@ -8,8 +8,7 @@ export default function DashboardOverview() {
     totalEnquiries: 0,
     newEnquiries: 0,
     totalBlogPosts: 0,
-    totalPortfolioItems: 0,
-    totalGalleryItems: 0
+    totalPortfolioItems: 0
   });
 
   const [recentLogs, setRecentLogs] = useState([]);
@@ -25,8 +24,7 @@ export default function DashboardOverview() {
             totalEnquiries: statsObj.totalEnquiries || 0,
             newEnquiries: statsObj.newEnquiries || 0,
             totalBlogPosts: statsObj.totalBlogPosts || 0,
-            totalPortfolioItems: statsObj.totalPortfolioItems || 0,
-            totalGalleryItems: statsObj.totalGalleryItems || 0
+            totalPortfolioItems: statsObj.totalPortfolioItems || 0
           });
           setRecentLogs(data.data?.recentLogs || []);
           setRecentEnquiries(data.data?.recentEnquiries || []);
@@ -64,7 +62,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Mail}
           label="New Enquiries"
@@ -77,12 +75,6 @@ export default function DashboardOverview() {
           label="Portfolio Items"
           value={stats?.totalPortfolioItems ?? 0}
           color="bg-[rgb(72,125,72)]/10 text-site"
-        />
-        <StatCard
-          icon={Image}
-          label="Wedding Photos"
-          value={stats?.totalGalleryItems ?? 0}
-          color="bg-sage-light/20 text-site"
         />
         <StatCard
           icon={FileText}

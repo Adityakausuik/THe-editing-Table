@@ -24,11 +24,8 @@ const AdminLoginPage = lazy(() => import("../admin/AdminLoginPage.jsx"));
 const AdminLayout = lazy(() => import("../admin/AdminLayout.jsx"));
 const DashboardOverview = lazy(() => import("../admin/modules/DashboardOverview.jsx"));
 const HeroBackgroundCMS = lazy(() => import("../admin/modules/HeroBackgroundCMS.jsx"));
-const PartnersCMS = lazy(() => import("../admin/modules/PartnersCMS.jsx"));
 const ServicesCMS = lazy(() => import("../admin/modules/ServicesCMS.jsx"));
 const PortfolioCMS = lazy(() => import("../admin/modules/PortfolioCMS.jsx"));
-const PhotoShowcaseCMS = lazy(() => import("../admin/modules/PhotoShowcaseCMS.jsx"));
-const WeddingGalleryCMS = lazy(() => import("../admin/modules/WeddingGalleryCMS.jsx"));
 const CollaborationsCMS = lazy(() => import("../admin/modules/CollaborationsCMS.jsx"));
 const BlogCMS = lazy(() => import("../admin/modules/BlogCMS.jsx"));
 const AboutMeCMS = lazy(() => import("../admin/modules/AboutMeCMS.jsx"));
@@ -95,12 +92,12 @@ export default function AppRoutes() {
               <Route path="dashboard" element={<DashboardOverview />} />
               <Route path="hero" element={<Navigate to="/admin/hero-video" replace />} />
               <Route path="hero-video" element={<HeroBackgroundCMS />} />
-              <Route path="partners" element={<PartnersCMS />} />
+              <Route path="partners" element={<Navigate to="/admin/portfolio" replace />} />
               <Route path="services" element={<ServicesCMS />} />
               <Route path="portfolio" element={<PortfolioCMS />} />
               <Route path="video-showcase" element={<Navigate to="/admin/collaborations" replace />} />
-              <Route path="photo-showcase" element={<PhotoShowcaseCMS />} />
-              <Route path="wedding-gallery" element={<WeddingGalleryCMS />} />
+              <Route path="photo-showcase" element={<Navigate to="/admin/portfolio" replace />} />
+              <Route path="wedding-gallery" element={<Navigate to="/admin/portfolio" replace />} />
               <Route path="collaborations" element={<CollaborationsCMS />} />
               <Route path="blog" element={<BlogCMS />} />
               <Route path="about-me" element={<AboutMeCMS />} />

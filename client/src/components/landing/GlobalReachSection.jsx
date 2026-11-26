@@ -187,9 +187,6 @@ export default function GlobalReachSection() {
                   <span className="h-1.5 w-1.5 rounded-full bg-[#487D48]" />
                   Hubs & Locations
                 </span>
-                <span className="text-[10px] text-[#777D76] italic hidden sm:inline">
-                  Select a location to rotate globe
-                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full">

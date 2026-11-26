@@ -11,10 +11,10 @@ export const REQUIRED_POSTGRES_TABLES = Object.freeze([
   "careerscontents", "contactemails", "contactoffices", "contactphones", "contactsettings",
   "emailotps", "enquiries", "herobackgroundvideos", "heroslides", "jobs", "jobapplications", "media", "media_upload_parts",
   "media_upload_sessions", "migration_runs", "mongo_migration_extras", "mongo_migration_mixed_bson",
-  "partners", "photoshowcaseitems", "photoshowcasesettings", "portfolioitems", "reviews",
+  "portfolioitems", "reviews",
   "schema_migrations", "securitypolicies", "services", "sessions", "sitesettings", "teammembers",
   "trusteddevices", "users", "videoanalytics", "videoshowcaseitems", "videoshowcasesettings",
-  "weddinggalleryitems", "workinghours"
+  "workinghours"
 ]);
 
 function requireDatabaseUrl() {
