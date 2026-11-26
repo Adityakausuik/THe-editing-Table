@@ -38,6 +38,35 @@ const mediaSchema = new Schema(
       type: String,
       default: ""
     },
+    checksum: {
+      type: String,
+      default: "",
+      index: true
+    },
+    width: {
+      type: Number,
+      default: null
+    },
+    height: {
+      type: Number,
+      default: null
+    },
+    duration: {
+      type: Number,
+      default: null
+    },
+    uploadStatus: {
+      type: String,
+      default: "completed"
+    },
+    totalChunks: {
+      type: Number,
+      default: 1
+    },
+    isVideo: {
+      type: Boolean,
+      default: false
+    },
     uploadedBy: {
       type: Schema.Types.ObjectId,
       ref: "User"

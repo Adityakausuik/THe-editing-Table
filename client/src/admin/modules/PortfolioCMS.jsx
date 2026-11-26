@@ -15,6 +15,7 @@ export default function PortfolioCMS() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -57,6 +58,7 @@ export default function PortfolioCMS() {
 
   const openModal = (item = null) => {
     setEditingItem(item);
+    setModalError(null);
     if (item) {
       setFormData({
         title: item.title || "",
@@ -87,6 +89,7 @@ export default function PortfolioCMS() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setModalError(null);
     try {
       const isNew = !editingItem;
       const url = isNew
@@ -112,7 +115,9 @@ export default function PortfolioCMS() {
       fetchPortfolio();
     } catch (err) {
       console.error("Submit error:", err);
-      setError(err.message || "Failed to save portfolio item.");
+      const msg = err.message || "Failed to save portfolio item.";
+      setModalError(msg);
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -344,6 +349,22 @@ export default function PortfolioCMS() {
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
               <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 no-scrollbar bg-sage-card text-left">
+                {modalError && (
+                  <div className="flex items-center justify-between gap-2 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold animate-fade-in">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                      <span>{modalError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setModalError(null)}
+                      className="p-1 hover:bg-rose-100 rounded-lg text-rose-600 cursor-pointer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <MediaUploadDropzone
                   folder="portfolio"
                   value={formData.coverImage}

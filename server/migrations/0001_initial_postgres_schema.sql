@@ -53,6 +53,20 @@ CREATE TABLE IF NOT EXISTS media_upload_parts (
   PRIMARY KEY (upload_id, part_index)
 );
 
+CREATE TABLE IF NOT EXISTS "media_chunks" (
+  "media_id" TEXT NOT NULL,
+  "chunk_index" INTEGER NOT NULL,
+  "chunk_size" INTEGER NOT NULL,
+  "offset_start" BIGINT,
+  "offset_end" BIGINT,
+  "data" BYTEA NOT NULL,
+  "sha256" TEXT,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY ("media_id", "chunk_index")
+);
+CREATE INDEX IF NOT EXISTS "idx_media_chunks_media_id" ON "media_chunks" ("media_id");
+CREATE INDEX IF NOT EXISTS "idx_media_chunks_offsets" ON "media_chunks" ("media_id", "offset_start", "offset_end");
+
 CREATE TABLE IF NOT EXISTS "aboutmes" (
   "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),
   "key" TEXT DEFAULT 'about_me_content',
@@ -398,11 +412,19 @@ CREATE TABLE IF NOT EXISTS "media" (
   "path" TEXT NOT NULL,
   "category" TEXT DEFAULT 'general',
   "alt_text" TEXT DEFAULT '',
+  "checksum" TEXT DEFAULT '',
+  "width" INTEGER,
+  "height" INTEGER,
+  "duration" DOUBLE PRECISION,
+  "upload_status" TEXT DEFAULT 'completed',
+  "total_chunks" INTEGER DEFAULT 1,
+  "is_video" BOOLEAN DEFAULT FALSE,
   "uploaded_by" TEXT,
   "__v" INTEGER NOT NULL DEFAULT 0,
   "created_at" TIMESTAMPTZ,
   "updated_at" TIMESTAMPTZ
 );
+CREATE INDEX IF NOT EXISTS "idx_media_checksum" ON "media" ("checksum");
 
 CREATE TABLE IF NOT EXISTS "portfolioitems" (
   "_id" TEXT PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 24),

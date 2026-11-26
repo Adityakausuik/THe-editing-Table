@@ -15,7 +15,7 @@ export function normalizeMediaPath(inputPath = "") {
 }
 
 /**
- * Looks up a media item in Neon PostgreSQL by path, url, filename, or _id.
+ * Looks up a media item in Neon PostgreSQL by path, url, filename, _id, or checksum.
  */
 export async function getMediaMetadata(identifier) {
   if (!identifier) return null;
@@ -31,11 +31,31 @@ export async function getMediaMetadata(identifier) {
       "width", "height", "duration", "upload_status", "total_chunks", 
       "is_video", "uploaded_by", "created_at", "updated_at"
     FROM "media"
-    WHERE "path" = $1 OR "url" = $2 OR "filename" = $3 OR "_id" = $4
+    WHERE "path" = $1 OR "url" = $2 OR "filename" = $3 OR "_id" = $4 OR "checksum" = $5
     LIMIT 1;
   `;
 
-  const result = await pool.query(query, [normalized, asUploadUrl, normalized, raw]);
+  const result = await pool.query(query, [normalized, asUploadUrl, normalized, raw, raw]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Looks up an existing media record by its SHA-256 checksum for deduplication.
+ */
+export async function getMediaByChecksum(checksum) {
+  if (!checksum) return null;
+  const pool = getPostgresPool();
+  const result = await pool.query(
+    `SELECT 
+      "_id", "filename", "original_name", "mime_type", "size", 
+      "url", "path", "category", "alt_text", "checksum", 
+      "width", "height", "duration", "upload_status", "total_chunks", 
+      "is_video", "uploaded_by", "created_at", "updated_at"
+    FROM "media" 
+    WHERE "checksum" = $1 
+    LIMIT 1;`,
+    [String(checksum).trim()]
+  );
   return result.rows[0] || null;
 }
 
@@ -181,6 +201,12 @@ export async function saveMediaBufferToNeon({
     const overallHash = crypto.createHash("sha256").update(buffer).digest("hex");
     const totalChunks = Math.ceil(size / NEON_CHUNK_SIZE);
 
+    let validUploadedBy = null;
+    if (uploadedBy) {
+      const userCheck = await client.query('SELECT "_id" FROM "users" WHERE "_id" = $1', [uploadedBy]);
+      if (userCheck.rows.length) validUploadedBy = uploadedBy;
+    }
+
     // 1. Insert media record
     await client.query(
       `INSERT INTO "media" (
@@ -192,7 +218,7 @@ export async function saveMediaBufferToNeon({
       [
         mediaId, filename, originalName, mimeType, size,
         mediaUrl, mediaPath, folder, altText || originalName, overallHash,
-        width, height, duration, totalChunks, isVideo, uploadedBy
+        width, height, duration, totalChunks, isVideo, validUploadedBy
       ]
     );
 
@@ -330,6 +356,12 @@ export async function commitChunkedUploadToNeon({
     const mediaUrl = `/uploads/${folder}/${filename}`;
     const mediaId = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
 
+    let validUserId = null;
+    if (userId) {
+      const userCheck = await client.query('SELECT "_id" FROM "users" WHERE "_id" = $1', [userId]);
+      if (userCheck.rows.length) validUserId = userId;
+    }
+
     // 3. Insert into "media"
     await client.query(
       `INSERT INTO "media" (
@@ -341,7 +373,7 @@ export async function commitChunkedUploadToNeon({
       [
         mediaId, filename, originalName, mimeType, calculatedTotalSize,
         mediaUrl, mediaPath, folder, altText || originalName, overallHash,
-        width, height, duration, partCount, isVideo, userId
+        width, height, duration, partCount, isVideo, validUserId
       ]
     );
 

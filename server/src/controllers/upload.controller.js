@@ -225,6 +225,13 @@ export async function recordUploadedMedia(req, res, next) {
       path: `${folder}/${filename}`,
       category: folder,
       altText: safeOriginalName,
+      checksum: req.body?.checksum || "",
+      width: req.body?.width || null,
+      height: req.body?.height || null,
+      duration: req.body?.duration || null,
+      uploadStatus: "completed",
+      totalChunks: req.body?.totalChunks || 1,
+      isVideo: req.body?.isVideo !== undefined ? Boolean(req.body.isVideo) : normalizedMime.startsWith("video/"),
       uploadedBy: req.user?.id
     };
     const media = await createPostgresMediaRecord(Media, payload);
