@@ -108,8 +108,9 @@ export default function Interactive3DGlobe({
 
     // 1. Scene & Camera
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0, 4.05);
+    const aspect = width / height;
+    const camera = new THREE.PerspectiveCamera(aspect < 1 ? 40 / aspect : 40, aspect, 0.1, 100);
+    camera.position.set(0, 0, 4.2);
 
     // 2. Renderer
     const renderer = new THREE.WebGLRenderer({
@@ -391,7 +392,9 @@ export default function Interactive3DGlobe({
         if (cr.width > 0 && cr.height > 0) {
           width = cr.width;
           height = cr.height;
-          camera.aspect = width / height;
+          const currentAspect = width / height;
+          camera.aspect = currentAspect;
+          camera.fov = currentAspect < 1 ? 40 / currentAspect : 40;
           camera.updateProjectionMatrix();
           renderer.setSize(width, height);
         }
@@ -492,7 +495,7 @@ export default function Interactive3DGlobe({
   }, [notifyUserInteraction, onSelectLocation]);
 
   return (
-    <div className="relative w-full h-[380px] sm:h-[460px] lg:h-[520px] flex items-center justify-center select-none overflow-hidden touch-none">
+    <div className="relative w-full max-w-[420px] mx-auto h-[230px] sm:h-[260px] md:h-[300px] lg:h-[340px] xl:h-[390px] flex items-center justify-center select-none overflow-hidden touch-none">
       {/* 3D WebGL Canvas Mount Container */}
       <div
         ref={mountRef}
