@@ -49,13 +49,13 @@ export function normalizeMimeType(rawMime, filename = "") {
   if (mime === "image/gif" || ext === ".gif") {
     return "image/gif";
   }
-  if (mime === "video/mp4" || ext === ".mp4") {
+  if (mime === "video/mp4" || mime === "video/m4v" || ext === ".mp4" || ext === ".m4v") {
     return "video/mp4";
   }
-  if (mime === "video/quicktime" || ext === ".mov") {
+  if (mime === "video/quicktime" || mime === "video/mov" || mime === "video/x-quicktime" || ext === ".mov") {
     return "video/quicktime";
   }
-  if (mime === "video/webm" || ext === ".webm") {
+  if (mime === "video/webm" || mime === "video/x-matroska" || ext === ".webm") {
     return "video/webm";
   }
 

@@ -1,11 +1,24 @@
-/* global console, FormData */
-import { AlertCircle, CheckCircle2, Film, Image as ImageIcon, Loader2, RefreshCw, Trash2, UploadCloud, X, XCircle } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+/* global console, FormData, URL, AbortController */
+import {
+  AlertCircle,
+  CheckCircle2,
+  Film,
+  Image as ImageIcon,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  UploadCloud,
+  X,
+  XCircle
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 import {
   CHUNK_BYTES,
   formatBytes,
+  isImageMedia,
   isImageMimeType,
+  isVideoMedia,
   isVideoMimeType,
   normalizeClientMimeType
 } from "../../utils/mediaUtils.js";
@@ -16,8 +29,8 @@ import {
  */
 export async function uploadFileInChunks(file, folder, onProgress = () => {}, signal = null) {
   const mimeType = normalizeClientMimeType(file);
-  const isVideo = isVideoMimeType(mimeType);
-  const isImage = isImageMimeType(mimeType);
+  const isVideo = isVideoMimeType(mimeType) || isVideoMedia(file.name);
+  const isImage = isImageMimeType(mimeType) || isImageMedia(file.name);
 
   if (!isImage && !isVideo) {
     throw new Error("Unsupported file type. Please choose a JPG, PNG, WEBP, GIF, MP4, MOV, or WebM file.");
@@ -41,7 +54,7 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}, si
   let completed = false;
 
   try {
-    // Controlled bounded concurrency: 2 parallel chunk uploads for 2x faster upload speed
+    // Controlled bounded concurrency: 2 parallel chunk uploads for optimal throughput
     const CONCURRENCY = 2;
     let nextIndex = 0;
     let completedChunks = 0;
@@ -121,7 +134,7 @@ export default function MediaUploadDropzone({
   maxFiles = 5,
   label = "Upload Media File",
   description = "Drag and drop media here, or click to browse",
-  accept = ".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm"
+  accept = "image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm"
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -130,14 +143,60 @@ export default function MediaUploadDropzone({
   const [successMsg, setSuccessMsg] = useState("");
   const [lastFailedFile, setLastFailedFile] = useState(null);
 
+  // Local preview state for instant feedback upon selection
+  const [localPreview, setLocalPreview] = useState(null);
+  const localUrlRef = useRef(null);
   const fileInputRef = useRef(null);
   const abortControllerRef = useRef(null);
+
+  // Revoke object URL on cleanup to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (localUrlRef.current) {
+        try {
+          URL.revokeObjectURL(localUrlRef.current);
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, []);
+
+  // Sync local preview when value prop changes from parent
+  useEffect(() => {
+    if (!value) {
+      if (localUrlRef.current) {
+        try {
+          URL.revokeObjectURL(localUrlRef.current);
+        } catch {}
+        localUrlRef.current = null;
+      }
+      setLocalPreview(null);
+    } else if (typeof value === "string" && (!localPreview || (!localPreview.isLocal && localPreview.url !== value))) {
+      const isVid = isVideoMedia(value);
+      const filename = value.split("/").pop()?.split("?")[0] || "media";
+      setLocalPreview({
+        url: value,
+        name: filename,
+        size: null,
+        isVideo: isVid,
+        isLocal: false
+      });
+    }
+  }, [value, localPreview]);
 
   const handleCancelUpload = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    if (localUrlRef.current) {
+      try {
+        URL.revokeObjectURL(localUrlRef.current);
+      } catch {}
+      localUrlRef.current = null;
+    }
+    setLocalPreview(null);
     setUploading(false);
     setProgress(0);
     setError("Upload cancelled.");
@@ -148,8 +207,6 @@ export default function MediaUploadDropzone({
       if (!fileList || fileList.length === 0) return;
       setError("");
       setSuccessMsg("");
-      setUploading(true);
-      setProgress(0);
       setLastFailedFile(null);
 
       const controller = new AbortController();
@@ -158,6 +215,36 @@ export default function MediaUploadDropzone({
       try {
         if (!multiple) {
           const file = fileList[0];
+          const mimeType = normalizeClientMimeType(file);
+          const isVideo = isVideoMimeType(mimeType) || isVideoMedia(file.name);
+          const isImage = isImageMimeType(mimeType) || isImageMedia(file.name);
+
+          // Validate supported formats
+          if (!isImage && !isVideo) {
+            setError("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, MP4, MOV, and WebM.");
+            return;
+          }
+
+          // Instantly create local object URL for immediate live video/image preview
+          if (localUrlRef.current) {
+            try {
+              URL.revokeObjectURL(localUrlRef.current);
+            } catch {}
+          }
+          const objectUrl = URL.createObjectURL(file);
+          localUrlRef.current = objectUrl;
+
+          setLocalPreview({
+            url: objectUrl,
+            name: file.name,
+            size: file.size,
+            isVideo,
+            isLocal: true
+          });
+
+          setUploading(true);
+          setProgress(0);
+
           try {
             const saved = await uploadFileInChunks(
               file,
@@ -165,10 +252,22 @@ export default function MediaUploadDropzone({
               (ratio) => setProgress(Math.round(ratio * 100)),
               controller.signal
             );
+
+            // Notify parent with saved server media URL
             onChange(saved.url);
             setProgress(100);
-            setSuccessMsg("Media uploaded successfully!");
-            setTimeout(() => setSuccessMsg(""), 3500);
+            setSuccessMsg("Media uploaded and saved to Neon PostgreSQL!");
+
+            // Switch to persistent server URL
+            setLocalPreview({
+              url: saved.url,
+              name: file.name,
+              size: file.size,
+              isVideo,
+              isLocal: false
+            });
+
+            setTimeout(() => setSuccessMsg(""), 4000);
           } catch (err) {
             if (controller.signal.aborted) {
               setError("Upload cancelled.");
@@ -178,6 +277,9 @@ export default function MediaUploadDropzone({
             }
           }
         } else {
+          // Multiple file upload flow (for galleries/collections)
+          setUploading(true);
+          setProgress(0);
           const currentList = Array.isArray(value) ? value : [];
           const remainingSlots = Math.max(0, maxFiles - currentList.length);
           if (remainingSlots === 0) {
@@ -232,7 +334,7 @@ export default function MediaUploadDropzone({
       } catch (err) {
         if (!controller.signal.aborted) {
           console.error("[MediaUploadDropzone] Upload error:", err);
-          setError(err.message || "Upload failed. Please check the file and try again.");
+          setError(err.message || "Upload failed. Please check your connection and try again.");
         }
       } finally {
         setUploading(false);
@@ -262,6 +364,13 @@ export default function MediaUploadDropzone({
   };
 
   const handleRemoveSingle = () => {
+    if (localUrlRef.current) {
+      try {
+        URL.revokeObjectURL(localUrlRef.current);
+      } catch {}
+      localUrlRef.current = null;
+    }
+    setLocalPreview(null);
     onChange("");
     setError("");
     setSuccessMsg("");
@@ -279,7 +388,15 @@ export default function MediaUploadDropzone({
     }
   };
 
-  const isValueValidSingle = typeof value === "string" && value.trim() !== "";
+  // Determine active preview target for single mode
+  const activeSinglePreview = localPreview || (typeof value === "string" && value.trim() ? {
+    url: value,
+    name: value.split("/").pop()?.split("?")[0] || "media",
+    size: null,
+    isVideo: isVideoMedia(value),
+    isLocal: false
+  } : null);
+
   const isValueValidMultiple = Array.isArray(value) && value.length > 0;
 
   return (
@@ -293,69 +410,259 @@ export default function MediaUploadDropzone({
         </span>
       </div>
 
-      {/* Upload Drop Area */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-3xl p-5 text-center transition-all duration-300 ${
-          uploading
-            ? "border-site/40 bg-site/5 cursor-wait"
-            : isDragging
-            ? "border-[rgb(72,125,72)] bg-[rgb(72,125,72)]/5 shadow-sage scale-[1.01]"
-            : "border-sage-border/80 bg-sage-secondary/40 hover:border-[rgb(72,125,72)]/50 hover:bg-sage-secondary"
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={accept}
-          multiple={multiple}
-          disabled={uploading}
-          onChange={(e) => executeUpload(e.target.files)}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 disabled:cursor-not-allowed"
-          title="Click to select file or drag and drop"
-        />
+      {/* Hidden file input for Replace and manual Browse actions */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        disabled={uploading}
+        onChange={(e) => executeUpload(e.target.files)}
+        className="hidden"
+        title="Select file"
+      />
 
-        <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-          {uploading ? (
-            <div className="space-y-2.5 w-full max-w-xs mx-auto py-2 pointer-events-auto">
-              <Loader2 className="h-8 w-8 animate-spin text-site mx-auto" />
-              <p className="text-xs font-semibold text-forest">
-                Uploading &amp; Processing... {progress}%
-              </p>
-              <div className="w-full bg-sage-border/40 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-site h-1.5 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
+      {/* ================= SINGLE FILE MODE ================= */}
+      {!multiple && (
+        <>
+          {activeSinglePreview ? (
+            /* ACTIVE MEDIA PREVIEW BOX (Prominent Video/Image player) */
+            <div className="relative rounded-2xl border border-sage-border overflow-hidden bg-forest/95 text-white shadow-soft transition-all">
+              {/* Media Player Container */}
+              <div className="relative aspect-video w-full max-h-72 bg-black flex items-center justify-center overflow-hidden">
+                {activeSinglePreview.isVideo ? (
+                  <video
+                    key={activeSinglePreview.url}
+                    src={activeSinglePreview.isLocal ? activeSinglePreview.url : mediaUrl(activeSinglePreview.url)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src={activeSinglePreview.isLocal ? activeSinglePreview.url : mediaUrl(activeSinglePreview.url)}
+                    alt={activeSinglePreview.name}
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "";
+                    }}
+                  />
+                )}
+
+                {/* Top Overlay Badges */}
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-2 pointer-events-none">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-forest/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold tracking-wider text-emerald-300 border border-emerald-500/30">
+                    {activeSinglePreview.isVideo ? (
+                      <>
+                        <Film className="h-3 w-3" />
+                        <span>VIDEO</span>
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="h-3 w-3" />
+                        <span>IMAGE</span>
+                      </>
+                    )}
+                  </span>
+                  {activeSinglePreview.size && (
+                    <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-medium text-white/90 border border-white/10">
+                      {formatBytes(activeSinglePreview.size)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Uploading Progress Overlay */}
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-20">
+                    <Loader2 className="h-9 w-9 animate-spin text-emerald-400 mb-3" />
+                    <p className="text-xs font-semibold text-white">
+                      Uploading to Neon PostgreSQL... {progress}%
+                    </p>
+                    <div className="w-full max-w-xs bg-white/20 rounded-full h-1.5 overflow-hidden mt-3">
+                      <div
+                        className="bg-emerald-400 h-1.5 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelUpload}
+                      className="mt-3 inline-flex items-center gap-1 px-3 py-1 text-[11px] font-semibold text-rose-300 bg-rose-950/60 hover:bg-rose-900/80 rounded-lg transition border border-rose-500/40 cursor-pointer"
+                    >
+                      <XCircle className="h-3 w-3" />
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={handleCancelUpload}
-                className="mt-2 inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
-              >
-                <XCircle className="h-3 w-3" />
-                Cancel Upload
-              </button>
+
+              {/* Bottom Metadata & Controls Bar */}
+              <div className="p-3 bg-forest border-t border-white/10 flex items-center justify-between gap-3 text-xs">
+                <div className="min-w-0 flex items-center gap-2">
+                  {activeSinglePreview.isVideo ? (
+                    <Film className="h-4 w-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <ImageIcon className="h-4 w-4 text-emerald-400 shrink-0" />
+                  )}
+                  <span className="font-medium text-white truncate max-w-xs sm:max-w-md">
+                    {activeSinglePreview.name}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition border border-white/20 cursor-pointer disabled:opacity-50"
+                  >
+                    Replace {activeSinglePreview.isVideo ? "Video" : "Image"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveSingle}
+                    disabled={uploading}
+                    className="p-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 transition border border-rose-500/30 cursor-pointer disabled:opacity-50"
+                    title="Remove media"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
-            <>
-              <div className="p-3 rounded-2xl bg-sage-card border border-sage-border shadow-soft">
-                <UploadCloud className="h-6 w-6 text-site" />
+            /* EMPTY DROPZONE (Drag and Drop / Click to Select) */
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`relative border-2 border-dashed rounded-3xl p-6 text-center transition-all duration-300 cursor-pointer ${
+                uploading
+                  ? "border-site/40 bg-site/5 cursor-wait"
+                  : isDragging
+                  ? "border-[rgb(72,125,72)] bg-[rgb(72,125,72)]/5 shadow-sage scale-[1.01]"
+                  : "border-sage-border/80 bg-sage-secondary/40 hover:border-[rgb(72,125,72)]/60 hover:bg-sage-secondary"
+              }`}
+            >
+              <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                <div className="p-3 rounded-2xl bg-sage-card border border-sage-border shadow-soft">
+                  <UploadCloud className="h-6 w-6 text-site" />
+                </div>
+                <p className="text-xs font-semibold text-forest">{description}</p>
+                <div className="flex items-center gap-2 text-[10px] text-sage-muted">
+                  <span>High-Res Photos (JPG, PNG, WEBP)</span>
+                  <span>•</span>
+                  <span>Cinematic Video (MP4, MOV, WebM)</span>
+                </div>
               </div>
-              <p className="text-xs font-semibold text-forest">{description}</p>
-              <div className="flex items-center gap-2 text-[10px] text-sage-muted">
-                <span>High-Res Photos (JPG, PNG, WEBP)</span>
-                <span>•</span>
-                <span>Cinematic Video (MP4, MOV, WebM)</span>
-              </div>
-            </>
+            </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Success Notice */}
+      {/* ================= MULTIPLE FILES MODE ================= */}
+      {multiple && (
+        <>
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`relative border-2 border-dashed rounded-3xl p-5 text-center transition-all duration-300 cursor-pointer ${
+              uploading
+                ? "border-site/40 bg-site/5 cursor-wait"
+                : isDragging
+                ? "border-[rgb(72,125,72)] bg-[rgb(72,125,72)]/5 shadow-sage scale-[1.01]"
+                : "border-sage-border/80 bg-sage-secondary/40 hover:border-[rgb(72,125,72)]/60 hover:bg-sage-secondary"
+            }`}
+          >
+            <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+              {uploading ? (
+                <div className="space-y-2.5 w-full max-w-xs mx-auto py-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-site mx-auto" />
+                  <p className="text-xs font-semibold text-forest">
+                    Uploading &amp; Processing... {progress}%
+                  </p>
+                  <div className="w-full bg-sage-border/40 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-site h-1.5 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 rounded-2xl bg-sage-card border border-sage-border shadow-soft">
+                    <UploadCloud className="h-6 w-6 text-site" />
+                  </div>
+                  <p className="text-xs font-semibold text-forest">{description}</p>
+                  <div className="flex items-center gap-2 text-[10px] text-sage-muted">
+                    <span>JPG, PNG, WEBP, MP4, MOV, WebM (up to {maxFiles} items)</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {isValueValidMultiple && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between text-[11px] text-sage-muted font-medium">
+                <span>Uploaded Assets ({value.length} of {maxFiles})</span>
+                {value.length < maxFiles && (
+                  <span className="text-site">{maxFiles - value.length} slots remaining</span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                {value.map((item, idx) => {
+                  const fileUrl = typeof item === "string" ? item : item?.url || "";
+                  const isVid = isVideoMedia(fileUrl);
+                  return (
+                    <div
+                      key={idx}
+                      className="relative group rounded-2xl border border-sage-border overflow-hidden bg-sage-card shadow-soft"
+                    >
+                      <div className="h-24 w-full overflow-hidden bg-forest/5 flex items-center justify-center">
+                        {isVid ? (
+                          <video
+                            src={mediaUrl(fileUrl)}
+                            className="h-full w-full object-cover"
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                        ) : (
+                          <img
+                            src={mediaUrl(fileUrl)}
+                            alt={`Asset ${idx + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="p-1.5 bg-sage-card/90 border-t border-sage-border/50 text-[10px] text-forest truncate flex items-center justify-between">
+                        <span className="truncate">{fileUrl.split("/").pop()}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMultiple(idx)}
+                          disabled={uploading}
+                          className="text-rose-600 hover:text-rose-800 p-0.5 rounded cursor-pointer"
+                          title="Remove Item"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Success Notification */}
       {successMsg && (
         <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 font-semibold animate-fade-in">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -363,7 +670,7 @@ export default function MediaUploadDropzone({
         </div>
       )}
 
-      {/* Error Notice & Retry */}
+      {/* Error Notification & Retry Button */}
       {error && (
         <div className="flex items-start sm:items-center justify-between gap-3 rounded-2xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800 font-semibold">
           <div className="flex items-center gap-2">
@@ -381,122 +688,6 @@ export default function MediaUploadDropzone({
               <span>Retry</span>
             </button>
           )}
-        </div>
-      )}
-
-      {/* Single Media Preview */}
-      {!multiple && isValueValidSingle && (
-        <div className="relative rounded-2xl border border-sage-border bg-sage-card p-3 flex items-center justify-between gap-3 shadow-soft">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-14 w-14 rounded-xl overflow-hidden border border-sage-border bg-forest/5 shrink-0 flex items-center justify-center">
-              {value.match(/\.(mp4|webm|mov)$/i) ? (
-                <video
-                  src={mediaUrl(value)}
-                  className="h-full w-full object-cover"
-                  controls={false}
-                  muted
-                  playsInline
-                />
-              ) : (
-                <img
-                  src={mediaUrl(value)}
-                  alt="Uploaded media preview"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "";
-                  }}
-                />
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                {value.match(/\.(mp4|webm|mov)$/i) ? (
-                  <Film className="h-3.5 w-3.5 text-site shrink-0" />
-                ) : (
-                  <ImageIcon className="h-3.5 w-3.5 text-site shrink-0" />
-                )}
-                <p className="text-xs font-semibold text-forest truncate">
-                  {value.split("/").pop()}
-                </p>
-              </div>
-              <p className="text-[10px] text-sage-muted truncate mt-0.5">{value}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="px-2.5 py-1.5 rounded-xl border border-sage-border hover:bg-sage-secondary text-forest text-[11px] font-semibold transition cursor-pointer"
-              title="Replace Media File"
-            >
-              Replace
-            </button>
-            <button
-              type="button"
-              onClick={handleRemoveSingle}
-              disabled={uploading}
-              className="p-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-              title="Remove Media File"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Multiple Media Previews Grid */}
-      {multiple && isValueValidMultiple && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-sage-muted font-medium">
-            <span>Uploaded Assets ({value.length} of {maxFiles})</span>
-            {value.length < maxFiles && (
-              <span className="text-site">{maxFiles - value.length} slots remaining</span>
-            )}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-            {value.map((item, idx) => {
-              const fileUrl = typeof item === "string" ? item : item?.url || "";
-              const isVid = fileUrl.match(/\.(mp4|webm|mov)$/i);
-              return (
-                <div
-                  key={idx}
-                  className="relative group rounded-2xl border border-sage-border overflow-hidden bg-sage-card shadow-soft"
-                >
-                  <div className="h-24 w-full overflow-hidden bg-forest/5 flex items-center justify-center">
-                    {isVid ? (
-                      <video
-                        src={mediaUrl(fileUrl)}
-                        className="h-full w-full object-cover"
-                        muted
-                        playsInline
-                      />
-                    ) : (
-                      <img
-                        src={mediaUrl(fileUrl)}
-                        alt={`Asset ${idx + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="p-1.5 bg-sage-card/90 border-t border-sage-border/50 text-[10px] text-forest truncate flex items-center justify-between">
-                    <span className="truncate">{fileUrl.split("/").pop()}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMultiple(idx)}
-                      disabled={uploading}
-                      className="text-rose-600 hover:text-rose-800 p-0.5 rounded cursor-pointer"
-                      title="Remove Item"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
     </div>

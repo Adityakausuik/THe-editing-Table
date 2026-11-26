@@ -92,7 +92,17 @@ export async function streamMediaFromNeon(req, res, media) {
   if (!media) return false;
 
   const fileSize = Number(media.size);
-  const mimeType = media.mime_type || "application/octet-stream";
+  let mimeType = media.mime_type || media.mimeType;
+  if (!mimeType || mimeType === "application/octet-stream") {
+    const ext = path.extname(media.filename || media.path || media.original_name || media.originalName || "").toLowerCase();
+    if (ext === ".mp4") mimeType = "video/mp4";
+    else if (ext === ".mov") mimeType = "video/quicktime";
+    else if (ext === ".webm") mimeType = "video/webm";
+    else if (ext === ".jpg" || ext === ".jpeg") mimeType = "image/jpeg";
+    else if (ext === ".png") mimeType = "image/png";
+    else if (ext === ".webp") mimeType = "image/webp";
+    else mimeType = "application/octet-stream";
+  }
   const checksum = media.checksum || media._id;
   const etag = `"${checksum}"`;
 

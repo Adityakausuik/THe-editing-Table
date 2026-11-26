@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
 import { getYouTubeId } from "../../utils/youtube.js";
+import { isVideoMedia, isImageMedia } from "../../utils/mediaUtils.js";
 
 /**
  * The Editing Table – Dynamic Multi-Slide Editorial Hero Section.
@@ -426,15 +427,49 @@ export default function HeroSection() {
     ? heroSlides[currentSlideIndex % heroSlides.length]
     : null;
 
+  const activeSlideMedia = activeSlide?.mainImage || "";
+  const isSlideVideo = isVideoMedia(activeSlideMedia);
+  const isSlideImage = Boolean(activeSlideMedia && !isSlideVideo);
+  const hasMediaBackground = Boolean(activeSlideMedia || heroVideo?.videoUrl || heroVideo?.posterUrl);
+
   return (
     <div
       className="et-hero"
-      data-has-video={Boolean(heroVideo?.videoUrl || heroVideo?.posterUrl)}
+      data-has-video={hasMediaBackground}
     >
       <style>{CSS}</style>
       <main className="hero">
-        {/* Dynamic Hero Background Video Layer */}
-        {heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) && (
+        {/* Dynamic Media Background Layer (Slide Media or Global Hero Video) */}
+        {activeSlideMedia ? (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+            {isSlideVideo && !prefersReducedMotion() ? (
+              <video
+                key={activeSlideMedia}
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                src={mediaUrl(activeSlideMedia)}
+              />
+            ) : (
+              <img
+                key={activeSlideMedia}
+                src={mediaUrl(activeSlideMedia)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            )}
+            {/* Adjustable Darkness Overlay */}
+            <div
+              className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
+              style={{
+                opacity: typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
+              }}
+            />
+          </div>
+        ) : heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) ? (
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
             {youtubeId && !prefersReducedMotion() ? (
               <div className="relative w-full h-full overflow-hidden pointer-events-none">
@@ -488,7 +523,7 @@ export default function HeroSection() {
               }}
             />
           </div>
-        )}
+        ) : null}
 
         {/* Dynamic Multi-Slide Carousel or Minimal Editorial Fallback */}
         {activeSlide ? (

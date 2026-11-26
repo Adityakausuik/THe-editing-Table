@@ -53,13 +53,26 @@ function normalizeHeroForClient(doc) {
     ? slide.imageGrid
     : Array.isArray(slide.images) ? slide.images : [];
 
+  const mainImage = slide.mainImage || "";
+  const cleanPath = typeof mainImage === "string" ? mainImage.split("?")[0].split("#")[0].toLowerCase() : "";
+  const isVideo = (
+    cleanPath.endsWith(".mp4") ||
+    cleanPath.endsWith(".mov") ||
+    cleanPath.endsWith(".webm") ||
+    cleanPath.endsWith(".m4v") ||
+    cleanPath.endsWith(".mkv")
+  );
+
   return {
     ...slide,
     images: imageGrid,
     imageGrid,
     slideNumber: slide.slideNumber || slide.order,
     status: slide.status || (slide.active === false ? "inactive" : "published"),
-    active: slide.active !== false && slide.status === "published"
+    active: slide.active !== false && slide.status === "published",
+    isVideo,
+    mediaType: isVideo ? "video" : (mainImage ? "image" : "none"),
+    videoUrl: isVideo ? mainImage : null
   };
 }
 

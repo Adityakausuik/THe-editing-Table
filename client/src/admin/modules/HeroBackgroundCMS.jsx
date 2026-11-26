@@ -36,6 +36,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, mediaUrl, notifyCmsChanged } from "../../lib/api.js";
 import MediaUploadDropzone, { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
 import { getYouTubeId } from "../../utils/youtube.js";
+import { isVideoMedia } from "../../utils/mediaUtils.js";
 
 const PLAYBACK_SPEED_OPTIONS = [
   { label: "0.5x (Slow Motion)", value: 0.5 },
@@ -1694,12 +1695,32 @@ export default function HeroBackgroundCMS() {
                     className="rounded-2xl border border-emerald-950/10 bg-white/90 shadow-2xs overflow-hidden flex flex-col justify-between"
                   >
                     {slide.mainImage ? (
-                      <div className="relative aspect-video w-full bg-forest overflow-hidden">
-                        <img
-                          src={mediaUrl(slide.mainImage)}
-                          alt={slide.title}
-                          className="h-full w-full object-cover"
-                        />
+                      <div className="relative aspect-video w-full bg-forest overflow-hidden group/thumb">
+                        {isVideoMedia(slide.mainImage) ? (
+                          <>
+                            <video
+                              src={mediaUrl(slide.mainImage)}
+                              className="h-full w-full object-cover"
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                            <div className="absolute top-2.5 left-12 flex items-center gap-1 rounded-full bg-forest/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-white/20">
+                              <Film className="h-3 w-3 text-emerald-400" />
+                              <span>VIDEO</span>
+                            </div>
+                          </>
+                        ) : (
+                          <img
+                            src={mediaUrl(slide.mainImage)}
+                            alt={slide.title}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "";
+                            }}
+                          />
+                        )}
                         <div className="absolute top-2.5 left-2.5">
                           <span className="rounded-full bg-forest/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-white">
                             #{index + 1}
@@ -1719,7 +1740,7 @@ export default function HeroBackgroundCMS() {
                       </div>
                     ) : (
                       <div className="aspect-video w-full bg-sage-secondary/40 flex items-center justify-center text-sage-muted text-xs font-medium">
-                        No Image Attached
+                        No Media Attached
                       </div>
                     )}
 

@@ -10,7 +10,11 @@ export const ALLOWED_MIME_MAP = {
   "image/gif": "image/gif",
   "video/mp4": "video/mp4",
   "video/quicktime": "video/quicktime",
-  "video/webm": "video/webm"
+  "video/mov": "video/quicktime",
+  "video/x-quicktime": "video/quicktime",
+  "video/webm": "video/webm",
+  "video/m4v": "video/mp4",
+  "video/x-matroska": "video/webm"
 };
 
 export const EXTENSION_MIME_MAP = {
@@ -21,15 +25,37 @@ export const EXTENSION_MIME_MAP = {
   ".gif": "image/gif",
   ".mp4": "video/mp4",
   ".mov": "video/quicktime",
-  ".webm": "video/webm"
+  ".webm": "video/webm",
+  ".m4v": "video/mp4"
 };
 
 export function isVideoMimeType(mimeType = "") {
-  return mimeType === "video/mp4" || mimeType === "video/quicktime" || mimeType === "video/webm";
+  const norm = String(mimeType || "").toLowerCase().trim();
+  return (
+    norm === "video/mp4" ||
+    norm === "video/quicktime" ||
+    norm === "video/mov" ||
+    norm === "video/x-quicktime" ||
+    norm === "video/webm" ||
+    norm === "video/m4v" ||
+    norm.startsWith("video/")
+  );
 }
 
 export function isImageMimeType(mimeType = "") {
   return String(mimeType).startsWith("image/");
+}
+
+export function isVideoMedia(urlOrName = "") {
+  if (!urlOrName) return false;
+  const clean = String(urlOrName).toLowerCase().split("?")[0].split("#")[0].trim();
+  return /\.(mp4|webm|mov|m4v|mkv)$/i.test(clean) || clean.includes("youtube.com") || clean.includes("youtu.be");
+}
+
+export function isImageMedia(urlOrName = "") {
+  if (!urlOrName) return false;
+  const clean = String(urlOrName).toLowerCase().split("?")[0].split("#")[0].trim();
+  return /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(clean);
 }
 
 /**
