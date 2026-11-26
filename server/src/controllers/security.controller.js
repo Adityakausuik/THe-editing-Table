@@ -401,3 +401,29 @@ export async function getSecurityAuditLogs(req, res) {
   const logs = await AuditLog.find(query).sort({ createdAt: -1 }).limit(500);
   return res.json({ success: true, message: "Security audit logs retrieved", data: logs });
 }
+
+export async function recordAdminActivity(req, res) {
+  try {
+    const { section, path, action = "VIEW_SECTION", details = {} } = req.body || {};
+    if (!section && !path) {
+      return res.status(400).json({ success: false, message: "Section or path required.", data: null });
+    }
+    const safeSection = String(section || path).slice(0, 80);
+    const safePath = String(path || "").slice(0, 160);
+    await writeSecurityAudit({
+      req,
+      user: req.userDocument || req.user,
+      action: String(action).toUpperCase(),
+      entity: "AdminNavigation",
+      entityId: safePath,
+      details: {
+        section: safeSection,
+        path: safePath,
+        ...details
+      }
+    });
+    return res.status(200).json({ success: true, message: "Activity logged." });
+  } catch {
+    return res.status(200).json({ success: true, message: "Activity logged (best effort)." });
+  }
+}

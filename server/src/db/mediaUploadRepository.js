@@ -20,38 +20,28 @@ export async function createPostgresMediaUploadSession({ uploadId, userId, folde
 }
 
 export async function savePostgresMediaUploadPart({ uploadId, userId, index, count, buffer }) {
-  const client = await getPostgresPool().connect();
-  try {
-    await client.query("BEGIN");
-    const session = await client.query(
-      `SELECT part_count, expires_at FROM media_upload_sessions WHERE upload_id = $1 AND user_id = $2 FOR UPDATE`,
-      [uploadId, String(userId)]
-    );
-    const row = session.rows[0];
-    if (!row || new Date(row.expires_at).getTime() <= Date.now()) {
-      await client.query("ROLLBACK");
-      const error = new Error("Upload session expired or not found.");
-      error.status = 404;
-      throw error;
-    }
-    if (Number(row.part_count) !== count || index < 0 || index >= count || !Buffer.isBuffer(buffer) || !buffer.length) {
-      await client.query("ROLLBACK");
-      const error = new Error("Invalid upload chunk.");
-      error.status = 400;
-      throw error;
-    }
-    await client.query(
-      `INSERT INTO media_upload_parts (upload_id, part_index, data) VALUES ($1, $2, $3) ` +
-        `ON CONFLICT (upload_id, part_index) DO UPDATE SET data = EXCLUDED.data, created_at = now()`,
-      [uploadId, index, buffer]
-    );
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
+  const pool = getPostgresPool();
+  // Fast session lookup without row-level blocking lock
+  const session = await pool.query(
+    `SELECT part_count, expires_at FROM media_upload_sessions WHERE upload_id = $1 AND user_id = $2`,
+    [uploadId, String(userId)]
+  );
+  const row = session.rows[0];
+  if (!row || new Date(row.expires_at).getTime() <= Date.now()) {
+    const error = new Error("Upload session expired or not found.");
+    error.status = 404;
     throw error;
-  } finally {
-    client.release();
   }
+  if (Number(row.part_count) !== count || index < 0 || index >= count || !Buffer.isBuffer(buffer) || !buffer.length) {
+    const error = new Error("Invalid upload chunk.");
+    error.status = 400;
+    throw error;
+  }
+  await pool.query(
+    `INSERT INTO media_upload_parts (upload_id, part_index, data) VALUES ($1, $2, $3) ` +
+      `ON CONFLICT (upload_id, part_index) DO UPDATE SET data = EXCLUDED.data, created_at = now()`,
+    [uploadId, index, buffer]
+  );
 }
 
 export async function readPostgresMediaUpload({ uploadId, userId }) {

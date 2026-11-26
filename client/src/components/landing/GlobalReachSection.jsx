@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { ArrowRight } from "lucide-react";
 import { apiFetch, subscribeToCmsChanges } from "../../lib/api.js";
 import Container from "../ui/Container.jsx";
-import Interactive3DGlobe from "./Interactive3DGlobe.jsx";
+const Interactive3DGlobe = lazy(() => import("./Interactive3DGlobe.jsx"));
 import { GLOBAL_LOCATIONS, GLOBAL_REACH_CONFIG } from "../../data/globalLocations.js";
 
 export default function GlobalReachSection() {
@@ -171,13 +171,21 @@ export default function GlobalReachSection() {
           {/* ================= RIGHT COLUMN: 3D Globe & Location Cards ================= */}
           <div className="lg:col-span-7 flex flex-col items-center justify-center space-y-3 sm:space-y-4 w-full">
             {/* 3D Interactive Earth Globe */}
-            <div className="w-full flex items-center justify-center">
-              <Interactive3DGlobe
-                activeLocation={activeLocation}
-                locations={allLocations}
-                onSelectLocation={setSelectedIndex}
-                onUserInteractionChange={handleGlobeInteraction}
-              />
+            <div className="w-full flex items-center justify-center min-h-[220px] sm:min-h-[280px] lg:min-h-[380px]">
+              <Suspense
+                fallback={
+                  <div className="h-[220px] sm:h-[280px] lg:h-[380px] w-full flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full border-2 border-[#CBD6C5] border-t-[#263D2D] animate-spin" />
+                  </div>
+                }
+              >
+                <Interactive3DGlobe
+                  activeLocation={activeLocation}
+                  locations={allLocations}
+                  onSelectLocation={setSelectedIndex}
+                  onUserInteractionChange={handleGlobeInteraction}
+                />
+              </Suspense>
             </div>
 
             {/* Compact 2-Column Location Cards Grid */}

@@ -12,13 +12,24 @@ import {
 } from "../db/heroBackgroundRepository.js";
 import { saveHeroAsset } from "../middleware/heroVideoUpload.js";
 import { writeSecurityAudit } from "../utils/audit.js";
+import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
 
 /**
  * Public: Get current active published hero background.
  */
 export async function getActiveHeroVideo(req, res, next) {
   try {
+    const cacheKey = "cms:hero:video:active";
+    const cached = await getCache(cacheKey);
+    if (cached && Object.prototype.hasOwnProperty.call(cached, "active")) {
+      res.setHeader("X-Cache", "HIT");
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+      return res.json({ success: true, data: cached.active });
+    }
+
     const active = await getActiveHeroBackground();
+    await setCache(cacheKey, { active: active || null }, 300);
+    res.setHeader("X-Cache", "MISS");
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return res.json({
       success: true,
@@ -265,6 +276,7 @@ export async function saveHeroDraft(req, res, next) {
       details: { version: draft.version, title: draft.title }
     });
 
+    await invalidateCmsCache("hero");
     return res.json({
       success: true,
       message: "Hero background draft saved successfully.",
@@ -302,6 +314,7 @@ export async function publishHeroVideo(req, res, next) {
       details: { version: published.version, videoUrl: published.videoUrl }
     });
 
+    await invalidateCmsCache("hero");
     return res.json({
       success: true,
       message: `Version ${published.version} published to live homepage successfully.`,
@@ -337,6 +350,7 @@ export async function unpublishHeroVideo(req, res, next) {
       details: { version: unpublished.version }
     });
 
+    await invalidateCmsCache("hero");
     return res.json({
       success: true,
       message: "Active hero background video unpublished successfully.",
@@ -368,6 +382,7 @@ export async function restoreHeroVersion(req, res, next) {
       details: { restoredFrom: id, newVersion: restored.version }
     });
 
+    await invalidateCmsCache("hero");
     return res.json({
       success: true,
       message: `Restored Version ${restored.version} and published to live website.`,

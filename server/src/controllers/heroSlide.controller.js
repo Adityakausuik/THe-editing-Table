@@ -1,6 +1,7 @@
 import { createId, isValidId } from "../utils/ids.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
 import { writeSecurityAudit } from "../utils/audit.js";
+import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
 import {
   createPostgresHeroSlide,
   deletePostgresHeroSlide,
@@ -163,12 +164,22 @@ async function writeAudit(req, action, entityId) {
 
 export async function getPublicHeroSlides(req, res) {
   try {
+    const cacheKey = "cms:hero-slides:public";
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      res.setHeader("X-Cache", "HIT");
+      return res.json(cached);
+    }
+
     const slides = await listPublishedHeroSlides();
-    return res.json({
+    const payload = {
       success: true,
       message: "Public hero slides retrieved successfully",
       data: slides.map(normalizeHeroForClient)
-    });
+    };
+    await setCache(cacheKey, payload, 300);
+    res.setHeader("X-Cache", "MISS");
+    return res.json(payload);
   } catch {
     return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Hero slide data cannot be retrieved.", data: null });
   }
@@ -212,6 +223,7 @@ export async function createHeroSlide(req, res) {
     const slide = await createPostgresHeroSlide(createId(), slideData);
 
     await normalizeAllHeroSlideOrders();
+    await invalidateCmsCache("hero");
     await writeAudit(req, "HERO_SLIDE_CREATE", slide._id);
     const saved = await getPostgresHeroSlide(slide._id);
     return res.status(201).json({
@@ -249,6 +261,7 @@ export async function updateHeroSlide(req, res) {
     const oldMedia = extractMediaPaths(existing);
     const currentMedia = new Set(extractMediaPaths(updated));
     await deleteUnreferencedMedia(oldMedia.filter((url) => !currentMedia.has(url)));
+    await invalidateCmsCache("hero");
     await writeAudit(req, "HERO_SLIDE_UPDATE", id);
 
     return res.json({
@@ -278,6 +291,7 @@ export async function deleteHeroSlide(req, res) {
 
     await normalizeAllHeroSlideOrders();
     await deleteUnreferencedMedia(extractMediaPaths(deleted));
+    await invalidateCmsCache("hero");
     await writeAudit(req, "HERO_SLIDE_DELETE", id);
     return res.json({ success: true, message: "Hero slide deleted successfully", data: { id } });
   } catch (error) {
@@ -326,6 +340,7 @@ export async function reorderHeroSlides(req, res) {
     }
 
     await reorderPostgresHeroSlides(validIds);
+    await invalidateCmsCache("hero");
     await writeAudit(req, "HERO_SLIDE_REORDER", "bulk");
 
     const slides = await listPostgresHeroSlides();

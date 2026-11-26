@@ -2,8 +2,12 @@
 import {
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
+  Edit3,
   Eye,
+  EyeOff,
   FileVideo,
   History,
   Image,
@@ -12,6 +16,7 @@ import {
   Loader2,
   Monitor,
   Play,
+  Plus,
   RotateCcw,
   Save,
   Send,
@@ -21,12 +26,13 @@ import {
   Upload,
   Volume2,
   VolumeX,
+  X,
   XCircle,
   Youtube
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
-import { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
+import MediaUploadDropzone, { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
 import { getYouTubeId } from "../../utils/youtube.js";
 
 const PLAYBACK_SPEED_OPTIONS = [
@@ -166,6 +172,150 @@ export default function HeroBackgroundCMS() {
       setHistoryLoading(false);
     }
   }, []);
+
+  // Slides state
+  const [slidesList, setSlidesList] = useState([]);
+  const [slidesLoading, setSlidesLoading] = useState(false);
+  const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+  const [editingSlide, setEditingSlide] = useState(null);
+  const [slideSaving, setSlideSaving] = useState(false);
+  const [slideForm, setSlideForm] = useState({
+    title: "",
+    slideKey: "",
+    eyebrow: "",
+    subtitle: "",
+    description: "",
+    ctaText: "Start a Project",
+    ctaLink: "/contact",
+    mainImage: "",
+    active: true
+  });
+
+  const loadSlides = useCallback(async () => {
+    try {
+      setSlidesLoading(true);
+      const res = await apiFetch("/api/v1/cms/hero-slides/admin");
+      if (res?.data) {
+        setSlidesList(Array.isArray(res.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("Failed to load hero slides:", err);
+    } finally {
+      setSlidesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "slides") {
+      loadSlides();
+    }
+  }, [activeTab, loadSlides]);
+
+  const openSlideModal = (slide = null) => {
+    setEditingSlide(slide);
+    if (slide) {
+      setSlideForm({
+        title: slide.title || "",
+        slideKey: slide.slideKey || "",
+        eyebrow: slide.eyebrow || "",
+        subtitle: slide.subtitle || "",
+        description: slide.description || "",
+        ctaText: slide.ctaText || "Start a Project",
+        ctaLink: slide.ctaLink || "/contact",
+        mainImage: slide.mainImage || "",
+        active: slide.active !== false
+      });
+    } else {
+      setSlideForm({
+        title: "",
+        slideKey: `slide-${Date.now().toString(36)}`,
+        eyebrow: "EDITORIAL POST-PRODUCTION",
+        subtitle: "",
+        description: "",
+        ctaText: "Start a Project",
+        ctaLink: "/contact",
+        mainImage: "",
+        active: true
+      });
+    }
+    setIsSlideModalOpen(true);
+  };
+
+  const handleSaveSlide = async (e) => {
+    e.preventDefault();
+    if (!slideForm.title || !slideForm.slideKey) {
+      showAlert("error", "Slide title and key are required.");
+      return;
+    }
+    try {
+      setSlideSaving(true);
+      const isNew = !editingSlide;
+      const targetId = editingSlide?._id || editingSlide?.id;
+      const url = isNew
+        ? "/api/v1/cms/hero-slides/admin"
+        : `/api/v1/cms/hero-slides/admin/${targetId}`;
+      const method = isNew ? "POST" : "PATCH";
+
+      await apiFetch(url, {
+        method,
+        body: JSON.stringify(slideForm)
+      });
+
+      showAlert("success", `Hero slide ${isNew ? "created" : "updated"} successfully!`);
+      setIsSlideModalOpen(false);
+      loadSlides();
+    } catch (err) {
+      showAlert("error", err.message || "Failed to save hero slide.");
+    } finally {
+      setSlideSaving(false);
+    }
+  };
+
+  const handleDeleteSlide = async (id) => {
+    if (!confirm("Are you sure you want to delete this hero slide?")) return;
+    try {
+      await apiFetch(`/api/v1/cms/hero-slides/admin/${id}`, { method: "DELETE" });
+      showAlert("success", "Hero slide deleted successfully.");
+      loadSlides();
+    } catch (err) {
+      showAlert("error", err.message || "Failed to delete hero slide.");
+    }
+  };
+
+  const handleToggleSlideActive = async (slide) => {
+    const targetId = slide._id || slide.id;
+    try {
+      await apiFetch(`/api/v1/cms/hero-slides/admin/${targetId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ active: !slide.active })
+      });
+      loadSlides();
+    } catch (err) {
+      showAlert("error", err.message || "Failed to toggle slide status.");
+    }
+  };
+
+  const handleMoveSlide = async (index, direction) => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= slidesList.length) return;
+
+    const reordered = [...slidesList];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    setSlidesList(reordered);
+    try {
+      await apiFetch("/api/v1/cms/hero-slides/admin/reorder", {
+        method: "PATCH",
+        body: JSON.stringify({ orderedIds: reordered.map((s) => s._id || s.id) })
+      });
+      showAlert("success", "Hero slides reordered successfully.");
+      loadSlides();
+    } catch (err) {
+      showAlert("error", err.message || "Failed to reorder hero slides.");
+      loadSlides();
+    }
+  };
 
   useEffect(() => {
     loadConfig();
@@ -524,7 +674,19 @@ export default function HeroBackgroundCMS() {
           }`}
         >
           <Sliders className="h-4 w-4" />
-          Studio &amp; Settings
+          Background Video Studio
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("slides")}
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition ${
+            activeTab === "slides"
+              ? "border-emerald-900 text-emerald-950"
+              : "border-transparent text-sage-muted hover:text-emerald-950"
+          }`}
+        >
+          <Layers className="h-4 w-4" />
+          Hero Slides &amp; Narrative ({slidesList.length})
         </button>
         <button
           type="button"
@@ -1170,6 +1332,326 @@ export default function HeroBackgroundCMS() {
         </div>
       )}
 
+      {/* TAB 3: Hero Slides & Narrative */}
+      {activeTab === "slides" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-emerald-950/10 bg-white/80 shadow-sm">
+            <div>
+              <h2 className="font-serif text-xl text-emerald-950">Editorial Hero Slides</h2>
+              <p className="text-xs text-sage-muted mt-0.5">
+                Manage narrative slides, headings, background imagery, and calls to action for the homepage.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openSlideModal(null)}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-950 transition cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Add Hero Slide
+            </button>
+          </div>
+
+          {slidesLoading ? (
+            <div className="p-12 text-center text-xs text-sage-muted flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-emerald-700" />
+              Loading hero slides...
+            </div>
+          ) : slidesList.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl border border-dashed border-sage-border bg-white/60">
+              <Layers className="h-8 w-8 text-sage-muted mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-semibold text-forest">No Hero Slides Configured</p>
+              <p className="text-xs text-sage-muted mt-1 max-w-sm mx-auto">
+                Create your first narrative slide to showcase your studio's story and call to action.
+              </p>
+              <button
+                type="button"
+                onClick={() => openSlideModal(null)}
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-900 text-white text-xs font-semibold hover:bg-emerald-950 transition"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Slide
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {slidesList.map((slide, index) => {
+                const slideId = slide._id || slide.id;
+                return (
+                  <div
+                    key={slideId || index}
+                    className="rounded-2xl border border-emerald-950/10 bg-white/90 shadow-sm overflow-hidden flex flex-col justify-between"
+                  >
+                    {slide.mainImage ? (
+                      <div className="relative aspect-video w-full bg-forest overflow-hidden">
+                        <img
+                          src={mediaUrl(slide.mainImage)}
+                          alt={slide.title}
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="rounded-full bg-forest/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-white">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        <div className="absolute top-2.5 right-2.5">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                              slide.active !== false
+                                ? "bg-emerald-500/90 text-white"
+                                : "bg-warm-grey/80 text-white"
+                            }`}
+                          >
+                            {slide.active !== false ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="aspect-video w-full bg-sage-secondary/40 flex items-center justify-center text-sage-muted text-xs font-medium">
+                        No Image Attached
+                      </div>
+                    )}
+
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        {slide.eyebrow && (
+                          <p className="text-[10px] font-bold text-site uppercase tracking-wider mb-1">
+                            {slide.eyebrow}
+                          </p>
+                        )}
+                        <h3 className="font-serif text-lg font-semibold text-forest leading-snug line-clamp-1">
+                          {slide.title}
+                        </h3>
+                        {slide.subtitle && (
+                          <p className="text-xs text-sage-muted line-clamp-2 mt-1">{slide.subtitle}</p>
+                        )}
+                        {slide.ctaText && (
+                          <p className="text-[11px] font-semibold text-site mt-2">
+                            CTA: {slide.ctaText} → {slide.ctaLink || "/contact"}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-sage-border/60">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, "up")}
+                            disabled={index === 0}
+                            className="p-1 rounded-lg border border-sage-border text-forest hover:bg-sage-secondary disabled:opacity-30 cursor-pointer"
+                            title="Move Up"
+                          >
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, "down")}
+                            disabled={index === slidesList.length - 1}
+                            className="p-1 rounded-lg border border-sage-border text-forest hover:bg-sage-secondary disabled:opacity-30 cursor-pointer"
+                            title="Move Down"
+                          >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSlideActive(slide)}
+                            className={`p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                              slide.active !== false
+                                ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                                : "border-warm-grey/30 text-sage-muted hover:text-forest"
+                            }`}
+                            title={slide.active !== false ? "Deactivate" : "Activate"}
+                          >
+                            {slide.active !== false ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openSlideModal(slide)}
+                            className="p-1.5 rounded-xl border border-sage-border text-forest hover:border-emerald-700 hover:text-site transition cursor-pointer"
+                            title="Edit Slide"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSlide(slideId)}
+                            className="p-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title="Delete Slide"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add / Edit Slide Modal */}
+          {isSlideModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-forest/80 p-3 sm:p-6 backdrop-blur-md">
+              <div className="relative max-w-xl w-full max-h-[92vh] rounded-3xl border border-sage-light/40 bg-sage-card shadow-deep flex flex-col overflow-hidden my-auto">
+                <div className="flex items-center justify-between p-5 border-b border-sage-border/60 bg-sage-card shrink-0">
+                  <h2 className="font-serif text-2xl text-forest">
+                    {editingSlide ? "Edit Hero Slide" : "Add Hero Slide"}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsSlideModalOpen(false)}
+                    className="text-sage-muted hover:text-forest p-1.5 rounded-full hover:bg-sage-secondary transition cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveSlide} className="flex flex-col flex-1 overflow-hidden min-h-0">
+                  <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 no-scrollbar bg-sage-card text-left">
+                    <MediaUploadDropzone
+                      folder="hero"
+                      value={slideForm.mainImage}
+                      onChange={(url) => setSlideForm({ ...slideForm, mainImage: url })}
+                      label="Slide Cover Image / Video"
+                      description="Upload background imagery for this narrative slide"
+                    />
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Slide Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={slideForm.title}
+                          onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })}
+                          className="field-luxury text-sm font-serif"
+                          placeholder="e.g. Masterful Wedding Cinema"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Slide Key / ID *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={slideForm.slideKey}
+                          onChange={(e) => setSlideForm({ ...slideForm, slideKey: e.target.value })}
+                          className="field-luxury text-sm font-mono"
+                          placeholder="e.g. wedding-cinema-slide"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Eyebrow Tag
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.eyebrow}
+                          onChange={(e) => setSlideForm({ ...slideForm, eyebrow: e.target.value })}
+                          className="field-luxury text-sm uppercase"
+                          placeholder="e.g. EDITORIAL POST-PRODUCTION"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Subtitle
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.subtitle}
+                          onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="e.g. Crafting bespoke visual language"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          CTA Button Text
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.ctaText}
+                          onChange={(e) => setSlideForm({ ...slideForm, ctaText: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="e.g. Start a Project"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          CTA Target Link
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.ctaLink}
+                          onChange={(e) => setSlideForm({ ...slideForm, ctaLink: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="/contact"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                        Slide Description / Narrative
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={slideForm.description}
+                        onChange={(e) => setSlideForm({ ...slideForm, description: e.target.value })}
+                        className="field-luxury text-xs"
+                        placeholder="Detailed editorial narrative for this slide..."
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="slideActiveToggle"
+                        checked={slideForm.active}
+                        onChange={(e) => setSlideForm({ ...slideForm, active: e.target.checked })}
+                        className="rounded border-sage-border text-emerald-800 focus:ring-emerald-800 h-4 w-4"
+                      />
+                      <label htmlFor="slideActiveToggle" className="text-xs font-semibold text-forest cursor-pointer">
+                        Active &amp; Visible in Homepage Narrative
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-sage-border/60 bg-sage-card/95 backdrop-blur-sm shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsSlideModalOpen(false)}
+                      className="px-5 py-2.5 rounded-full border border-sage-border text-xs font-semibold text-forest hover:border-emerald-800 transition cursor-pointer bg-sage-card"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={slideSaving}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-900 text-white text-xs font-semibold hover:bg-emerald-950 transition shadow-sage cursor-pointer disabled:opacity-50"
+                    >
+                      {slideSaving ? "Saving..." : "Save Hero Slide"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* TAB 2: Version History */}
       {activeTab === "history" && (
         <div className="rounded-2xl border border-emerald-950/10 bg-white/80 p-6 shadow-sm">
@@ -1331,6 +1813,326 @@ export default function HeroBackgroundCMS() {
               </table>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB 3: Hero Slides & Narrative */}
+      {activeTab === "slides" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-emerald-950/10 bg-white/80 shadow-sm">
+            <div>
+              <h2 className="font-serif text-xl text-emerald-950">Editorial Hero Slides</h2>
+              <p className="text-xs text-sage-muted mt-0.5">
+                Manage narrative slides, headings, background imagery, and calls to action for the homepage.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openSlideModal(null)}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-950 transition cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Add Hero Slide
+            </button>
+          </div>
+
+          {slidesLoading ? (
+            <div className="p-12 text-center text-xs text-sage-muted flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-emerald-700" />
+              Loading hero slides...
+            </div>
+          ) : slidesList.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl border border-dashed border-sage-border bg-white/60">
+              <Layers className="h-8 w-8 text-sage-muted mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-semibold text-forest">No Hero Slides Configured</p>
+              <p className="text-xs text-sage-muted mt-1 max-w-sm mx-auto">
+                Create your first narrative slide to showcase your studio's story and call to action.
+              </p>
+              <button
+                type="button"
+                onClick={() => openSlideModal(null)}
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-900 text-white text-xs font-semibold hover:bg-emerald-950 transition"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Slide
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {slidesList.map((slide, index) => {
+                const slideId = slide._id || slide.id;
+                return (
+                  <div
+                    key={slideId || index}
+                    className="rounded-2xl border border-emerald-950/10 bg-white/90 shadow-sm overflow-hidden flex flex-col justify-between"
+                  >
+                    {slide.mainImage ? (
+                      <div className="relative aspect-video w-full bg-forest overflow-hidden">
+                        <img
+                          src={mediaUrl(slide.mainImage)}
+                          alt={slide.title}
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="rounded-full bg-forest/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-white">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        <div className="absolute top-2.5 right-2.5">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                              slide.active !== false
+                                ? "bg-emerald-500/90 text-white"
+                                : "bg-warm-grey/80 text-white"
+                            }`}
+                          >
+                            {slide.active !== false ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="aspect-video w-full bg-sage-secondary/40 flex items-center justify-center text-sage-muted text-xs font-medium">
+                        No Image Attached
+                      </div>
+                    )}
+
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        {slide.eyebrow && (
+                          <p className="text-[10px] font-bold text-site uppercase tracking-wider mb-1">
+                            {slide.eyebrow}
+                          </p>
+                        )}
+                        <h3 className="font-serif text-lg font-semibold text-forest leading-snug line-clamp-1">
+                          {slide.title}
+                        </h3>
+                        {slide.subtitle && (
+                          <p className="text-xs text-sage-muted line-clamp-2 mt-1">{slide.subtitle}</p>
+                        )}
+                        {slide.ctaText && (
+                          <p className="text-[11px] font-semibold text-site mt-2">
+                            CTA: {slide.ctaText} → {slide.ctaLink || "/contact"}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-sage-border/60">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, "up")}
+                            disabled={index === 0}
+                            className="p-1 rounded-lg border border-sage-border text-forest hover:bg-sage-secondary disabled:opacity-30 cursor-pointer"
+                            title="Move Up"
+                          >
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveSlide(index, "down")}
+                            disabled={index === slidesList.length - 1}
+                            className="p-1 rounded-lg border border-sage-border text-forest hover:bg-sage-secondary disabled:opacity-30 cursor-pointer"
+                            title="Move Down"
+                          >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSlideActive(slide)}
+                            className={`p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                              slide.active !== false
+                                ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                                : "border-warm-grey/30 text-sage-muted hover:text-forest"
+                            }`}
+                            title={slide.active !== false ? "Deactivate" : "Activate"}
+                          >
+                            {slide.active !== false ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openSlideModal(slide)}
+                            className="p-1.5 rounded-xl border border-sage-border text-forest hover:border-emerald-700 hover:text-site transition cursor-pointer"
+                            title="Edit Slide"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSlide(slideId)}
+                            className="p-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title="Delete Slide"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add / Edit Slide Modal */}
+          {isSlideModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-forest/80 p-3 sm:p-6 backdrop-blur-md">
+              <div className="relative max-w-xl w-full max-h-[92vh] rounded-3xl border border-sage-light/40 bg-sage-card shadow-deep flex flex-col overflow-hidden my-auto">
+                <div className="flex items-center justify-between p-5 border-b border-sage-border/60 bg-sage-card shrink-0">
+                  <h2 className="font-serif text-2xl text-forest">
+                    {editingSlide ? "Edit Hero Slide" : "Add Hero Slide"}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsSlideModalOpen(false)}
+                    className="text-sage-muted hover:text-forest p-1.5 rounded-full hover:bg-sage-secondary transition cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveSlide} className="flex flex-col flex-1 overflow-hidden min-h-0">
+                  <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 no-scrollbar bg-sage-card text-left">
+                    <MediaUploadDropzone
+                      folder="hero"
+                      value={slideForm.mainImage}
+                      onChange={(url) => setSlideForm({ ...slideForm, mainImage: url })}
+                      label="Slide Cover Image / Video"
+                      description="Upload background imagery for this narrative slide"
+                    />
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Slide Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={slideForm.title}
+                          onChange={(e) => setSlideForm({ ...slideForm, title: e.target.value })}
+                          className="field-luxury text-sm font-serif"
+                          placeholder="e.g. Masterful Wedding Cinema"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Slide Key / ID *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={slideForm.slideKey}
+                          onChange={(e) => setSlideForm({ ...slideForm, slideKey: e.target.value })}
+                          className="field-luxury text-sm font-mono"
+                          placeholder="e.g. wedding-cinema-slide"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Eyebrow Tag
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.eyebrow}
+                          onChange={(e) => setSlideForm({ ...slideForm, eyebrow: e.target.value })}
+                          className="field-luxury text-sm uppercase"
+                          placeholder="e.g. EDITORIAL POST-PRODUCTION"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          Subtitle
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.subtitle}
+                          onChange={(e) => setSlideForm({ ...slideForm, subtitle: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="e.g. Crafting bespoke visual language"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          CTA Button Text
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.ctaText}
+                          onChange={(e) => setSlideForm({ ...slideForm, ctaText: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="e.g. Start a Project"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                          CTA Target Link
+                        </label>
+                        <input
+                          type="text"
+                          value={slideForm.ctaLink}
+                          onChange={(e) => setSlideForm({ ...slideForm, ctaLink: e.target.value })}
+                          className="field-luxury text-sm"
+                          placeholder="/contact"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
+                        Slide Description / Narrative
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={slideForm.description}
+                        onChange={(e) => setSlideForm({ ...slideForm, description: e.target.value })}
+                        className="field-luxury text-xs"
+                        placeholder="Detailed editorial narrative for this slide..."
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="slideActiveToggle"
+                        checked={slideForm.active}
+                        onChange={(e) => setSlideForm({ ...slideForm, active: e.target.checked })}
+                        className="rounded border-sage-border text-emerald-800 focus:ring-emerald-800 h-4 w-4"
+                      />
+                      <label htmlFor="slideActiveToggle" className="text-xs font-semibold text-forest cursor-pointer">
+                        Active &amp; Visible in Homepage Narrative
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-sage-border/60 bg-sage-card/95 backdrop-blur-sm shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsSlideModalOpen(false)}
+                      className="px-5 py-2.5 rounded-full border border-sage-border text-xs font-semibold text-forest hover:border-emerald-800 transition cursor-pointer bg-sage-card"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={slideSaving}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-900 text-white text-xs font-semibold hover:bg-emerald-950 transition shadow-sage cursor-pointer disabled:opacity-50"
+                    >
+                      {slideSaving ? "Saving..." : "Save Hero Slide"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

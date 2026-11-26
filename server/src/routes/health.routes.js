@@ -4,6 +4,7 @@ import { checkPostgresConnection, inspectPostgresSchema, ensurePostgresSchema } 
 import { isPostgresAuthEnabled } from "../config/databaseMode.js";
 import { findPostgresAuthUserByEmail, getPostgresGlobalSecurityPolicy } from "../db/authRepository.js";
 import { bootstrapPostgresDatabase } from "../config/bootstrap.js";
+import { checkRedisHealth } from "../config/redis.js";
 
 const router = Router();
 
@@ -104,9 +105,19 @@ router.get("/", async (req, res) => {
       },
       adminUser: adminInfo,
       securityPolicy: policyInfo,
+      redis: await checkRedisHealth(),
       environment: process.env.NODE_ENV || "development",
       timestamp: new Date().toISOString()
     }
+  });
+});
+
+router.get("/redis", async (req, res) => {
+  const health = await checkRedisHealth();
+  res.json({
+    success: true,
+    message: "Redis cache health status",
+    data: health
   });
 });
 

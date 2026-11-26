@@ -20,10 +20,11 @@ import {
   Video,
   X
 } from "lucide-react";
-import { useState } from "react";
-import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import BrandLogo from "../components/ui/BrandLogo.jsx";
 import { useAdmin } from "./AdminContext.jsx";
+import { apiFetch } from "../lib/api.js";
 
 const navSections = [
   {
@@ -67,6 +68,31 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const lastReportedPath = useRef("");
+
+  // Audit Logging: Record section and page navigation
+  useEffect(() => {
+    if (!isAuthenticated || !location.pathname.startsWith("/admin") || location.pathname === "/admin/login") {
+      return;
+    }
+    if (lastReportedPath.current === location.pathname) return;
+    lastReportedPath.current = location.pathname;
+
+    const navItem = navSections
+      .flatMap((s) => s.items)
+      .find((it) => it.path === location.pathname);
+    const sectionName = navItem?.label || location.pathname.replace("/admin/", "").replace(/-/g, " ");
+
+    apiFetch("/api/v1/security/activity", {
+      method: "POST",
+      body: JSON.stringify({
+        section: sectionName,
+        path: location.pathname,
+        action: "VIEW_SECTION"
+      })
+    }).catch(() => {});
+  }, [location.pathname, isAuthenticated]);
 
   if (authLoading) {
     return <div className="min-h-svh flex items-center justify-center bg-sage-bg text-sage-muted">Checking session...</div>;

@@ -29,6 +29,7 @@ import {
 } from "../db/cmsRepository.js";
 import { getPostgresDashboardData } from "../db/dashboardRepository.js";
 import { createPostgresAuthUser, deletePostgresCmsUser, listPostgresCmsUsers } from "../db/authRepository.js";
+import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
 
 function usesPostgres() {
   return true;
@@ -636,6 +637,17 @@ function createCRUDActions(Model, entityName) {
     // Public listing (active/published items)
     getAll: async (req, res) => {
       try {
+        const isDefaultList = !req.query.search && (!req.query.category || req.query.category === "All");
+        const cacheKey = `cms:${entityName.toLowerCase()}:public`;
+
+        if (isDefaultList) {
+          const cached = await getCache(cacheKey);
+          if (cached) {
+            res.setHeader("X-Cache", "HIT");
+            return res.json(cached);
+          }
+        }
+
         if (usesPostgres()) {
           const docs = await listPostgresCmsRecords(Model, {
             publicFilter: config.publicFilter,
@@ -644,18 +656,32 @@ function createCRUDActions(Model, entityName) {
             orderField: config.orderField
           });
           if (docs && docs.length > 0) {
-            return res.json({ success: true, message: `${entityName} records retrieved successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
+            const payload = {
+              success: true,
+              message: `${entityName} records retrieved successfully`,
+              data: docs.map((doc) => normalizeDocForClient(doc, entityName))
+            };
+            if (isDefaultList) {
+              await setCache(cacheKey, payload, 300);
+            }
+            res.setHeader("X-Cache", "MISS");
+            return res.json(payload);
           }
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
             entityName === "PortfolioItem" ? DEFAULT_AUTHENTIC_PORTFOLIO :
             entityName === "BrandCollaboration" ? DEFAULT_AUTHENTIC_COLLABORATIONS :
             entityName === "BlogPost" ? DEFAULT_AUTHENTIC_BLOGS : [];
-          return res.json({
+          const payload = {
             success: true,
             message: `${entityName} records retrieved (default fallback)`,
             data: defaults.map((d) => normalizeDocForClient(d, entityName))
-          });
+          };
+          if (isDefaultList) {
+            await setCache(cacheKey, payload, 300);
+          }
+          res.setHeader("X-Cache", "MISS");
+          return res.json(payload);
         }
 
 
@@ -822,6 +848,7 @@ function createCRUDActions(Model, entityName) {
           }
           const validated = await validatePostgresCreate(Model, payload);
           const item = await createPostgresCmsRecord(Model, validated.id, validated.data);
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `CREATE_${entityName.toUpperCase()}`, entityName, item._id, payload);
           return res.status(201).json({ success: true, message: `${entityName} created successfully`, data: normalizeDocForClient(item, entityName) });
         }
@@ -853,6 +880,7 @@ function createCRUDActions(Model, entityName) {
           if (!existing) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
           const validated = await validatePostgresUpdate(Model, existing, payload);
           const item = await updatePostgresCmsRecord(Model, id, validated);
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `UPDATE_${entityName.toUpperCase()}`, entityName, item._id, payload);
           return res.json({ success: true, message: `${entityName} updated successfully`, data: normalizeDocForClient(item, entityName) });
         }
@@ -909,6 +937,7 @@ function createCRUDActions(Model, entityName) {
           const validated = await validatePostgresUpdate(Model, existing, updateData);
           const item = await updatePostgresCmsRecord(Model, id, validated);
           if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `UPDATE_STATUS_${entityName.toUpperCase()}`, entityName, id, updateData);
           return res.json({ success: true, message: `${entityName} status updated successfully`, data: normalizeDocForClient(item, entityName) });
         }
@@ -943,6 +972,7 @@ function createCRUDActions(Model, entityName) {
         if (usesPostgres()) {
           const docs = await reorderPostgresCmsRecords(Model, config.orderField, validItems);
           if (!docs) return res.status(404).json({ success: false, message: "One or more records no longer exist.", data: null });
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `REORDER_${entityName.toUpperCase()}`, entityName, "bulk", { count: validItems.length });
           return res.json({ success: true, message: `${entityName} reordered successfully`, data: docs.map((doc) => normalizeDocForClient(doc, entityName)) });
         }
@@ -982,6 +1012,7 @@ function createCRUDActions(Model, entityName) {
         if (usesPostgres()) {
           const deleted = await deletePostgresCmsRecord(Model, id);
           if (!deleted) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `DELETE_${entityName.toUpperCase()}`, entityName, id);
           return res.json({ success: true, message: `${entityName} deleted successfully`, data: { id } });
         }
@@ -1011,6 +1042,7 @@ function createCRUDActions(Model, entityName) {
         if (usesPostgres()) {
           const result = await bulkDeletePostgresCmsRecords(Model, validIds.map(String));
           if (!result) return res.status(404).json({ success: false, message: "One or more records no longer exist.", data: null });
+          await invalidateCmsCache(entityName);
           await logAudit(req.user, `BULK_DELETE_${entityName.toUpperCase()}`, entityName, "bulk", { count: result.deletedCount });
           return res.json({ success: true, message: `Selected ${entityName} items deleted successfully`, data: { deletedCount: result.deletedCount } });
         }
@@ -1128,6 +1160,13 @@ export async function deleteEnquiry(req, res) {
 // --- SITE SETTINGS ---
 export async function getSiteSettings(req, res) {
   try {
+    const cacheKey = "cms:sitesettings:public";
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      res.setHeader("X-Cache", "HIT");
+      return res.json(cached);
+    }
+
     const postgres = usesPostgres();
 
 
@@ -1171,7 +1210,10 @@ export async function getSiteSettings(req, res) {
     } else {
       settingsMap.globalReach = DEFAULT_AUTHENTIC_SETTINGS.globalReach;
     }
-    return res.json({ success: true, message: "Site settings retrieved successfully", data: settingsMap });
+    const payload = { success: true, message: "Site settings retrieved successfully", data: settingsMap };
+    await setCache(cacheKey, payload, 600);
+    res.setHeader("X-Cache", "MISS");
+    return res.json(payload);
   } catch {
     if (usesPostgres()) {
       return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Site settings could not be retrieved.", data: null });
@@ -1265,6 +1307,7 @@ export async function updateSiteSetting(req, res) {
         { upsert: true, new: true, runValidators: true }
       );
     await logAudit(req.user, "UPDATE_SITE_SETTING", "SiteSetting", key, { value });
+    await invalidateCmsCache("sitesettings");
     return res.json({ success: true, message: `Setting "${key}" updated successfully`, data: setting });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message || "Setting update failed", data: null });

@@ -1,5 +1,6 @@
 import AboutMe from "../models/AboutMe.model.js";
 import { findAboutMe, saveAboutMe, writeAboutMeAudit } from "../db/aboutMeRepository.js";
+import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
 
 async function logAudit(user, action, entity, entityId, details) {
   try {
@@ -18,12 +19,22 @@ function getDefaultAboutMeData() {
  */
 export async function getPublicAboutMe(req, res) {
   try {
+    const cacheKey = "cms:about-me:public";
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      res.setHeader("X-Cache", "HIT");
+      return res.json(cached);
+    }
+
     const doc = await findAboutMe();
-    return res.json({
+    const payload = {
       success: true,
       message: "About Me content retrieved successfully",
       data: doc || getDefaultAboutMeData()
-    });
+    };
+    await setCache(cacheKey, payload, 300);
+    res.setHeader("X-Cache", "MISS");
+    return res.json(payload);
   } catch {
     return res.status(503).json({
       success: false,
@@ -119,6 +130,7 @@ export async function updateAboutMe(req, res) {
 
     try {
       const updated = await saveAboutMe(updateFields);
+      await invalidateCmsCache("about-me");
       await logAudit(req.user, "UPDATE_ABOUT_ME", "AboutMe", "about_me_content", {
         updatedFields: Object.keys(updateFields)
       });

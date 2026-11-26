@@ -1,5 +1,5 @@
 /* global confirm, console */
-import { AlertCircle, CheckCircle2, Edit3, Eye, EyeOff, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Edit3, Eye, EyeOff, Film, Image as ImageIcon, Plus, RefreshCw, Search, Star, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 import MediaUploadDropzone from "../components/MediaUploadDropzone.jsx";
@@ -64,10 +64,11 @@ export default function PortfolioCMS() {
         title: item.title || "",
         category: item.category || "Commercial Film",
         client: item.client || "",
-        coverImage: item.coverImage || item.thumbnail || "",
+        coverImage: item.coverImage || item.thumbnail || item.image || "",
         videoUrl: item.videoUrl || "",
         description: item.description || "",
         deliverables: Array.isArray(item.deliverables) ? item.deliverables.join(", ") : item.deliverables || "",
+        featured: Boolean(item.featured),
         active: item.active !== undefined ? item.active : true
       });
     } else {
@@ -79,6 +80,7 @@ export default function PortfolioCMS() {
         videoUrl: "",
         description: "",
         deliverables: "",
+        featured: false,
         active: true
       });
     }
@@ -277,12 +279,18 @@ export default function PortfolioCMS() {
               }`}
             >
               <div className="h-40 w-full rounded-2xl overflow-hidden bg-forest/5 border border-sage-border relative">
-                {item.coverImage || item.thumbnail ? (
-                  <img src={mediaUrl(item.coverImage || item.thumbnail)} alt="" className="h-full w-full object-cover" />
+                {item.coverImage || item.thumbnail || item.image ? (
+                  <img src={mediaUrl(item.coverImage || item.thumbnail || item.image)} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-xs text-sage-muted font-semibold">
                     No Cover Image
                   </div>
+                )}
+                {item.featured && (
+                  <span className="absolute top-3 right-3 rounded-full bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-sm z-10">
+                    <Star className="h-2.5 w-2.5 fill-white" />
+                    Featured
+                  </span>
                 )}
                 <input
                   type="checkbox"
@@ -381,13 +389,39 @@ export default function PortfolioCMS() {
                   </div>
                 )}
 
-                <MediaUploadDropzone
-                  folder="portfolio"
-                  value={formData.coverImage}
-                  onChange={(url) => setFormData({ ...formData, coverImage: url })}
-                  label="Portfolio Cover Image / Video"
-                  description="Drag and drop portfolio cover media here"
-                />
+                <div className="space-y-4">
+                  <MediaUploadDropzone
+                    folder="portfolio"
+                    value={formData.coverImage}
+                    onChange={(url) => setFormData({ ...formData, coverImage: url })}
+                    label="Portfolio Cover Image"
+                    description="Upload high-res JPG, PNG, or WEBP cover artwork"
+                  />
+
+                  <div className="rounded-2xl border border-sage-border/80 bg-sage-secondary/30 p-4 space-y-3">
+                    <label className="block text-xs font-semibold text-sage-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <Film className="h-3.5 w-3.5 text-site" />
+                      Showcase Video (Direct Upload or Embed Link)
+                    </label>
+                    <MediaUploadDropzone
+                      folder="portfolio"
+                      value={formData.videoUrl?.startsWith("/uploads") ? formData.videoUrl : ""}
+                      onChange={(url) => setFormData({ ...formData, videoUrl: url })}
+                      label="Upload Video File (MP4, MOV, WebM)"
+                      description="Chunked upload directly into Neon PostgreSQL"
+                    />
+                    <div>
+                      <span className="text-[11px] text-sage-muted block mb-1">Or paste a Vimeo / YouTube embed URL:</span>
+                      <input
+                        type="text"
+                        value={formData.videoUrl}
+                        onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                        className="field-luxury text-xs"
+                        placeholder="e.g. https://vimeo.com/... or https://youtu.be/..."
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -400,19 +434,42 @@ export default function PortfolioCMS() {
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       className="field-luxury text-sm font-serif"
+                      placeholder="e.g. Royal Heritage Wedding"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
                       Category *
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="field-luxury text-sm"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={["Commercial Film", "Weddings", "Brand Campaign", "Photography", "Films", "Fashion Editorial", "Music Video", "Documentary"].includes(formData.category) ? formData.category : "custom"}
+                        onChange={(e) => {
+                          if (e.target.value !== "custom") {
+                            setFormData({ ...formData, category: e.target.value });
+                          }
+                        }}
+                        className="field-luxury text-xs flex-1"
+                      >
+                        <option value="Commercial Film">Commercial Film</option>
+                        <option value="Weddings">Weddings</option>
+                        <option value="Brand Campaign">Brand Campaign</option>
+                        <option value="Photography">Photography</option>
+                        <option value="Films">Films</option>
+                        <option value="Fashion Editorial">Fashion Editorial</option>
+                        <option value="Music Video">Music Video</option>
+                        <option value="Documentary">Documentary</option>
+                        <option value="custom">Custom...</option>
+                      </select>
+                      <input
+                        type="text"
+                        required
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="field-luxury text-xs flex-1"
+                        placeholder="Category name"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -426,18 +483,19 @@ export default function PortfolioCMS() {
                       value={formData.client}
                       onChange={(e) => setFormData({ ...formData, client: e.target.value })}
                       className="field-luxury text-sm"
+                      placeholder="e.g. Atelier Vance Cinema"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-sage-muted mb-1 uppercase tracking-wider">
-                      Video Embed URL / File
+                      Deliverables (Comma Separated)
                     </label>
                     <input
                       type="text"
-                      value={formData.videoUrl}
-                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                      value={formData.deliverables}
+                      onChange={(e) => setFormData({ ...formData, deliverables: e.target.value })}
                       className="field-luxury text-sm"
-                      placeholder="https://vimeo.com/..."
+                      placeholder="e.g. DaVinci Color, 4K Master, Teaser"
                     />
                   </div>
                 </div>
@@ -451,7 +509,37 @@ export default function PortfolioCMS() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="field-luxury text-xs"
+                    placeholder="Brief background, post-production notes, and creative vision..."
                   />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-sage-border/60">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="portfolioFeaturedToggle"
+                      checked={formData.featured}
+                      onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                      className="rounded border-sage-border text-emerald-800 focus:ring-emerald-800 h-4 w-4"
+                    />
+                    <label htmlFor="portfolioFeaturedToggle" className="text-xs font-semibold text-forest cursor-pointer flex items-center gap-1.5">
+                      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                      Featured on Homepage
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="portfolioActiveToggle"
+                      checked={formData.active}
+                      onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                      className="rounded border-sage-border text-emerald-800 focus:ring-emerald-800 h-4 w-4"
+                    />
+                    <label htmlFor="portfolioActiveToggle" className="text-xs font-semibold text-forest cursor-pointer">
+                      Published &amp; Active
+                    </label>
+                  </div>
                 </div>
               </div>
 

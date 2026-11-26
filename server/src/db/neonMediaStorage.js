@@ -222,25 +222,39 @@ export async function saveMediaBufferToNeon({
       ]
     );
 
-    // 2. Insert chunks into media_chunks
+    // 2. Insert chunks into media_chunks in optimized batches
     let offset = 0;
-    for (let index = 0; index < totalChunks; index++) {
-      const startByte = index * NEON_CHUNK_SIZE;
-      const endByte = Math.min((index + 1) * NEON_CHUNK_SIZE, size);
-      const chunkData = buffer.subarray(startByte, endByte);
-      const chunkSize = chunkData.length;
-      const offsetStart = offset;
-      const offsetEnd = offset + chunkSize - 1;
-      const chunkHash = crypto.createHash("sha256").update(chunkData).digest("hex");
+    const batchSize = 25;
+    for (let b = 0; b < totalChunks; b += batchSize) {
+      const sliceCount = Math.min(batchSize, totalChunks - b);
+      const values = [];
+      const placeholders = [];
+
+      for (let s = 0; s < sliceCount; s++) {
+        const index = b + s;
+        const startByte = index * NEON_CHUNK_SIZE;
+        const endByte = Math.min((index + 1) * NEON_CHUNK_SIZE, size);
+        const chunkData = buffer.subarray(startByte, endByte);
+        const chunkSize = chunkData.length;
+        const offsetStart = offset;
+        const offsetEnd = offset + chunkSize - 1;
+        const chunkHash = crypto.createHash("sha256").update(chunkData).digest("hex");
+
+        const offsetIndex = values.length;
+        values.push(mediaId, index, chunkSize, offsetStart, offsetEnd, chunkData, chunkHash);
+        placeholders.push(
+          `($${offsetIndex + 1}, $${offsetIndex + 2}, $${offsetIndex + 3}, $${offsetIndex + 4}, $${offsetIndex + 5}, $${offsetIndex + 6}, $${offsetIndex + 7})`
+        );
+
+        offset += chunkSize;
+      }
 
       await client.query(
         `INSERT INTO "media_chunks" (
           "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [mediaId, index, chunkSize, offsetStart, offsetEnd, chunkData, chunkHash]
+        ) VALUES ${placeholders.join(", ")}`,
+        values
       );
-
-      offset += chunkSize;
     }
 
     await client.query("COMMIT");
@@ -377,23 +391,37 @@ export async function commitChunkedUploadToNeon({
       ]
     );
 
-    // 4. Copy parts to "media_chunks"
+    // 4. Copy parts to "media_chunks" in optimized batches (up to 25 chunks per query)
     let runningOffset = 0;
-    for (let i = 0; i < partCount; i++) {
-      const part = partsRes.rows[i];
-      const chunkSize = part.data.length;
-      const offsetStart = runningOffset;
-      const offsetEnd = runningOffset + chunkSize - 1;
-      const chunkHash = crypto.createHash("sha256").update(part.data).digest("hex");
+    const batchSize = 25;
+    for (let b = 0; b < partCount; b += batchSize) {
+      const slice = partsRes.rows.slice(b, b + batchSize);
+      const values = [];
+      const placeholders = [];
+
+      for (let s = 0; s < slice.length; s++) {
+        const i = b + s;
+        const part = slice[s];
+        const chunkSize = part.data.length;
+        const offsetStart = runningOffset;
+        const offsetEnd = runningOffset + chunkSize - 1;
+        const chunkHash = crypto.createHash("sha256").update(part.data).digest("hex");
+
+        const offsetIndex = values.length;
+        values.push(mediaId, i, chunkSize, offsetStart, offsetEnd, part.data, chunkHash);
+        placeholders.push(
+          `($${offsetIndex + 1}, $${offsetIndex + 2}, $${offsetIndex + 3}, $${offsetIndex + 4}, $${offsetIndex + 5}, $${offsetIndex + 6}, $${offsetIndex + 7})`
+        );
+
+        runningOffset += chunkSize;
+      }
 
       await client.query(
         `INSERT INTO "media_chunks" (
           "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [mediaId, i, chunkSize, offsetStart, offsetEnd, part.data, chunkHash]
+        ) VALUES ${placeholders.join(", ")}`,
+        values
       );
-
-      runningOffset += chunkSize;
     }
 
     // 5. Cleanup temporary session and parts

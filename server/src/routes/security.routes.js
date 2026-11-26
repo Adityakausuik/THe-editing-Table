@@ -9,6 +9,7 @@ import {
   getOwnSecurity,
   getSecurityAuditLogs,
   getSecurityPolicy,
+  recordAdminActivity,
   regenerateRecoveryCodes,
   resetUserTwoFactor,
   revokeDevice,
@@ -30,6 +31,7 @@ const sensitiveLimiter = rateLimit({
 });
 
 router.use(authenticate);
+router.post("/activity", recordAdminActivity);
 router.get("/me", getOwnSecurity);
 router.post("/password", sensitiveLimiter, changePassword);
 router.post("/recovery-codes", sensitiveLimiter, regenerateRecoveryCodes);

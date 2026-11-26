@@ -41,41 +41,52 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}, si
   let completed = false;
 
   try {
-    for (let index = 0; index < count; index += 1) {
-      if (signal?.aborted) throw new Error("Upload cancelled by user.");
+    // Controlled bounded concurrency: 2 parallel chunk uploads for 2x faster upload speed
+    const CONCURRENCY = 2;
+    let nextIndex = 0;
+    let completedChunks = 0;
 
-      const startByte = index * chunkSize;
-      const endByte = Math.min((index + 1) * chunkSize, file.size);
-      const chunkBlob = file.slice(startByte, endByte, mimeType);
-
-      const body = new FormData();
-      body.append("uploadId", uploadId);
-      body.append("index", String(index));
-      body.append("count", String(count));
-      body.append("chunk", chunkBlob, file.name);
-
-      // Automatic retry on transient chunk failure (up to 3 attempts)
-      let attempts = 0;
-      let lastErr = null;
-      while (attempts < 3) {
+    const uploadWorker = async () => {
+      while (nextIndex < count) {
         if (signal?.aborted) throw new Error("Upload cancelled by user.");
-        try {
-          await apiFetch("/api/v1/upload/chunked/part", { method: "POST", body, signal });
-          lastErr = null;
-          break;
-        } catch (err) {
-          if (signal?.aborted || err?.name === "AbortError") throw err;
-          lastErr = err;
-          attempts += 1;
-          if (attempts < 3) {
-            await new Promise((resolve) => setTimeout(resolve, 600 * attempts));
+        const index = nextIndex++;
+        const startByte = index * chunkSize;
+        const endByte = Math.min((index + 1) * chunkSize, file.size);
+        const chunkBlob = file.slice(startByte, endByte, mimeType);
+
+        const body = new FormData();
+        body.append("uploadId", uploadId);
+        body.append("index", String(index));
+        body.append("count", String(count));
+        body.append("chunk", chunkBlob, file.name);
+
+        // Automatic retry on transient chunk failure (up to 3 attempts)
+        let attempts = 0;
+        let lastErr = null;
+        while (attempts < 3) {
+          if (signal?.aborted) throw new Error("Upload cancelled by user.");
+          try {
+            await apiFetch("/api/v1/upload/chunked/part", { method: "POST", body, signal });
+            lastErr = null;
+            break;
+          } catch (err) {
+            if (signal?.aborted || err?.name === "AbortError") throw err;
+            lastErr = err;
+            attempts += 1;
+            if (attempts < 3) {
+              await new Promise((resolve) => setTimeout(resolve, 400 * attempts));
+            }
           }
         }
-      }
-      if (lastErr) throw lastErr;
+        if (lastErr) throw lastErr;
 
-      onProgress((index + 1) / count);
-    }
+        completedChunks += 1;
+        onProgress(completedChunks / count);
+      }
+    };
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY, count) }, () => uploadWorker());
+    await Promise.all(workers);
 
     const result = await apiFetch("/api/v1/upload/chunked/finish", {
       method: "POST",
