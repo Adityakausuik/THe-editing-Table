@@ -605,7 +605,7 @@ export default function HeroBackgroundCMS() {
                   <span className="text-xs font-semibold text-emerald-950">
                     {uploadingDesktop
                       ? `Uploading Video (${Math.round(desktopProgress * 100)}%)...`
-                      : "Upload Video File (Chunked MP4 / WebM)"}
+                      : "Upload Video File (MP4, MOV, WebM)"}
                   </span>
                   {uploadingDesktop ? (
                     <div className="w-48 bg-emerald-100 rounded-full h-1.5 mt-2 overflow-hidden">
@@ -615,11 +615,11 @@ export default function HeroBackgroundCMS() {
                       />
                     </div>
                   ) : (
-                    <span className="text-[11px] text-sage-muted mt-0.5">Reliable chunked upload handles large video files</span>
+                    <span className="text-[11px] text-sage-muted mt-0.5">Reliable upload handles large video files</span>
                   )}
                   <input
                     type="file"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/quicktime,video/webm,.mov,.mp4,.webm"
                     onChange={(e) => handleChunkedUpload(e, "desktop")}
                     disabled={uploadingDesktop}
                     className="hidden"
@@ -717,7 +717,7 @@ export default function HeroBackgroundCMS() {
                   )}
                   <input
                     type="file"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/quicktime,video/webm,.mov,.mp4,.webm"
                     onChange={(e) => handleChunkedUpload(e, "mobile")}
                     disabled={uploadingMobile}
                     className="hidden"
@@ -803,7 +803,7 @@ export default function HeroBackgroundCMS() {
                   )}
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
                     onChange={(e) => handleChunkedUpload(e, "poster")}
                     disabled={uploadingPoster}
                     className="hidden"

@@ -3,6 +3,9 @@ import {
   abortChunkedUpload,
   beginChunkedUpload,
   finishChunkedUpload,
+  generateBlobClientToken,
+  getUploadConfig,
+  recordUploadedMedia,
   uploadChunk,
   uploadMultipleMedia,
   uploadSingleMedia
@@ -12,6 +15,10 @@ import { authenticate } from "../middleware/auth.js";
 import { requireMinimumRole } from "../middleware/rbac.js";
 
 const router = Router();
+
+router.get("/config", authenticate, getUploadConfig);
+router.post("/blob/token", authenticate, requireMinimumRole("editor"), generateBlobClientToken);
+router.post("/record-media", authenticate, requireMinimumRole("editor"), recordUploadedMedia);
 
 router.post("/chunked/start", authenticate, requireMinimumRole("editor"), beginChunkedUpload);
 router.post("/chunked/part", authenticate, requireMinimumRole("editor"), uploadChunkMiddleware.single("chunk"), uploadChunk);

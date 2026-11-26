@@ -6,9 +6,7 @@ import { ALLOWED_MODULE_FOLDERS, ensureUploadDirectories, isServerlessEnvironmen
 import { deleteVercelBlob, isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 
-export const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
-export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
-export const UPLOAD_CHUNK_SIZE = 3 * 1024 * 1024;
+export const UPLOAD_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk target for reliable serverless transit
 
 export const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -22,6 +20,7 @@ export const ALLOWED_IMAGE_TYPES = new Set([
 
 export const ALLOWED_VIDEO_TYPES = new Set([
   "video/mp4",
+  "video/quicktime",
   "video/webm"
 ]);
 
@@ -53,6 +52,9 @@ export function normalizeMimeType(rawMime, filename = "") {
   if (mime === "video/mp4" || ext === ".mp4") {
     return "video/mp4";
   }
+  if (mime === "video/quicktime" || ext === ".mov") {
+    return "video/quicktime";
+  }
   if (mime === "video/webm" || ext === ".webm") {
     return "video/webm";
   }
@@ -73,20 +75,21 @@ const fileFilter = (req, file, cb) => {
     file.mimetype = normalizedMime;
     cb(null, true);
   } else {
-    cb(new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, and MP4."), false);
+    cb(new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, MP4, MOV, and WebM."), false);
   }
 };
 
+// Generous memory limits to avoid artificial Multer 'File too large' rejections
 export const uploadMiddleware = multer({
   storage: memoryStorage,
   fileFilter,
-  limits: { fileSize: MAX_VIDEO_SIZE }
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB headroom for direct single uploads
 });
 
-// Chunks are raw binary slices; overall file validation occurs at /chunked/start and /chunked/finish
+// Chunks are binary slices (~3MB-4MB); 20MB buffer headroom prevents any premature 'File too large' errors
 export const uploadChunkMiddleware = multer({
   storage: memoryStorage,
-  limits: { fileSize: UPLOAD_CHUNK_SIZE }
+  limits: { fileSize: 20 * 1024 * 1024 }
 });
 
 export function validateUploadMetadata({ mimeType, size, originalName = "" }) {
@@ -96,14 +99,13 @@ export function validateUploadMetadata({ mimeType, size, originalName = "" }) {
   const isVideo = ALLOWED_VIDEO_TYPES.has(normalizedMime);
 
   if (!isImage && !isVideo) {
-    const error = new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, and MP4.");
+    const error = new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, MP4, MOV, and WebM.");
     error.status = 415;
     throw error;
   }
-  const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-  if (!Number.isSafeInteger(normalizedSize) || normalizedSize < 1 || normalizedSize > limit) {
-    const error = new Error(isVideo ? "Videos must be 50MB or smaller." : "Images must be 15MB or smaller.");
-    error.status = 413;
+  if (!Number.isSafeInteger(normalizedSize) || normalizedSize < 1) {
+    const error = new Error("Invalid file size.");
+    error.status = 400;
     throw error;
   }
   return { size: normalizedSize, isVideo, mimeType: normalizedMime };
@@ -137,14 +139,16 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
 
   if (isVideo) {
     const signature = file.buffer.subarray(0, 64).toString("latin1");
-    const isMp4Family = signature.includes("ftyp") || (normalizedMime === "video/webm" && signature.includes("webm"));
+    const isMp4Family = signature.includes("ftyp") ||
+      (normalizedMime === "video/webm" && (signature.includes("webm") || (file.buffer[0] === 0x1a && file.buffer[1] === 0x45))) ||
+      (normalizedMime === "video/quicktime" && (signature.includes("ftyp") || signature.includes("moov") || signature.includes("mdat") || signature.includes("wide") || signature.includes("free") || signature.includes("qt  ")));
     if (!isMp4Family) {
-      const error = new Error("Uploaded video content does not match an allowed media format.");
+      const error = new Error("Uploaded video content does not match an allowed media format (MP4, MOV, WebM).");
       error.status = 400;
       throw error;
     }
 
-    const ext = path.extname(file.originalname) || (normalizedMime === "video/webm" ? ".webm" : ".mp4");
+    const ext = path.extname(file.originalname) || (normalizedMime === "video/webm" ? ".webm" : normalizedMime === "video/quicktime" ? ".mov" : ".mp4");
     const filename = `${cleanName}-${uniqueSuffix}${ext}`;
     if (useBlob) {
       const blob = await putVercelBlob(`${folder}/${filename}`, file.buffer, { access: "public", contentType: file.mimetype, multipart: true });
@@ -185,17 +189,16 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
 
   const isAnimated = Boolean(metadata.pages && metadata.pages > 1);
 
-  // Main WebP optimization
+  // Preserve high fidelity & full resolution for professional photography
   const processedBuffer = await sharp(file.buffer, isAnimated ? { animated: true } : {})
     .rotate() // Auto-orient based on EXIF
-    .resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 82 })
+    .webp({ quality: 90, effort: 4 })
     .toBuffer();
 
   const thumbBuffer = await sharp(file.buffer)
     .rotate()
-    .resize({ width: 400, height: 400, fit: "cover" })
-    .webp({ quality: 75 })
+    .resize({ width: 480, height: 480, fit: "cover" })
+    .webp({ quality: 80 })
     .toBuffer();
 
   if (useBlob) {

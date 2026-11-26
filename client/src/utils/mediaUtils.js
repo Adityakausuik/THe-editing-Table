@@ -1,6 +1,4 @@
-export const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15MB
-export const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50MB
-export const CHUNK_BYTES = 3 * 1024 * 1024; // 3MB
+export const CHUNK_BYTES = 3 * 1024 * 1024; // 3MB chunk slice for reliable transport
 
 export const ALLOWED_MIME_MAP = {
   "image/jpeg": "image/jpeg",
@@ -11,6 +9,7 @@ export const ALLOWED_MIME_MAP = {
   "image/webp": "image/webp",
   "image/gif": "image/gif",
   "video/mp4": "video/mp4",
+  "video/quicktime": "video/quicktime",
   "video/webm": "video/webm"
 };
 
@@ -21,8 +20,17 @@ export const EXTENSION_MIME_MAP = {
   ".webp": "image/webp",
   ".gif": "image/gif",
   ".mp4": "video/mp4",
+  ".mov": "video/quicktime",
   ".webm": "video/webm"
 };
+
+export function isVideoMimeType(mimeType = "") {
+  return mimeType === "video/mp4" || mimeType === "video/quicktime" || mimeType === "video/webm";
+}
+
+export function isImageMimeType(mimeType = "") {
+  return String(mimeType).startsWith("image/");
+}
 
 /**
  * Normalizes client file MIME type using both file.type and filename extension fallback.

@@ -6,11 +6,11 @@ import { ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } fr
 
 import { normalizeMimeType } from "./upload.js";
 
-// Configurable size limits
-export const MAX_HERO_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
-export const MAX_HERO_POSTER_SIZE = 15 * 1024 * 1024; // 15MB
+// Generous headroom to eliminate artificial Multer 'File too large' rejections
+export const MAX_HERO_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB
+export const MAX_HERO_POSTER_SIZE = 100 * 1024 * 1024; // 100MB
 
-const ALLOWED_VIDEO_MIMES = new Set(["video/mp4", "video/webm"]);
+const ALLOWED_VIDEO_MIMES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const ALLOWED_IMAGE_MIMES = new Set([
   "image/jpeg",
   "image/jpg",
@@ -31,7 +31,7 @@ export const heroVideoUploadMiddleware = multer({
     const isVideo = ALLOWED_VIDEO_MIMES.has(normalized);
     const isImage = ALLOWED_IMAGE_MIMES.has(normalized);
     if (!isVideo && !isImage) {
-      const err = new Error("Unsupported file format. Permitted formats: MP4, WebM for video; JPG, PNG, WEBP, GIF for poster.");
+      const err = new Error("Unsupported file format. Permitted formats: MP4, MOV, WebM for video; JPG, PNG, WEBP, GIF for poster.");
       err.status = 415;
       return cb(err, false);
     }
@@ -52,15 +52,16 @@ export function validateFileSignature(buffer, mimetype, originalname) {
 
   const ext = path.extname(originalname || "").toLowerCase();
 
-  // 1. MP4
-  if (mimetype === "video/mp4" || ext === ".mp4") {
-    const headerStr = buffer.subarray(0, 32).toString("latin1");
-    if (!headerStr.includes("ftyp")) {
-      const err = new Error("Invalid MP4 file: missing ftyp box signature.");
+  // 1. MP4 & MOV (QuickTime)
+  if (mimetype === "video/mp4" || ext === ".mp4" || mimetype === "video/quicktime" || ext === ".mov") {
+    const headerStr = buffer.subarray(0, 64).toString("latin1");
+    const isIsoMedia = headerStr.includes("ftyp") || headerStr.includes("moov") || headerStr.includes("mdat") || headerStr.includes("wide") || headerStr.includes("free") || headerStr.includes("qt  ");
+    if (!isIsoMedia) {
+      const err = new Error("Invalid MP4/MOV file: missing media box signature.");
       err.status = 400;
       throw err;
     }
-    return { isVideo: true, format: "mp4" };
+    return { isVideo: true, format: ext === ".mov" || mimetype === "video/quicktime" ? "mov" : "mp4" };
   }
 
   // 2. WebM (EBML header starts with 0x1A 0x45 0xDF 0xA3)
@@ -133,21 +134,8 @@ export async function saveHeroAsset(file, assetType = "desktop") {
     throw err;
   }
 
-  // Validate size
-  const isVideoExpected = assetType === "desktop" || assetType === "mobile";
-  const sizeLimit = isVideoExpected ? MAX_HERO_VIDEO_SIZE : MAX_HERO_POSTER_SIZE;
-  if (file.size > sizeLimit) {
-    const limitMb = Math.round(sizeLimit / (1024 * 1024));
-    const err = new Error(`File exceeds maximum size limit of ${limitMb}MB.`);
-    err.status = 413;
-    throw err;
-  }
-
-  // Validate signature
-  const { isVideo, format } = validateFileSignature(file.buffer, file.mimetype, file.originalname);
-
   if (isVideoExpected && !isVideo) {
-    const err = new Error(`Asset type '${assetType}' requires an MP4 or WebM video file.`);
+    const err = new Error(`Asset type '${assetType}' requires an MP4, MOV, or WebM video file.`);
     err.status = 400;
     throw err;
   }

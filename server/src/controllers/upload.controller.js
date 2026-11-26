@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/db.js";
-import { processAndSaveFile, UPLOAD_CHUNK_SIZE, validateUploadMetadata } from "../middleware/upload.js";
+import { normalizeMimeType, processAndSaveFile, UPLOAD_CHUNK_SIZE, validateUploadMetadata } from "../middleware/upload.js";
 import Media from "../models/Media.model.js";
 import { ALLOWED_MODULE_FOLDERS, safeDeleteFile } from "../utils/fileUtils.js";
 import { cleanupExpiredUploadParts, deleteUploadParts, readUploadParts, saveUploadPart } from "../utils/gridfs.js";
 import { randomUUID } from "node:crypto";
 import { env } from "../config/env.js";
+import { getBlobToken, isBlobStorageConfigured } from "../utils/blobStorage.js";
 import {
   buildPostgresMediaUploadPartCount,
   createPostgresMediaUploadSession,
@@ -184,7 +185,7 @@ export async function uploadChunk(req, res, next) {
     const chunkIndex = Number(index);
     const chunkCount = Number(count);
     if (!/^[a-f0-9]{32}$/.test(String(uploadId || "")) || !Number.isInteger(chunkIndex) ||
-        !Number.isInteger(chunkCount) || chunkCount < 1 || chunkCount > 20 ||
+        !Number.isInteger(chunkCount) || chunkCount < 1 || chunkCount > 50000 ||
         chunkIndex < 0 || chunkIndex >= chunkCount || !req.file) {
       return res.status(400).json({ success: false, message: "Invalid upload chunk.", data: null });
     }
@@ -270,6 +271,104 @@ export async function abortChunkedUpload(req, res, next) {
     if (usesPostgres()) await deletePostgresMediaUploadSession(uploadId, req.user?.id);
     else await deleteUploadParts(uploadId);
     return res.status(200).json({ success: true, message: "Incomplete upload removed.", data: null });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getUploadConfig(req, res) {
+  return res.json({
+    success: true,
+    data: {
+      directBlobAvailable: isBlobStorageConfigured("public"),
+      chunkSize: UPLOAD_CHUNK_SIZE,
+      allowedImageTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+      allowedVideoTypes: ["video/mp4", "video/quicktime", "video/webm"]
+    }
+  });
+}
+
+export async function generateBlobClientToken(req, res) {
+  try {
+    if (!isBlobStorageConfigured("public")) {
+      return res.status(503).json({
+        success: false,
+        message: "Direct blob storage is not configured on this environment.",
+        code: "BLOB_STORAGE_NOT_CONFIGURED"
+      });
+    }
+
+    const { handleUpload } = await import("@vercel/blob/client");
+    const jsonResponse = await handleUpload({
+      body: req.body,
+      request: req,
+      token: getBlobToken("public"),
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        let payloadObj = {};
+        try {
+          if (clientPayload) payloadObj = JSON.parse(clientPayload);
+        } catch {}
+        const folder = payloadObj.folder || "general";
+        if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
+          throw new Error("Invalid upload target folder.");
+        }
+
+        return {
+          allowedContentTypes: [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+            "video/mp4",
+            "video/quicktime",
+            "video/webm"
+          ],
+          tokenPayload: JSON.stringify({
+            userId: req.user?.id,
+            folder
+          }),
+          addRandomSuffix: true
+        };
+      },
+      onUploadCompleted: async ({ blob }) => {
+        console.info("[blob:client] Direct upload completed:", blob.url);
+      }
+    });
+
+    return res.json(jsonResponse);
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+export async function recordUploadedMedia(req, res, next) {
+  try {
+    if (!await requireDb(res)) return;
+    const { url, filename, originalName, mimeType, size, folder = "general" } = req.body || {};
+    if (!url || !filename) {
+      return res.status(400).json({ success: false, message: "Missing required media details." });
+    }
+    const safeOriginalName = String(originalName || filename).slice(0, 240);
+    const normalizedMime = normalizeMimeType(mimeType, safeOriginalName);
+    const payload = {
+      filename,
+      originalName: safeOriginalName,
+      mimeType: normalizedMime,
+      size: Number(size) || 0,
+      url,
+      path: `${folder}/${filename}`,
+      category: folder,
+      altText: safeOriginalName,
+      uploadedBy: req.user?.id
+    };
+    const media = usesPostgres()
+      ? await createPostgresMediaRecord(Media, payload)
+      : await Media.create(payload);
+    return res.status(201).json({
+      success: true,
+      message: "Media metadata recorded successfully.",
+      data: { ...payload, ...(media.toObject?.() || media) }
+    });
   } catch (error) {
     next(error);
   }

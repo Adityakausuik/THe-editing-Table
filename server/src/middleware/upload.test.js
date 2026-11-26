@@ -1,35 +1,39 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { MAX_IMAGE_SIZE, MAX_VIDEO_SIZE, processAndSaveFile, validateUploadMetadata } from "./upload.js";
+import { processAndSaveFile, validateUploadMetadata } from "./upload.js";
 
-test("upload metadata accepts supported images and MP4 at their advertised limits", () => {
+test("upload metadata accepts supported images and videos without artificial size caps", () => {
   for (const mimeType of ["image/jpeg", "image/png", "image/webp", "image/gif"]) {
-    assert.deepEqual(validateUploadMetadata({ mimeType, size: MAX_IMAGE_SIZE }), {
-      size: MAX_IMAGE_SIZE,
+    // High-resolution photography (e.g. 45MB RAW/TIFF export)
+    assert.deepEqual(validateUploadMetadata({ mimeType, size: 45 * 1024 * 1024 }), {
+      size: 45 * 1024 * 1024,
       isVideo: false,
       mimeType
     });
   }
-  assert.deepEqual(validateUploadMetadata({ mimeType: "video/mp4", size: MAX_VIDEO_SIZE }), {
-    size: MAX_VIDEO_SIZE,
-    isVideo: true,
-    mimeType: "video/mp4"
-  });
+  for (const mimeType of ["video/mp4", "video/quicktime", "video/webm"]) {
+    // Large cinematic footage (e.g. 500MB 4K cut)
+    assert.deepEqual(validateUploadMetadata({ mimeType, size: 500 * 1024 * 1024 }), {
+      size: 500 * 1024 * 1024,
+      isVideo: true,
+      mimeType
+    });
+  }
 });
 
-test("upload metadata rejects unsupported MIME types and oversize files", () => {
+test("upload metadata rejects unsupported MIME types and invalid sizes", () => {
   assert.throws(() => validateUploadMetadata({ mimeType: "image/svg+xml", size: 10 }), {
     status: 415
   });
-  assert.throws(() => validateUploadMetadata({ mimeType: "image/jpeg", size: MAX_IMAGE_SIZE + 1 }), {
-    status: 413
-  });
-  assert.throws(() => validateUploadMetadata({ mimeType: "video/mp4", size: MAX_VIDEO_SIZE + 1 }), {
-    status: 413
+  assert.throws(() => validateUploadMetadata({ mimeType: "application/pdf", size: 100 }), {
+    status: 415
   });
   assert.throws(() => validateUploadMetadata({ mimeType: "image/jpeg", size: 0 }), {
-    status: 413
+    status: 400
+  });
+  assert.throws(() => validateUploadMetadata({ mimeType: "video/mp4", size: -50 }), {
+    status: 400
   });
 });
 
@@ -40,6 +44,10 @@ test("server rejects mismatched image and video content before persistence", asy
   );
   await assert.rejects(
     processAndSaveFile({ originalname: "clip.mp4", mimetype: "video/mp4", size: 4, buffer: Buffer.from("nope") }, "weddings"),
+    { status: 400 }
+  );
+  await assert.rejects(
+    processAndSaveFile({ originalname: "clip.mov", mimetype: "video/quicktime", size: 4, buffer: Buffer.from("nope") }, "weddings"),
     { status: 400 }
   );
 });

@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { createApp } from "../app.js";
 import { getYouTubeId, isValidYouTubeUrl, getYouTubeEmbedUrl, getYouTubeThumbnail } from "../../../client/src/utils/youtube.js";
 import { extractYouTubeId, isValidYouTubeUrl as isServerValidYouTubeUrl } from "../utils/youtubeUtils.js";
-import { normalizeMimeType, validateUploadMetadata, processAndSaveFile, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from "../middleware/upload.js";
+import { normalizeMimeType, validateUploadMetadata, processAndSaveFile } from "../middleware/upload.js";
 import { normalizeClientMimeType } from "../../../client/src/utils/mediaUtils.js";
 
 const app = createApp();
@@ -85,14 +85,16 @@ async function runTests() {
   // -------------------------------------------------------------------
   // 2. Client & Server MIME Normalization
   // -------------------------------------------------------------------
-  await test("MIME Normalization: Server normalizes image/jpg, image/pjpeg, and .jpg", () => {
+  await test("MIME Normalization: Server normalizes image/jpg, image/pjpeg, .jpg, and QuickTime .mov", () => {
     assert.equal(normalizeMimeType("image/jpg", "test.jpg"), "image/jpeg");
     assert.equal(normalizeMimeType("image/pjpeg", "test.jpeg"), "image/jpeg");
     assert.equal(normalizeMimeType("application/octet-stream", "test.jpg"), "image/jpeg");
     assert.equal(normalizeMimeType("", "photo.jpeg"), "image/jpeg");
+    assert.equal(normalizeMimeType("video/quicktime", "clip.mov"), "video/quicktime");
+    assert.equal(normalizeMimeType("", "film.mov"), "video/quicktime");
   });
 
-  await test("MIME Normalization: Client normalizes JPG, PNG, WEBP, GIF, and MP4", () => {
+  await test("MIME Normalization: Client normalizes JPG, PNG, WEBP, GIF, MP4, and MOV", () => {
     assert.equal(normalizeClientMimeType({ type: "image/jpg", name: "test.jpg" }), "image/jpeg");
     assert.equal(normalizeClientMimeType({ type: "image/jpeg", name: "test.jpg" }), "image/jpeg");
     assert.equal(normalizeClientMimeType({ type: "", name: "camera.jpg" }), "image/jpeg");
@@ -100,10 +102,12 @@ async function runTests() {
     assert.equal(normalizeClientMimeType({ type: "image/webp", name: "img.webp" }), "image/webp");
     assert.equal(normalizeClientMimeType({ type: "image/gif", name: "clip.gif" }), "image/gif");
     assert.equal(normalizeClientMimeType({ type: "video/mp4", name: "reel.mp4" }), "video/mp4");
+    assert.equal(normalizeClientMimeType({ type: "video/quicktime", name: "scene.mov" }), "video/quicktime");
+    assert.equal(normalizeClientMimeType({ type: "", name: "raw_footage.mov" }), "video/quicktime");
   });
 
   // -------------------------------------------------------------------
-  // 3. Metadata Validation & Size Limits
+  // 3. Metadata Validation & Size Limits (No Artificial Caps)
   // -------------------------------------------------------------------
   await test("validateUploadMetadata: Accepts JPG images with correct normalized MIME", () => {
     const resultJpg = validateUploadMetadata({ mimeType: "image/jpg", size: 5000, originalName: "camera.jpg" });
@@ -112,30 +116,29 @@ async function runTests() {
     assert.equal(resultJpg.size, 5000);
   });
 
-  await test("validateUploadMetadata: Accepts all standard image types up to 15MB", () => {
+  await test("validateUploadMetadata: Accepts large high-res photos without artificial caps", () => {
     for (const mime of ["image/jpeg", "image/png", "image/webp", "image/gif"]) {
-      const res = validateUploadMetadata({ mimeType: mime, size: MAX_IMAGE_SIZE });
-      assert.equal(res.size, MAX_IMAGE_SIZE);
+      const res = validateUploadMetadata({ mimeType: mime, size: 50 * 1024 * 1024 });
+      assert.equal(res.size, 50 * 1024 * 1024);
       assert.equal(res.isVideo, false);
     }
   });
 
-  await test("validateUploadMetadata: Accepts MP4 videos up to 50MB", () => {
-    const res = validateUploadMetadata({ mimeType: "video/mp4", size: MAX_VIDEO_SIZE });
-    assert.equal(res.size, MAX_VIDEO_SIZE);
-    assert.equal(res.isVideo, true);
+  await test("validateUploadMetadata: Accepts large MP4 and MOV videos without artificial caps", () => {
+    for (const mime of ["video/mp4", "video/quicktime", "video/webm"]) {
+      const res = validateUploadMetadata({ mimeType: mime, size: 500 * 1024 * 1024 });
+      assert.equal(res.size, 500 * 1024 * 1024);
+      assert.equal(res.isVideo, true);
+    }
   });
 
-  await test("validateUploadMetadata: Rejects oversized images (> 15MB)", () => {
+  await test("validateUploadMetadata: Rejects zero or negative file sizes (400)", () => {
     assert.throws(() => {
-      validateUploadMetadata({ mimeType: "image/jpeg", size: MAX_IMAGE_SIZE + 1 });
-    }, /Images must be 15MB or smaller/);
-  });
-
-  await test("validateUploadMetadata: Rejects oversized videos (> 50MB)", () => {
+      validateUploadMetadata({ mimeType: "image/jpeg", size: 0 });
+    }, { status: 400 });
     assert.throws(() => {
-      validateUploadMetadata({ mimeType: "video/mp4", size: MAX_VIDEO_SIZE + 1 });
-    }, /Videos must be 50MB or smaller/);
+      validateUploadMetadata({ mimeType: "video/mp4", size: -1 });
+    }, { status: 400 });
   });
 
   await test("validateUploadMetadata: Rejects unsupported file types (e.g. PDF, EXE)", () => {
@@ -222,6 +225,27 @@ async function runTests() {
     const saved = await processAndSaveFile(file, "hero");
     assert.ok(saved.url.startsWith("/uploads/hero/"));
     assert.ok(saved.url.endsWith(".mp4"));
+    assert.equal(saved.isVideo, true);
+  });
+
+  const validMovBuffer = Buffer.concat([
+    Buffer.from([0x00, 0x00, 0x00, 0x14]),
+    Buffer.from("ftypqt  ", "latin1"),
+    Buffer.from([0x20, 0x05, 0x03, 0x00]),
+    Buffer.from("qt  ", "latin1"),
+    Buffer.alloc(256)
+  ]);
+
+  await test("processAndSaveFile: Successfully processes MOV video in hero", async () => {
+    const file = {
+      originalname: "cinematic.mov",
+      mimetype: "video/quicktime",
+      size: validMovBuffer.length,
+      buffer: validMovBuffer
+    };
+    const saved = await processAndSaveFile(file, "hero");
+    assert.ok(saved.url.startsWith("/uploads/hero/"));
+    assert.ok(saved.url.endsWith(".mov"));
     assert.equal(saved.isVideo, true);
   });
 

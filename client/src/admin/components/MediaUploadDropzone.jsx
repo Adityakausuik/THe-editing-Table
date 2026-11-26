@@ -1,33 +1,71 @@
 /* global console, FormData */
-import { AlertCircle, CheckCircle2, Film, Image as ImageIcon, Loader2, RefreshCw, Trash2, UploadCloud, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Film, Image as ImageIcon, Loader2, RefreshCw, Trash2, UploadCloud, X, XCircle } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 import {
   CHUNK_BYTES,
   formatBytes,
-  MAX_IMAGE_BYTES,
-  MAX_VIDEO_BYTES,
+  isImageMimeType,
+  isVideoMimeType,
   normalizeClientMimeType
 } from "../../utils/mediaUtils.js";
 
-export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
+/**
+ * Uploads a file either directly via @vercel/blob/client (when configured)
+ * or via resilient chunked pipeline (with 3MB slices, retries, and cancellation).
+ */
+export async function uploadFileInChunks(file, folder, onProgress = () => {}, signal = null) {
   const mimeType = normalizeClientMimeType(file);
-  const isVideo = mimeType === "video/mp4" || mimeType === "video/webm";
-  const isImage = mimeType.startsWith("image/");
+  const isVideo = isVideoMimeType(mimeType);
+  const isImage = isImageMimeType(mimeType);
 
   if (!isImage && !isVideo) {
-    throw new Error("Unsupported file type. Please choose a JPG, PNG, WEBP, GIF, or MP4 file.");
+    throw new Error("Unsupported file type. Please choose a JPG, PNG, WEBP, GIF, MP4, MOV, or WebM file.");
   }
 
-  const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-  if (file.size > limit) {
-    throw new Error(
-      isVideo
-        ? `Videos must be ${Math.round(MAX_VIDEO_BYTES / (1024 * 1024))}MB or smaller.`
-        : `Images must be ${Math.round(MAX_IMAGE_BYTES / (1024 * 1024))}MB or smaller.`
-    );
+  // Check if direct Blob upload is available in this environment
+  try {
+    const configRes = await apiFetch("/api/v1/upload/config").catch(() => null);
+    if (configRes?.data?.directBlobAvailable) {
+      try {
+        const { upload } = await import("@vercel/blob/client");
+        const newBlob = await upload(file.name, file, {
+          access: "public",
+          handleUploadUrl: "/api/v1/upload/blob/token",
+          clientPayload: JSON.stringify({ folder }),
+          abortSignal: signal || undefined,
+          onUploadProgress: (progressEvent) => {
+            if (typeof progressEvent?.percentage === "number") {
+              onProgress(progressEvent.percentage / 100);
+            }
+          }
+        });
+
+        const recordRes = await apiFetch("/api/v1/upload/record-media", {
+          method: "POST",
+          body: JSON.stringify({
+            url: newBlob.url,
+            filename: file.name,
+            originalName: file.name,
+            mimeType: file.type || mimeType,
+            size: file.size,
+            folder
+          }),
+          signal
+        });
+
+        return recordRes?.data || { url: newBlob.url, filename: file.name, size: file.size };
+      } catch (blobErr) {
+        if (signal?.aborted || blobErr?.name === "AbortError") throw blobErr;
+        console.warn("[upload] Direct Blob upload unavailable, falling back to chunked pipeline:", blobErr.message);
+      }
+    }
+  } catch (err) {
+    if (signal?.aborted || err?.name === "AbortError") throw err;
+    console.warn("[upload] Server config check failed, proceeding with chunked pipeline:", err.message);
   }
 
+  // Resumable chunked upload pipeline (safe for Vercel 4.5MB payload limit & local dev)
   const started = await apiFetch("/api/v1/upload/chunked/start", {
     method: "POST",
     body: JSON.stringify({
@@ -35,7 +73,8 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
       mimeType,
       size: file.size,
       originalName: file.name
-    })
+    }),
+    signal
   });
 
   const { uploadId, chunkSize = CHUNK_BYTES } = started.data || {};
@@ -45,9 +84,10 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
 
   try {
     for (let index = 0; index < count; index += 1) {
+      if (signal?.aborted) throw new Error("Upload cancelled by user.");
+
       const startByte = index * chunkSize;
       const endByte = Math.min((index + 1) * chunkSize, file.size);
-      // Explicitly pass mimeType to Blob slice
       const chunkBlob = file.slice(startByte, endByte, mimeType);
 
       const body = new FormData();
@@ -56,7 +96,26 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
       body.append("count", String(count));
       body.append("chunk", chunkBlob, file.name);
 
-      await apiFetch("/api/v1/upload/chunked/part", { method: "POST", body });
+      // Automatic retry on transient chunk failure (up to 3 attempts)
+      let attempts = 0;
+      let lastErr = null;
+      while (attempts < 3) {
+        if (signal?.aborted) throw new Error("Upload cancelled by user.");
+        try {
+          await apiFetch("/api/v1/upload/chunked/part", { method: "POST", body, signal });
+          lastErr = null;
+          break;
+        } catch (err) {
+          if (signal?.aborted || err?.name === "AbortError") throw err;
+          lastErr = err;
+          attempts += 1;
+          if (attempts < 3) {
+            await new Promise((resolve) => setTimeout(resolve, 600 * attempts));
+          }
+        }
+      }
+      if (lastErr) throw lastErr;
+
       onProgress((index + 1) / count);
     }
 
@@ -68,7 +127,8 @@ export async function uploadFileInChunks(file, folder, onProgress = () => {}) {
         mimeType,
         size: file.size,
         folder
-      })
+      }),
+      signal
     });
 
     if (!result?.data?.url) throw new Error("The server did not return a stored media URL.");
@@ -92,7 +152,7 @@ export default function MediaUploadDropzone({
   maxFiles = 5,
   label = "Upload Media File",
   description = "Drag and drop media here, or click to browse",
-  accept = ".jpg,.jpeg,.png,.webp,.gif,.mp4"
+  accept = ".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm"
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -102,6 +162,17 @@ export default function MediaUploadDropzone({
   const [lastFailedFile, setLastFailedFile] = useState(null);
 
   const fileInputRef = useRef(null);
+  const abortControllerRef = useRef(null);
+
+  const handleCancelUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setUploading(false);
+    setProgress(0);
+    setError("Upload cancelled.");
+  };
 
   const executeUpload = useCallback(
     async (fileList) => {
@@ -112,20 +183,30 @@ export default function MediaUploadDropzone({
       setProgress(0);
       setLastFailedFile(null);
 
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         if (!multiple) {
           const file = fileList[0];
           try {
-            const saved = await uploadFileInChunks(file, folder, (ratio) =>
-              setProgress(Math.round(ratio * 100))
+            const saved = await uploadFileInChunks(
+              file,
+              folder,
+              (ratio) => setProgress(Math.round(ratio * 100)),
+              controller.signal
             );
             onChange(saved.url);
             setProgress(100);
-            setSuccessMsg("Media uploaded and optimized successfully!");
+            setSuccessMsg("Media uploaded successfully!");
             setTimeout(() => setSuccessMsg(""), 3500);
           } catch (err) {
-            setLastFailedFile(file);
-            throw err;
+            if (controller.signal.aborted) {
+              setError("Upload cancelled.");
+            } else {
+              setLastFailedFile(file);
+              throw err;
+            }
           }
         } else {
           const currentList = Array.isArray(value) ? value : [];
@@ -140,16 +221,26 @@ export default function MediaUploadDropzone({
           let firstFailure = null;
 
           for (let fileIndex = 0; fileIndex < filesToUpload.length; fileIndex += 1) {
+            if (controller.signal.aborted) break;
             const currentFile = filesToUpload[fileIndex];
             try {
-              const saved = await uploadFileInChunks(currentFile, folder, (ratio) => {
-                const totalProgress = ((fileIndex + ratio) / filesToUpload.length) * 100;
-                setProgress(Math.round(totalProgress));
-              });
+              const saved = await uploadFileInChunks(
+                currentFile,
+                folder,
+                (ratio) => {
+                  const totalProgress = ((fileIndex + ratio) / filesToUpload.length) * 100;
+                  setProgress(Math.round(totalProgress));
+                },
+                controller.signal
+              );
               savedFiles.push(saved);
             } catch (err) {
-              firstFailure = err;
-              setLastFailedFile(currentFile);
+              if (controller.signal.aborted) {
+                firstFailure = new Error("Upload cancelled.");
+              } else {
+                firstFailure = err;
+                setLastFailedFile(currentFile);
+              }
               break;
             }
           }
@@ -170,10 +261,13 @@ export default function MediaUploadDropzone({
           }
         }
       } catch (err) {
-        console.error("[MediaUploadDropzone] Upload error:", err);
-        setError(err.message || "Upload failed. Please check the file and try again.");
+        if (!controller.signal.aborted) {
+          console.error("[MediaUploadDropzone] Upload error:", err);
+          setError(err.message || "Upload failed. Please check the file and try again.");
+        }
       } finally {
         setUploading(false);
+        abortControllerRef.current = null;
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
@@ -256,10 +350,10 @@ export default function MediaUploadDropzone({
 
         <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
           {uploading ? (
-            <div className="space-y-2.5 w-full max-w-xs mx-auto py-2">
+            <div className="space-y-2.5 w-full max-w-xs mx-auto py-2 pointer-events-auto">
               <Loader2 className="h-8 w-8 animate-spin text-site mx-auto" />
               <p className="text-xs font-semibold text-forest">
-                Uploading &amp; Optimizing... {progress}%
+                Uploading &amp; Processing... {progress}%
               </p>
               <div className="w-full bg-sage-border/40 rounded-full h-1.5 overflow-hidden">
                 <div
@@ -267,6 +361,14 @@ export default function MediaUploadDropzone({
                   style={{ width: `${progress}%` }}
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleCancelUpload}
+                className="mt-2 inline-flex items-center gap-1 px-3 py-1 text-[11px] font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
+              >
+                <XCircle className="h-3 w-3" />
+                Cancel Upload
+              </button>
             </div>
           ) : (
             <>
@@ -275,9 +377,9 @@ export default function MediaUploadDropzone({
               </div>
               <p className="text-xs font-semibold text-forest">{description}</p>
               <div className="flex items-center gap-2 text-[10px] text-sage-muted">
-                <span>JPG, PNG, WEBP, GIF (Max 15MB)</span>
+                <span>High-Res Photos (JPG, PNG, WEBP)</span>
                 <span>•</span>
-                <span>MP4 (Max 50MB)</span>
+                <span>Cinematic Video (MP4, MOV, WebM)</span>
               </div>
             </>
           )}
