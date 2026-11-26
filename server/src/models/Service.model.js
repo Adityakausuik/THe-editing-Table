@@ -50,7 +50,7 @@ const serviceSchema = new mongoose.Schema(
     deliverables: [{ type: String }],
     icon: {
       type: String,
-      default: "Sparkles"
+      default: "Film"
     },
     order: {
       type: Number,

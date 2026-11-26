@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import { ArrowUpRight, Award, CheckCircle2, Film, Palette, Sparkles } from "lucide-react";
+import { ArrowUpRight, Award, CheckCircle2, Film, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import Container from "../components/ui/Container.jsx";
 import { useCmsCollection } from "../lib/useCmsCollection.js";
@@ -18,7 +18,7 @@ export default function ServicesPage() {
       <Container className="space-y-10">
         <div className="text-center space-y-3.5 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-widest text-site shadow-xs">
-            <Sparkles className="h-3.5 w-3.5" /> Full Post-Production Capabilities
+            <Film className="h-3.5 w-3.5" /> Full Post-Production Capabilities
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
             Post-Production Services Suite

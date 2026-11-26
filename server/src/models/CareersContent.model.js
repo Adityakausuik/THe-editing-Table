@@ -5,7 +5,7 @@ const whyJoinUsCardSchema = new mongoose.Schema(
     id: { type: String, required: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
-    icon: { type: String, default: "Sparkles" },
+    icon: { type: String, default: "Award" },
     active: { type: Boolean, default: true },
     order: { type: Number, default: 0 }
   },
@@ -57,7 +57,7 @@ const careersContentSchema = new mongoose.Schema(
           id: "card-3",
           title: "Learn & Grow",
           description: "Continuous mentorship in advanced DaVinci Resolve color science, 35mm film emulation, and high-fashion retouching.",
-          icon: "Sparkles",
+          icon: "Award",
           active: true,
           order: 2
         },

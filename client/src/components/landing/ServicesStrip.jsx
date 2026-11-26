@@ -1,4 +1,4 @@
-import { Film, Layers, Palette, Sparkles, Volume2 } from "lucide-react";
+import { Clapperboard, Film, Layers, Palette, Volume2 } from "lucide-react";
 import Container from "../ui/Container.jsx";
 
 const SERVICES = [
@@ -13,7 +13,7 @@ const SERVICES = [
     id: "vfx-compositing",
     title: "VFX & Compositing",
     tagline: "Bring imagination to life.",
-    icon: Sparkles,
+    icon: Clapperboard,
     href: "/services#vfx-compositing"
   },
   {

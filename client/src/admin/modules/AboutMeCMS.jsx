@@ -1,13 +1,13 @@
 /* global console */
 import {
   AlertCircle,
+  Award,
   Briefcase,
   CheckCircle2,
   ExternalLink,
   Plus,
   RefreshCw,
   Save,
-  Sparkles,
   Trash2,
   User,
   Zap
@@ -286,7 +286,7 @@ export default function AboutMeCMS() {
 
   const tabs = [
     { id: "profile", label: "Profile & Portrait", icon: User },
-    { id: "story", label: "Story & Vision", icon: Sparkles },
+    { id: "story", label: "Story & Vision", icon: Award },
     { id: "skills", label: "Experience & Skills", icon: Zap },
     { id: "responsibilities", label: "What I Do", icon: Briefcase },
     { id: "philosophy", label: "Company & Philosophy", icon: CheckCircle2 }

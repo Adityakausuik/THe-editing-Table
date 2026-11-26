@@ -115,7 +115,7 @@ export default function CareersCMS() {
     id: "",
     title: "",
     description: "",
-    icon: "Sparkles",
+    icon: "Award",
     active: true
   });
 
@@ -438,7 +438,7 @@ export default function CareersCMS() {
         id: `card-${Date.now()}`,
         title: "",
         description: "",
-        icon: "Sparkles",
+        icon: "Award",
         active: true
       });
     }
@@ -1541,7 +1541,7 @@ export default function CareersCMS() {
                 >
                   <option value="Users">Users</option>
                   <option value="Film">Film</option>
-                  <option value="Sparkles">Sparkles</option>
+                  <option value="Award">Award</option>
                   <option value="Heart">Heart</option>
                   <option value="TrendingUp">TrendingUp</option>
                   <option value="Briefcase">Briefcase</option>

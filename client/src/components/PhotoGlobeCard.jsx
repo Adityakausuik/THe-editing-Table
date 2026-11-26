@@ -1,5 +1,5 @@
 import React, { forwardRef, memo } from "react";
-import { Sparkles, MapPin, Maximize2, Eye } from "lucide-react";
+import { Camera, MapPin, Maximize2, Eye } from "lucide-react";
 
 /**
  * PhotoGlobeCard Component
@@ -61,7 +61,7 @@ export const PhotoGlobeCard = memo(
           {/* Category Pill Badge */}
           {photo.category && (
             <div className="photo-globe-badge pointer-events-none">
-              <Sparkles className="w-3 h-3 text-[#C8D8BE]" aria-hidden="true" />
+              <Camera className="w-3 h-3 text-[#C8D8BE]" aria-hidden="true" />
               <span>{photo.category}</span>
             </div>
           )}

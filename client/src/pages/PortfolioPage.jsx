@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import { ArrowUpRight, Play, Sparkles } from "lucide-react";
+import { ArrowUpRight, Film, Play } from "lucide-react";
 import { useMemo, useState } from "react";
 import Container from "../components/ui/Container.jsx";
 import { mediaUrl } from "../lib/api.js";
@@ -75,7 +75,7 @@ export default function PortfolioPage() {
       <Container className="space-y-10">
         <div className="text-center space-y-3.5 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-secondary/80 px-3.5 py-1 text-xs font-semibold uppercase tracking-widest text-site shadow-xs">
-            <Sparkles className="h-3.5 w-3.5" /> 4K Film Portfolio Showcase
+            <Film className="h-3.5 w-3.5" /> 4K Film Portfolio Showcase
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-normal text-forest leading-tight">
             Selected Editorial &amp; Wedding Films

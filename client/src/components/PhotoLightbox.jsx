@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, MapPin, Sparkles } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, MapPin, Camera } from "lucide-react";
 
 /**
  * PhotoLightbox Component
@@ -180,7 +180,7 @@ export function PhotoLightbox({
               {/* Floating Category Pill */}
               {photo.category && (
                 <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-xs font-medium text-white">
-                  <Sparkles className="w-3 h-3 text-[#C8D8BE]" />
+                  <Camera className="w-3 h-3 text-[#C8D8BE]" />
                   <span>{photo.category}</span>
                 </div>
               )}

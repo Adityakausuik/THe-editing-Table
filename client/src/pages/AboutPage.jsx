@@ -10,7 +10,6 @@ import {
   Layers,
   Palette,
   ShieldCheck,
-  Sparkles,
   Target,
   Users,
   Wand2,
@@ -254,7 +253,7 @@ export default function AboutPage() {
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-site shadow-xs"
           >
-            <Sparkles className="h-3.5 w-3.5 text-site" />
+            <Award className="h-3.5 w-3.5 text-site" />
             <span>
               {data.introBadge || "FOUNDER & CREATIVE DIRECTOR"}
             </span>
@@ -437,7 +436,7 @@ export default function AboutPage() {
                 transition={{ duration: 0.3, delay: index * 0.04 }}
                 className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-5 py-2.5 text-xs sm:text-sm font-medium text-forest shadow-soft hover:border-[rgb(72,125,72)] hover:bg-sage-secondary transition-all"
               >
-                <Sparkles className="h-3.5 w-3.5 text-site shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-site shrink-0" />
                 <span>{skill}</span>
               </m.div>
             ))}

@@ -11,7 +11,6 @@ import {
   Heart,
   MapPin,
   Send,
-  Sparkles,
   TrendingUp,
   Upload,
   Users,
@@ -27,7 +26,6 @@ import { sanitizeStudio } from "../lib/sanitizeStudio.js";
 const ICON_MAP = {
   Users,
   Film,
-  Sparkles,
   Heart,
   TrendingUp,
   Briefcase,
@@ -210,7 +208,7 @@ export default function CareersPage() {
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-site backdrop-blur-md shadow-xs"
           >
-            <Sparkles className="h-3.5 w-3.5 text-site" />
+            <Briefcase className="h-3.5 w-3.5 text-site" />
             <span>{heroBadge}</span>
           </m.div>
 
@@ -268,7 +266,7 @@ export default function CareersPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {whyJoinUsCards.map((card, idx) => {
-              const IconComp = ICON_MAP[card.icon] || Sparkles;
+              const IconComp = ICON_MAP[card.icon] || Briefcase;
               return (
                 <m.div
                   key={card.id || idx}

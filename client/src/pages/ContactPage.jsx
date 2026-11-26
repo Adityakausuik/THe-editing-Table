@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Loader2, Send, Sparkles, Mail, Phone, MapPin, Instagram, Linkedin } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Send, Mail, Phone, MapPin, Instagram, Linkedin } from "lucide-react";
 import { useState } from "react";
 import Container from "../components/ui/Container.jsx";
 import SectionHeading from "../components/ui/SectionHeading.jsx";
@@ -154,7 +154,7 @@ export default function ContactPage() {
       <section className="relative py-14 sm:py-16 bg-sage-secondary/40 border-b border-sage-border/60">
         <Container className="max-w-4xl text-center space-y-5">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(72,125,72)]/30 bg-sage-card/80 px-3.5 py-1 backdrop-blur-md shadow-xs">
-            <Sparkles className="h-3.5 w-3.5 text-site" />
+            <Mail className="h-3.5 w-3.5 text-site" />
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-site">
               {contact.heroLabel}
             </span>

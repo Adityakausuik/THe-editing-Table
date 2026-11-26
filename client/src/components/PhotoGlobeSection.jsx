@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Camera } from "lucide-react";
 import PhotoGlobe from "./PhotoGlobe.jsx";
 import PhotoLightbox from "./PhotoLightbox.jsx";
 import defaultPhotos from "../data/photoData.js";
@@ -84,7 +84,7 @@ export function PhotoGlobeSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 mb-4 md:mb-6">
         {/* Eyebrow Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F2F7F0] border border-[#E3EBDD] mb-4 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-[#8FAE7B]" aria-hidden="true" />
+          <Camera className="w-3.5 h-3.5 text-[#8FAE7B]" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#2F3A2F]">
             Interactive 3D Gallery
           </span>

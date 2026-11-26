@@ -7,7 +7,6 @@ import {
   ChevronRight,
   MapPin,
   Maximize2,
-  Sparkles,
   X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -449,7 +448,7 @@ export default function PhotoShowcaseSection() {
                   <div className="relative z-10 p-4 flex items-center justify-between w-full">
                     {photo.badgeText && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-forest/70 backdrop-blur-md px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-soft">
-                        <Sparkles className="h-3 w-3 text-site" />
+                        <Camera className="h-3 w-3 text-site" />
                         {photo.badgeText}
                       </span>
                     )}

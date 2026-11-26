@@ -1,6 +1,6 @@
 import { m } from "framer-motion";
 import { useId, useState } from "react";
-import { Sparkles, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, SlidersHorizontal } from "lucide-react";
 import { mediaUrl } from "../../lib/api.js";
 import { useSiteSettings } from "../../lib/useSiteSettings.js";
 import Container from "../ui/Container.jsx";
@@ -47,7 +47,7 @@ export default function BeforeAfterSection() {
                 key={item}
                 className="flex items-center gap-2.5 py-2.5 border-b border-sage-border/70 text-xs sm:text-[13px] font-medium text-forest"
               >
-                <Sparkles className="h-3.5 w-3.5 text-site shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#487D48] shrink-0" />
                 <span>{item}</span>
               </div>
             ))}

@@ -15,7 +15,6 @@ import {
   Save,
   Search,
   Sliders,
-  Sparkles,
   Star,
   Trash2,
   X
@@ -442,7 +441,7 @@ export default function GlobalReachManager() {
           </div>
         </div>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white border border-sage-border text-site shadow-2xs">
-          <Sparkles className="h-3.5 w-3.5" />
+          <Globe2 className="h-3.5 w-3.5" />
           <span>Live 3D Sync</span>
         </div>
       </div>

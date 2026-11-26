@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Clock, Film, Layers, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Film, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Button from "../components/ui/Button.jsx";
@@ -108,7 +108,7 @@ export default function ServiceDetailPage() {
             <ul className="space-y-3">
               {deliverables.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-xs sm:text-sm text-forest">
-                  <Sparkles className="h-4 w-4 text-site shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-[#487D48] shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>
               ))}
