@@ -125,7 +125,7 @@ export default function HeroBackgroundCMS() {
   // Preview interactive state
   const [previewDevice, setPreviewDevice] = useState("desktop"); // "desktop" | "mobile"
   const [previewMuted, setPreviewMuted] = useState(true);
-  const [showMockupText, setShowMockupText] = useState(true);
+  const [showMockupText, setShowMockupText] = useState(false);
   const videoRef = useRef(null);
 
   // Hidden file inputs for replacing assets
@@ -1460,23 +1460,6 @@ export default function HeroBackgroundCMS() {
                       >
                         The Editing Table
                       </h2>
-
-                      <p
-                        className="mt-1 text-white/85 mx-auto max-w-sm line-clamp-2"
-                        style={{
-                          fontFamily: "'Manrope', sans-serif",
-                          fontSize: previewDevice === "desktop" ? "0.75rem" : "0.65rem",
-                          lineHeight: 1.4
-                        }}
-                      >
-                        Professional photo &amp; video editing for creators, filmmakers and brands around the world.
-                      </p>
-
-                      <div className="mt-3 flex justify-center">
-                        <div className="rounded-full bg-emerald-700/90 px-4 py-1.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
-                          Start a Project &rarr;
-                        </div>
-                      </div>
                     </div>
                   )}
                 </div>
