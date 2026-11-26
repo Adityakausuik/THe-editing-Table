@@ -12,7 +12,7 @@ import {
 } from "../db/heroBackgroundRepository.js";
 import { saveHeroAsset } from "../middleware/heroVideoUpload.js";
 import { writeSecurityAudit } from "../utils/audit.js";
-import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
+import { getCache, setCache, deleteCache, invalidateCmsCache } from "../config/redis.js";
 
 /**
  * Public: Get current active published hero background.
@@ -23,14 +23,14 @@ export async function getActiveHeroVideo(req, res, next) {
     const cached = await getCache(cacheKey);
     if (cached && Object.prototype.hasOwnProperty.call(cached, "active")) {
       res.setHeader("X-Cache", "HIT");
-      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+      res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
       return res.json({ success: true, data: cached.active });
     }
 
     const active = await getActiveHeroBackground();
     await setCache(cacheKey, { active: active || null }, 300);
     res.setHeader("X-Cache", "MISS");
-    res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     return res.json({
       success: true,
       data: active
@@ -314,6 +314,7 @@ export async function publishHeroVideo(req, res, next) {
       details: { version: published.version, videoUrl: published.videoUrl }
     });
 
+    await deleteCache("cms:hero:video:active");
     await invalidateCmsCache("hero");
     return res.json({
       success: true,
@@ -350,6 +351,7 @@ export async function unpublishHeroVideo(req, res, next) {
       details: { version: unpublished.version }
     });
 
+    await deleteCache("cms:hero:video:active");
     await invalidateCmsCache("hero");
     return res.json({
       success: true,
@@ -382,6 +384,7 @@ export async function restoreHeroVersion(req, res, next) {
       details: { restoredFrom: id, newVersion: restored.version }
     });
 
+    await deleteCache("cms:hero:video:active");
     await invalidateCmsCache("hero");
     return res.json({
       success: true,

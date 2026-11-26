@@ -644,6 +644,7 @@ function createCRUDActions(Model, entityName) {
           const cached = await getCache(cacheKey);
           if (cached) {
             res.setHeader("X-Cache", "HIT");
+            res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
             return res.json(cached);
           }
         }
@@ -665,6 +666,7 @@ function createCRUDActions(Model, entityName) {
               await setCache(cacheKey, payload, 300);
             }
             res.setHeader("X-Cache", "MISS");
+            res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
             return res.json(payload);
           }
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
@@ -681,6 +683,7 @@ function createCRUDActions(Model, entityName) {
             await setCache(cacheKey, payload, 300);
           }
           res.setHeader("X-Cache", "MISS");
+          res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
           return res.json(payload);
         }
 

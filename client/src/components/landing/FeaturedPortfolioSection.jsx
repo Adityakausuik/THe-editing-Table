@@ -473,6 +473,7 @@ export default function FeaturedPortfolioSection() {
                   controls
                   autoPlay
                   playsInline
+                  preload="metadata"
                   className="h-full w-full object-contain"
                 />
               )}

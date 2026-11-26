@@ -1,7 +1,7 @@
 import { createId, isValidId } from "../utils/ids.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
 import { writeSecurityAudit } from "../utils/audit.js";
-import { getCache, setCache, invalidateCmsCache } from "../config/redis.js";
+import { getCache, setCache, deleteCache, invalidateCmsCache } from "../config/redis.js";
 import {
   createPostgresHeroSlide,
   deletePostgresHeroSlide,
@@ -168,6 +168,7 @@ export async function getPublicHeroSlides(req, res) {
     const cached = await getCache(cacheKey);
     if (cached) {
       res.setHeader("X-Cache", "HIT");
+      res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
       return res.json(cached);
     }
 
@@ -179,6 +180,7 @@ export async function getPublicHeroSlides(req, res) {
     };
     await setCache(cacheKey, payload, 300);
     res.setHeader("X-Cache", "MISS");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     return res.json(payload);
   } catch {
     return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Hero slide data cannot be retrieved.", data: null });

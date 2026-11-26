@@ -185,7 +185,13 @@ export async function invalidateCmsCache(moduleName) {
   ];
 
   if (norm.includes("hero")) {
-    keysToClear.push("cms:hero:*", "cms:hero-slides:*", "hero-video:*");
+    keysToClear.push(
+      "cms:hero:*",
+      "cms:hero:video:active",
+      "cms:hero-slides:*",
+      "cms:hero-slides:public",
+      "hero-video:*"
+    );
   } else if (norm.includes("portfolio")) {
     keysToClear.push("cms:portfolio:*", "cms:portfolio:list", "cms:portfolio:admin");
   } else if (norm.includes("service")) {

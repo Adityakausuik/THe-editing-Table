@@ -33,7 +33,7 @@ import {
   Youtube
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { apiFetch, mediaUrl, notifyCmsChanged } from "../../lib/api.js";
 import MediaUploadDropzone, { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
 import { getYouTubeId } from "../../utils/youtube.js";
 
@@ -447,6 +447,7 @@ export default function HeroBackgroundCMS() {
 
       if (res?.data) {
         setActiveConfig(res.data);
+        notifyCmsChanged("hero-video");
         showAlert("success", `Version ${res.data.version} is now LIVE on the homepage!`);
         await loadConfig();
         await loadHistory();
@@ -472,6 +473,7 @@ export default function HeroBackgroundCMS() {
       });
       if (res?.success) {
         setActiveConfig(null);
+        notifyCmsChanged("hero-video");
         showAlert("success", "Active hero background video unpublished. Homepage reverted to minimal mode.");
         await loadConfig();
         await loadHistory();
@@ -495,6 +497,7 @@ export default function HeroBackgroundCMS() {
         method: "POST"
       });
       if (res?.data) {
+        notifyCmsChanged("hero-video");
         showAlert("success", `Version ${versionNumber} restored as Version ${res.data.version} and published!`);
         setActiveTab("manager");
         await loadConfig();
@@ -578,6 +581,7 @@ export default function HeroBackgroundCMS() {
         body: JSON.stringify(slideForm)
       });
 
+      notifyCmsChanged("hero-slides");
       showAlert("success", `Hero slide ${isNew ? "created" : "updated"} successfully!`);
       setIsSlideModalOpen(false);
       loadSlides();
@@ -592,6 +596,7 @@ export default function HeroBackgroundCMS() {
     if (!confirm("Are you sure you want to delete this hero slide?")) return;
     try {
       await apiFetch(`/api/v1/cms/hero-slides/admin/${id}`, { method: "DELETE" });
+      notifyCmsChanged("hero-slides");
       showAlert("success", "Hero slide deleted successfully.");
       loadSlides();
     } catch (err) {
@@ -606,6 +611,7 @@ export default function HeroBackgroundCMS() {
         method: "PATCH",
         body: JSON.stringify({ active: !slide.active })
       });
+      notifyCmsChanged("hero-slides");
       loadSlides();
     } catch (err) {
       showAlert("error", err.message || "Failed to toggle slide status.");
@@ -626,6 +632,7 @@ export default function HeroBackgroundCMS() {
         method: "PUT",
         body: JSON.stringify({ items })
       });
+      notifyCmsChanged("hero-slides");
       showAlert("success", "Slide ordering updated.");
     } catch (err) {
       showAlert("error", err.message || "Failed to reorder slides.");

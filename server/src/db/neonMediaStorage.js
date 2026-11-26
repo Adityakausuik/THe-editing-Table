@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { getPostgresPool } from "./postgres.js";
 import { sanitizeFilename } from "../utils/fileUtils.js";
+import { getCache, setCache, deleteCache } from "../config/redis.js";
 
 export const NEON_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunk slices for streaming efficiency
 
@@ -16,12 +17,23 @@ export function normalizeMediaPath(inputPath = "") {
 
 /**
  * Looks up a media item in Neon PostgreSQL by path, url, filename, _id, or checksum.
+ * Utilizes high-performance Redis/in-memory caching to eliminate redundant database queries
+ * on HTTP 206 Partial Content video range requests.
  */
 export async function getMediaMetadata(identifier) {
   if (!identifier) return null;
-  const pool = getPostgresPool();
   const raw = String(identifier).trim();
   const normalized = normalizeMediaPath(raw);
+  const cacheKey = `media:meta:${normalized}`;
+
+  // 1. Check multi-tier cache
+  const cached = await getCache(cacheKey);
+  if (cached && cached._id) {
+    return cached;
+  }
+
+  // 2. Query Neon PostgreSQL
+  const pool = getPostgresPool();
   const asUploadUrl = `/uploads/${normalized}`;
 
   const query = `
@@ -36,7 +48,20 @@ export async function getMediaMetadata(identifier) {
   `;
 
   const result = await pool.query(query, [normalized, asUploadUrl, normalized, raw, raw]);
-  return result.rows[0] || null;
+  const row = result.rows[0] || null;
+
+  if (row) {
+    // Cache for 1 hour (3600 seconds) across paths and IDs
+    await setCache(cacheKey, row, 3600);
+    if (row._id && row._id !== normalized) {
+      await setCache(`media:meta:${row._id}`, row, 3600);
+    }
+    if (row.path && row.path !== normalized) {
+      await setCache(`media:meta:${row.path}`, row, 3600);
+    }
+  }
+
+  return row;
 }
 
 /**
@@ -259,7 +284,7 @@ export async function saveMediaBufferToNeon({
 
     await client.query("COMMIT");
 
-    return {
+    const savedMedia = {
       _id: mediaId,
       id: mediaId,
       filename,
@@ -277,6 +302,12 @@ export async function saveMediaBufferToNeon({
       isVideo,
       totalChunks
     };
+
+    // Warm metadata cache immediately
+    await setCache(`media:meta:${mediaPath}`, savedMedia, 3600);
+    await setCache(`media:meta:${mediaId}`, savedMedia, 3600);
+
+    return savedMedia;
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     throw error;
@@ -429,7 +460,7 @@ export async function commitChunkedUploadToNeon({
 
     await client.query("COMMIT");
 
-    return {
+    const committedMedia = {
       _id: mediaId,
       id: mediaId,
       filename,
@@ -447,6 +478,12 @@ export async function commitChunkedUploadToNeon({
       isVideo,
       totalChunks: partCount
     };
+
+    // Warm metadata cache immediately
+    await setCache(`media:meta:${mediaPath}`, committedMedia, 3600);
+    await setCache(`media:meta:${mediaId}`, committedMedia, 3600);
+
+    return committedMedia;
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     throw error;
@@ -464,6 +501,10 @@ export async function deleteMediaFromNeon(identifier) {
   const raw = String(identifier).trim();
   const normalized = normalizeMediaPath(raw);
   const asUploadUrl = `/uploads/${normalized}`;
+
+  // Invalidate metadata caches
+  await deleteCache(`media:meta:${normalized}`);
+  await deleteCache(`media:meta:${raw}`);
 
   const result = await pool.query(
     `DELETE FROM "media" WHERE "path" = $1 OR "url" = $2 OR "filename" = $3 OR "_id" = $4`,
