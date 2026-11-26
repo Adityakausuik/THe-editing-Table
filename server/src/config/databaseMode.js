@@ -1,12 +1,10 @@
 import { env } from "./env.js";
 
-export function isPostgresSelected(config = env) {
-  if (config.DATABASE_URL) return true;
-  if (config.VERCEL_ENV === "preview") return true;
-  return config.DATABASE_BACKEND === "postgres";
+export function isPostgresSelected(_config = env) {
+  return true;
 }
 
 export function isPostgresAuthEnabled(config = env) {
-  if (!isPostgresSelected(config)) return false;
+  if (process.env.POSTGRES_AUTH_ENABLED === "false" || config.POSTGRES_AUTH_ENABLED === false) return false;
   return true;
 }

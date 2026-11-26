@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const trustedDeviceSchema = new mongoose.Schema(
+const trustedDeviceSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     tokenHash: { type: String, required: true, select: false },
     name: { type: String, default: "Trusted browser" },
     ipAddress: { type: String, default: "" },
@@ -16,4 +16,4 @@ const trustedDeviceSchema = new mongoose.Schema(
 
 trustedDeviceSchema.index({ user: 1, revokedAt: 1, expiresAt: 1 });
 
-export default mongoose.models.TrustedDevice || mongoose.model("TrustedDevice", trustedDeviceSchema);
+export default model("TrustedDevice", trustedDeviceSchema);

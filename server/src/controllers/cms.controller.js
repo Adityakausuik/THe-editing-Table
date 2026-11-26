@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
 import { isValidId } from "../utils/ids.js";
-import { connectDatabase } from "../config/db.js";
 import Service from "../models/Service.model.js";
 import PortfolioItem from "../models/PortfolioItem.model.js";
 import BrandCollaboration from "../models/BrandCollaboration.model.js";
@@ -33,11 +31,11 @@ import { getPostgresDashboardData } from "../db/dashboardRepository.js";
 import { createPostgresAuthUser, deletePostgresCmsUser, listPostgresCmsUsers } from "../db/authRepository.js";
 
 function usesPostgres() {
-  return isPostgresSelected();
+  return true;
 }
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return true;
 }
 
 const ENTITY_CONFIG = {
@@ -167,20 +165,8 @@ function getEntityConfig(entityName) {
   };
 }
 
-async function requireDb(res) {
-  if (isDbConnected()) return true;
-  try {
-    await connectDatabase();
-    if (isDbConnected()) return true;
-  } catch (err) {
-    console.warn("[requireDb] Auto-connect attempt failed:", err.message);
-  }
-  res.status(503).json({
-    success: false,
-    message: "MongoDB is unavailable. CMS data cannot be retrieved or changed.",
-    data: null
-  });
-  return false;
+async function requireDb() {
+  return true;
 }
 
 function buildSearchQuery(search) {
@@ -270,24 +256,8 @@ function normalizeDocForClient(doc, entityName) {
 
 // Helper for generic audit logging
 async function logAudit(user, action, entity, entityId, details) {
-  if (usesPostgres()) {
-    try {
-      await writePostgresCmsAudit(user, action, entity, entityId, details);
-    } catch {
-      // Fail silently for audit logs
-    }
-    return;
-  }
-  if (!isDbConnected()) return;
   try {
-    await AuditLog.create({
-      user: user?.id,
-      userEmail: user?.email || "system",
-      action,
-      entity,
-      entityId,
-      details
-    });
+    await writePostgresCmsAudit(user, action, entity, entityId, details);
   } catch {
     // Fail silently for audit logs
   }
@@ -296,61 +266,7 @@ async function logAudit(user, action, entity, entityId, details) {
 // --- CMS OVERVIEW STATS ---
 export async function getDashboardStats(req, res) {
   try {
-    if (usesPostgres()) {
-      const payload = await getPostgresDashboardData();
-      return res.json({
-        success: true,
-        message: "Dashboard stats fetched successfully",
-        data: payload
-      });
-    }
-
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-
-    if (!isDbConnected()) {
-      return res.json({
-        success: true,
-        message: "Dashboard stats retrieved (offline mode)",
-        data: {
-          stats: {
-            totalEnquiries: 0,
-            newEnquiries: 0,
-            totalBlogPosts: 0,
-            totalPortfolioItems: 0,
-            totalTeamMembers: 0
-          },
-          recentLogs: [],
-          recentEnquiries: []
-        }
-      });
-    }
-
-    const [enquiriesCount, newEnquiries, blogCount, portfolioCount, teamCount] =
-      await Promise.all([
-        Enquiry.countDocuments().catch(() => 0),
-        Enquiry.countDocuments({ status: "new" }).catch(() => 0),
-        BlogPost.countDocuments().catch(() => 0),
-        PortfolioItem.countDocuments().catch(() => 0),
-        TeamMember.countDocuments().catch(() => 0)
-      ]);
-
-    const recentLogs = await AuditLog.find().sort({ createdAt: -1 }).limit(10).catch(() => []);
-    const recentEnquiries = await Enquiry.find().sort({ createdAt: -1 }).limit(5).catch(() => []);
-
-    const payload = {
-      stats: {
-        totalEnquiries: enquiriesCount,
-        newEnquiries,
-        totalBlogPosts: blogCount,
-        totalPortfolioItems: portfolioCount,
-        totalTeamMembers: teamCount
-      },
-      recentLogs,
-      recentEnquiries
-    };
-
+    const payload = await getPostgresDashboardData();
     return res.json({
       success: true,
       message: "Dashboard stats fetched successfully",
@@ -736,9 +652,7 @@ function createCRUDActions(Model, entityName) {
             data: defaults.map((d) => normalizeDocForClient(d, entityName))
           });
         }
-        if (!isDbConnected()) {
-          await connectDatabase().catch(() => {});
-        }
+
 
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
@@ -810,9 +724,7 @@ function createCRUDActions(Model, entityName) {
             data: defaults.map((d) => normalizeDocForClient(d, entityName))
           });
         }
-        if (!isDbConnected()) {
-          await connectDatabase().catch(() => {});
-        }
+
 
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
@@ -861,9 +773,7 @@ function createCRUDActions(Model, entityName) {
           if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
           return res.json({ success: true, message: `${entityName} retrieved successfully`, data: normalizeDocForClient(item, entityName) });
         }
-        if (!isDbConnected()) {
-          await connectDatabase().catch(() => {});
-        }
+
         if (!isDbConnected()) {
           const defaults = entityName === "Service" ? DEFAULT_AUTHENTIC_SERVICES :
             entityName === "TeamMember" ? DEFAULT_AUTHENTIC_TEAM :
@@ -1135,9 +1045,7 @@ export async function getEnquiries(req, res) {
       return res.json({ success: true, message: "Enquiries retrieved successfully", data: enquiries });
     }
 
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
+
     if (!isDbConnected()) {
       return res.json({ success: true, message: "Enquiries retrieved (offline mode)", data: [] });
     }
@@ -1205,9 +1113,7 @@ export async function deleteEnquiry(req, res) {
 export async function getSiteSettings(req, res) {
   try {
     const postgres = usesPostgres();
-    if (!postgres && !isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
+
 
     if (!postgres && !isDbConnected()) {
       return res.json({
@@ -1265,9 +1171,7 @@ export async function getSiteSettings(req, res) {
 export async function getAdminSiteSettings(req, res) {
   try {
     const postgres = usesPostgres();
-    if (!postgres && !isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
+
 
     if (!postgres && !isDbConnected()) {
       return res.json({
@@ -1356,9 +1260,7 @@ export async function getAuditLogs(req, res) {
       const logs = await listPostgresCmsAuditLogs(100);
       return res.json({ success: true, message: "Audit logs retrieved successfully", data: logs });
     }
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
+
     if (!isDbConnected()) {
       return res.json({ success: true, message: "Audit logs retrieved (offline mode)", data: [] });
     }
@@ -1477,9 +1379,7 @@ export async function deleteUser(req, res) {
 export async function getGlobalReachSettings(req, res) {
   try {
     const postgres = usesPostgres();
-    if (!postgres && !isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
+
 
     let globalReach = null;
     if (postgres) {

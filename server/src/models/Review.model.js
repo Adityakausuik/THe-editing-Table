@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const reviewSchema = new mongoose.Schema(
+const reviewSchema = new Schema(
   {
     name: {
       type: String,
@@ -114,7 +114,7 @@ reviewSchema.index({ status: 1, createdAt: -1 });
 reviewSchema.index({ status: 1, featured: 1, createdAt: -1 });
 reviewSchema.index({ email: 1, createdAt: -1 });
 
-const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
+const Review = model("Review", reviewSchema);
 
 export { Review };
 export default Review;

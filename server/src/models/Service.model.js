@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const serviceSchema = new mongoose.Schema(
+const serviceSchema = new Schema(
   {
     title: {
       type: String,
@@ -67,4 +67,4 @@ const serviceSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.Service || mongoose.model("Service", serviceSchema);
+export default model("Service", serviceSchema);

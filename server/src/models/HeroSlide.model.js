@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const heroSlideSchema = new mongoose.Schema(
+const heroSlideSchema = new Schema(
   {
     slideNumber: {
       type: Number,
@@ -126,7 +126,7 @@ const heroSlideSchema = new mongoose.Schema(
 
 heroSlideSchema.index({ active: 1, order: 1 });
 
-const HeroSlide = mongoose.models.HeroSlide || mongoose.model("HeroSlide", heroSlideSchema);
+const HeroSlide = model("HeroSlide", heroSlideSchema);
 
 export { HeroSlide };
 export default HeroSlide;

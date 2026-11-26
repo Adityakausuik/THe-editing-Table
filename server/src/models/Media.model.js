@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const mediaSchema = new mongoose.Schema(
+const mediaSchema = new Schema(
   {
     filename: {
       type: String,
@@ -39,7 +39,7 @@ const mediaSchema = new mongoose.Schema(
       default: ""
     },
     uploadedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -48,4 +48,4 @@ const mediaSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.Media || mongoose.model("Media", mediaSchema);
+export default model("Media", mediaSchema);

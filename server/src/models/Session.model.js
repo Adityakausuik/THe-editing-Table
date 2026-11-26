@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const sessionSchema = new mongoose.Schema(
+const sessionSchema = new Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     expiresAt: { type: Date, required: true, index: { expires: 0 } },
     revokedAt: { type: Date },
     revokeReason: { type: String, default: "" },
@@ -17,4 +17,4 @@ const sessionSchema = new mongoose.Schema(
 
 sessionSchema.index({ user: 1, revokedAt: 1, expiresAt: 1 });
 
-export default mongoose.models.Session || mongoose.model("Session", sessionSchema);
+export default model("Session", sessionSchema);

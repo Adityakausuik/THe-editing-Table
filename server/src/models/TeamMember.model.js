@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const teamMemberSchema = new mongoose.Schema(
+const teamMemberSchema = new Schema(
   {
     fullName: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true, index: true },
@@ -23,6 +23,6 @@ const teamMemberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const TeamMember = mongoose.models.TeamMember || mongoose.model("TeamMember", teamMemberSchema);
+const TeamMember = model("TeamMember", teamMemberSchema);
 export { TeamMember };
 export default TeamMember;

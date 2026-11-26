@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const contactSettingsSchema = new mongoose.Schema(
+const contactSettingsSchema = new Schema(
   {
     settingsKey: {
       type: String,
@@ -64,7 +64,7 @@ const contactSettingsSchema = new mongoose.Schema(
       default: true
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -72,7 +72,6 @@ const contactSettingsSchema = new mongoose.Schema(
 );
 
 const ContactSettings =
-  mongoose.models.ContactSettings ||
-  mongoose.model("ContactSettings", contactSettingsSchema);
+  model("ContactSettings", contactSettingsSchema);
 
 export default ContactSettings;

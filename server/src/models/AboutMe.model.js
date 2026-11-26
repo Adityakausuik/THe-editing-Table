@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const whatIDoItemSchema = new mongoose.Schema(
+const whatIDoItemSchema = new Schema(
   {
     title: { type: String, trim: true, default: "" },
     description: { type: String, trim: true, default: "" },
@@ -9,7 +9,7 @@ const whatIDoItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const philosophyPillarSchema = new mongoose.Schema(
+const philosophyPillarSchema = new Schema(
   {
     title: { type: String, trim: true, default: "" },
     description: { type: String, trim: true, default: "" }
@@ -17,7 +17,7 @@ const philosophyPillarSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const aboutMeSchema = new mongoose.Schema(
+const aboutMeSchema = new Schema(
   {
     key: {
       type: String,
@@ -181,7 +181,7 @@ const aboutMeSchema = new mongoose.Schema(
       ]
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -190,7 +190,7 @@ const aboutMeSchema = new mongoose.Schema(
   }
 );
 
-const AboutMe = mongoose.models.AboutMe || mongoose.model("AboutMe", aboutMeSchema);
+const AboutMe = model("AboutMe", aboutMeSchema);
 
 export { AboutMe };
 export default AboutMe;

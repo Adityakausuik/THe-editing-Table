@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const siteSettingSchema = new mongoose.Schema(
+const siteSettingSchema = new Schema(
   {
     key: {
       type: String,
@@ -10,7 +10,7 @@ const siteSettingSchema = new mongoose.Schema(
       index: true
     },
     value: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       required: true
     },
     group: {
@@ -24,7 +24,7 @@ const siteSettingSchema = new mongoose.Schema(
       default: ""
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -33,4 +33,4 @@ const siteSettingSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.SiteSetting || mongoose.model("SiteSetting", siteSettingSchema);
+export default model("SiteSetting", siteSettingSchema);

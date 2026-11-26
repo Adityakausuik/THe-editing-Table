@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const videoShowcaseItemSchema = new mongoose.Schema(
+const videoShowcaseItemSchema = new Schema(
   {
     title: {
       type: String,
@@ -172,11 +172,11 @@ const videoShowcaseItemSchema = new mongoose.Schema(
       index: true
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -192,7 +192,6 @@ videoShowcaseItemSchema.index({ publishedAt: 1, expiresAt: 1 });
 videoShowcaseItemSchema.index({ createdAt: -1 });
 
 const VideoShowcaseItem =
-  mongoose.models.VideoShowcaseItem ||
-  mongoose.model("VideoShowcaseItem", videoShowcaseItemSchema);
+  model("VideoShowcaseItem", videoShowcaseItemSchema);
 
 export default VideoShowcaseItem;

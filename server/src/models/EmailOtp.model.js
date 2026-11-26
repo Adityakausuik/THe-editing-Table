@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 import crypto from "node:crypto";
 import { hashOtp } from "../utils/security.js";
 
-const emailOtpSchema = new mongoose.Schema(
+const emailOtpSchema = new Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true
@@ -30,7 +30,7 @@ const emailOtpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: { expireAfterSeconds: 0 } // MongoDB TTL index for automatic expiration
+      index: { expireAfterSeconds: 0 } // TTL expiration index
     },
     attempts: {
       type: Number,
@@ -140,4 +140,4 @@ emailOtpSchema.statics.verifyOtp = async function (userId, candidateCode) {
   return { valid: true };
 };
 
-export default mongoose.models.EmailOtp || mongoose.model("EmailOtp", emailOtpSchema);
+export default model("EmailOtp", emailOtpSchema);

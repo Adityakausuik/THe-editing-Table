@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const securityPolicySchema = new mongoose.Schema(
+const securityPolicySchema = new Schema(
   {
     key: { type: String, default: "global", unique: true, immutable: true },
     requireAdmin2FA: { type: Boolean, default: true },
@@ -11,7 +11,7 @@ const securityPolicySchema = new mongoose.Schema(
     lockMinutes: { type: Number, min: 1, max: 1440, default: 15 },
     sessionExpiryHours: { type: Number, min: 1, max: 720, default: 24 },
     recoveryCodeCount: { type: Number, min: 5, max: 20, default: 10 },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );
@@ -24,4 +24,4 @@ securityPolicySchema.statics.getGlobal = function () {
   );
 };
 
-export default mongoose.models.SecurityPolicy || mongoose.model("SecurityPolicy", securityPolicySchema);
+export default model("SecurityPolicy", securityPolicySchema);

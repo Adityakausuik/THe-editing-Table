@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const videoShowcaseSettingsSchema = new mongoose.Schema(
+const videoShowcaseSettingsSchema = new Schema(
   {
     settingsKey: {
       type: String,
@@ -146,7 +146,7 @@ const videoShowcaseSettingsSchema = new mongoose.Schema(
       default: "video-showcase"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -156,7 +156,6 @@ const videoShowcaseSettingsSchema = new mongoose.Schema(
 );
 
 const VideoShowcaseSettings =
-  mongoose.models.VideoShowcaseSettings ||
-  mongoose.model("VideoShowcaseSettings", videoShowcaseSettingsSchema);
+  model("VideoShowcaseSettings", videoShowcaseSettingsSchema);
 
 export default VideoShowcaseSettings;

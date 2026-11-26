@@ -21,12 +21,18 @@ function responseDouble() {
 }
 
 test("login fails closed without a connected authentication database", async () => {
-  const res = responseDouble();
-  await login({ body: { email: "admin@theeditingtable.com", password: "anything" } }, res);
+  const original = process.env.POSTGRES_AUTH_ENABLED;
+  process.env.POSTGRES_AUTH_ENABLED = "false";
+  try {
+    const res = responseDouble();
+    await login({ body: { email: "admin@theeditingtable.com", password: "anything" } }, res);
 
-  assert.equal(res.statusCode, 503);
-  assert.equal(res.body.success, false);
-  assert.equal(res.cookies.length, 0);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.body.success, false);
+    assert.equal(res.cookies.length, 0);
+  } finally {
+    process.env.POSTGRES_AUTH_ENABLED = original;
+  }
 });
 
 test("retired admin reset endpoint never returns or writes default credentials", async () => {

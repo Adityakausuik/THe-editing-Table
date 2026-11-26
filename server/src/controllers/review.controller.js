@@ -1,7 +1,4 @@
-import mongoose from "mongoose";
 import { createId, isValidId } from "../utils/ids.js";
-import { connectDatabase } from "../config/db.js";
-import { isPostgresSelected } from "../config/databaseMode.js";
 import {
   bulkPostgresReviewAction,
   createPostgresReview,
@@ -14,7 +11,6 @@ import {
   listPostgresPublicReviews,
   updatePostgresReview
 } from "../db/reviewRepository.js";
-import Review from "../models/Review.model.js";
 import { deleteUnreferencedMedia, extractMediaPaths } from "../utils/mediaCleanup.js";
 
 // Helper to strip script tags and basic HTML
@@ -26,10 +22,6 @@ function sanitizeText(str = "") {
     .trim();
 }
 
-function escapeRegex(value = "") {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 // Helper to sanitize CSV fields against formula injection (=, +, -, @)
 function sanitizeCsvCell(value) {
   if (value === null || value === undefined) return "";
@@ -38,30 +30,6 @@ function sanitizeCsvCell(value) {
     return `'${str}`;
   }
   return str;
-}
-
-function isDbConnected() {
-  return mongoose.connection.readyState === 1;
-}
-
-function isPostgresPreview() {
-  return isPostgresSelected();
-}
-
-async function requireDb(res) {
-  if (isDbConnected()) return true;
-  try {
-    await connectDatabase();
-    if (isDbConnected()) return true;
-  } catch (err) {
-    console.warn("[review:requireDb] Auto-connect attempt failed:", err.message);
-  }
-  res.status(503).json({
-    success: false,
-    message: "MongoDB is unavailable. Review data cannot be retrieved or changed.",
-    data: null
-  });
-  return false;
 }
 
 function validObjectId(id) {
@@ -79,31 +47,6 @@ async function updatePostgresReviewOrFail(id, updates, res) {
     return null;
   }
   return review;
-}
-
-async function getReviewOrFail(id, res) {
-  if (!validObjectId(id)) {
-    res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-    return null;
-  }
-  const review = await Review.findById(id);
-  if (!review) {
-    res.status(404).json({ success: false, message: "Review not found", data: null });
-    return null;
-  }
-  return review;
-}
-
-function reviewStats(reviews = []) {
-  const totalApproved = reviews.length;
-  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  reviews.forEach((review) => {
-    distribution[review.rating] = (distribution[review.rating] || 0) + 1;
-  });
-  const averageRating = totalApproved
-    ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / totalApproved
-    : 0;
-  return { averageRating, totalApproved, distribution };
 }
 
 // ---------------------------------------------------
@@ -189,438 +132,181 @@ export async function submitReview(req, res) {
       ipAddress: req.ip || ""
     };
 
-    if (isPostgresPreview()) {
-      reviewPayload._id = createId();
-      await createPostgresReview(reviewPayload);
-      return res.status(201).json({
-        success: true,
-        message: "Thank you! Your review has been submitted and is awaiting admin approval.",
-        data: { id: reviewPayload._id }
-      });
-    }
-
-    if (!await requireDb(res)) return;
-    const review = await Review.create(reviewPayload);
-
+    const review = await createPostgresReview(createId(), reviewPayload);
     return res.status(201).json({
       success: true,
       message: "Thank you! Your review has been submitted and is awaiting admin approval.",
       data: { id: review._id }
     });
   } catch (error) {
-    console.error("[REVIEWS] Submission error:", error.name, error.message);
-    if (error.name === "ValidationError") {
-      const validationMessage = Object.values(error.errors || {})[0]?.message || "Please review the submitted information.";
-      return res.status(400).json({ success: false, message: validationMessage, data: null });
-    }
-    return res.status(500).json({ success: false, message: "Review submission is temporarily unavailable. Please try again.", data: null });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to submit review. Please try again.",
+      data: null
+    });
   }
 }
 
 export async function getPublicReviews(req, res) {
   try {
-    const { rating, projectType, search, page = 1, limit = 12, sort = "newest" } = req.query;
+    const { page = 1, limit = 9, rating, sort = "newest", projectType } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 12));
-    if (isPostgresPreview()) {
-      const data = await listPostgresPublicReviews({
-        rating,
-        projectType,
-        search: search ? sanitizeText(search) : "",
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 9));
+
+    const result = await listPostgresPublicReviews({ page: pageNum, limit: limitNum, rating, sort, projectType });
+    return res.status(200).json({
+      success: true,
+      message: "Reviews retrieved successfully",
+      data: result.reviews,
+      pagination: {
         page: pageNum,
         limit: limitNum,
-        sort
-      });
-      return res.status(200).json({ success: true, message: "Public reviews retrieved", data });
-    }
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.status(200).json({
-        success: true,
-        message: "Public reviews retrieved (offline fallback)",
-        data: {
-          items: [],
-          pagination: { page: 1, limit: 12, totalCount: 0, totalPages: 1 },
-          stats: { averageRating: 5, totalApproved: 0, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }
-        }
-      });
-    }
-
-    const query = { status: "approved" };
-
-    if (rating && !isNaN(Number(rating))) query.rating = Number(rating);
-    if (projectType && projectType !== "All") query.projectType = projectType;
-    if (search) {
-      const cleanSearch = escapeRegex(sanitizeText(search));
-      query.$or = [
-        { title: { $regex: cleanSearch, $options: "i" } },
-        { message: { $regex: cleanSearch, $options: "i" } },
-        { name: { $regex: cleanSearch, $options: "i" } },
-        { company: { $regex: cleanSearch, $options: "i" } }
-      ];
-    }
-
-    const sortOption = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
-    const skip = (pageNum - 1) * limitNum;
-
-    const [reviews, totalCount] = await Promise.all([
-      Review.find(query).select("-email -phone -ipAddress -__v").sort(sortOption).skip(skip).limit(limitNum).lean(),
-      Review.countDocuments(query)
-    ]);
-
-    const allApproved = await Review.find(query).select("rating").lean();
-    const stats = reviewStats(allApproved);
-
-    return res.status(200).json({
-      success: true,
-      message: "Public reviews retrieved",
-      data: {
-        items: reviews,
-        pagination: { page: pageNum, limit: limitNum, totalCount, totalPages: Math.ceil(totalCount / limitNum) || 1 },
-        stats
-      }
+        total: result.total,
+        pages: Math.ceil(result.total / limitNum) || 1
+      },
+      stats: result.stats
     });
-  } catch {
-    if (isPostgresPreview()) {
-      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Public reviews could not be retrieved.", data: null });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Public reviews retrieved (offline fallback)",
-      data: {
-        items: [],
-        pagination: { page: 1, limit: 12, totalCount: 0, totalPages: 1 },
-        stats: { averageRating: 5, totalApproved: 0, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }
-      }
-    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch reviews", data: null });
   }
 }
 
 export async function getFeaturedReviews(req, res) {
   try {
-    if (isPostgresPreview()) {
-      const data = await listPostgresFeaturedReviews();
-      return res.status(200).json({ success: true, message: "Featured reviews retrieved", data });
-    }
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.status(200).json({
-        success: true,
-        message: "Featured reviews retrieved (offline fallback)",
-        data: []
-      });
-    }
-
-    const reviews = await Review.find({ status: "approved", featured: true })
-      .select("-email -phone -ipAddress -__v")
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
-
-    return res.status(200).json({
-      success: true,
-      message: "Featured reviews retrieved",
-      data: reviews
-    });
-  } catch {
-    if (isPostgresPreview()) {
-      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Featured reviews could not be retrieved.", data: null });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Featured reviews retrieved (offline fallback)",
-      data: []
-    });
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 6));
+    const reviews = await listPostgresFeaturedReviews(limit);
+    return res.status(200).json({ success: true, message: "Featured reviews retrieved", data: reviews });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch featured reviews", data: null });
   }
 }
 
+// ---------------------------------------------------
+// ADMIN CONTROLLERS
+// ---------------------------------------------------
+
 export async function getAdminReviewStats(req, res) {
   try {
-    if (isPostgresPreview()) {
-      const data = await getPostgresAdminReviewStats();
-      return res.status(200).json({ success: true, message: "Review stats retrieved successfully", data });
-    }
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.status(200).json({
-        success: true,
-        message: "Review stats retrieved (offline fallback)",
-        data: { total: 0, pending: 0, approved: 0, rejected: 0, hidden: 0, averageRating: 5 }
-      });
-    }
-    const [total, pending, approved, rejected, hidden, approvedReviews] = await Promise.all([
-      Review.countDocuments(),
-      Review.countDocuments({ status: "pending" }),
-      Review.countDocuments({ status: "approved" }),
-      Review.countDocuments({ status: "rejected" }),
-      Review.countDocuments({ status: "hidden" }),
-      Review.find({ status: "approved" }).select("rating").lean()
-    ]);
-    const stats = reviewStats(approvedReviews);
-    return res.status(200).json({
-      success: true,
-      message: "Review stats retrieved successfully",
-      data: { total, pending, approved, rejected, hidden, averageRating: stats.averageRating }
-    });
-  } catch {
-    if (isPostgresPreview()) {
-      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Review statistics could not be retrieved.", data: null });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Review stats retrieved (offline fallback)",
-      data: { total: 0, pending: 0, approved: 0, rejected: 0, hidden: 0, averageRating: 5 }
-    });
+    const stats = await getPostgresAdminReviewStats();
+    return res.status(200).json({ success: true, message: "Review stats retrieved", data: stats });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch review statistics", data: null });
   }
 }
 
 export async function getAdminReviews(req, res) {
   try {
-    if (isPostgresPreview()) {
-      const reviews = await listPostgresAdminReviews();
-      return res.status(200).json({
-        success: true,
-        message: "Admin reviews retrieved",
-        data: { items: reviews, pagination: { page: 1, limit: reviews.length, totalCount: reviews.length, totalPages: 1 } }
-      });
-    }
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.status(200).json({
-        success: true,
-        message: "Admin reviews retrieved (offline fallback)",
-        data: {
-          items: [],
-          pagination: { page: 1, limit: 0, totalCount: 0, totalPages: 1 }
-        }
-      });
-    }
+    const { page = 1, limit = 15, status, rating, sort = "newest", search, featured } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
 
-    const reviews = await Review.find().sort({ createdAt: -1 }).lean();
-
+    const result = await listPostgresAdminReviews({ page: pageNum, limit: limitNum, status, rating, sort, search, featured });
     return res.status(200).json({
       success: true,
       message: "Admin reviews retrieved",
-      data: {
-        items: reviews,
-        pagination: { page: 1, limit: reviews.length, totalCount: reviews.length, totalPages: 1 }
+      data: result.reviews,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: result.total,
+        pages: Math.ceil(result.total / limitNum) || 1
       }
     });
-  } catch {
-    if (isPostgresPreview()) {
-      return res.status(503).json({ success: false, message: "PostgreSQL is unavailable. Admin reviews could not be retrieved.", data: null });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Admin reviews retrieved (offline fallback)",
-      data: {
-        items: [],
-        pagination: { page: 1, limit: 0, totalCount: 0, totalPages: 1 }
-      }
-    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch admin reviews", data: null });
   }
 }
 
-export async function getAdminReviewById(req, res) {
+export async function getReviewById(req, res) {
   try {
-    if (isPostgresPreview()) {
-      if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-      const review = await getPostgresReviewById(req.params.id);
-      if (!review) return res.status(404).json({ success: false, message: "Review not found", data: null });
-      return res.status(200).json({ success: true, message: "Review details retrieved", data: review });
+    if (!validObjectId(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
     }
-    if (!await requireDb(res)) return;
-    const review = await getReviewOrFail(req.params.id, res);
-    if (!review) return;
+    const review = await getPostgresReviewById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found", data: null });
+    }
     return res.status(200).json({ success: true, message: "Review details retrieved", data: review });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Review lookup failed", data: null });
   }
 }
 
+export const getAdminReviewById = getReviewById;
+
 export async function approveReview(req, res) {
-  if (isPostgresPreview()) {
-    const review = await updatePostgresReviewOrFail(req.params.id, { status: "approved" }, res);
-    if (!review) return;
-    return res.status(200).json({ success: true, message: "Review approved successfully", data: review });
-  }
-  if (!await requireDb(res)) return;
-  const review = await getReviewOrFail(req.params.id, res);
+  const review = await updatePostgresReviewOrFail(req.params.id, { status: "approved" }, res);
   if (!review) return;
-  review.status = "approved";
-  await review.save();
   return res.status(200).json({ success: true, message: "Review approved successfully", data: review });
 }
 
 export async function rejectReview(req, res) {
-  if (isPostgresPreview()) {
-    const review = await updatePostgresReviewOrFail(req.params.id, { status: "rejected" }, res);
-    if (!review) return;
-    return res.status(200).json({ success: true, message: "Review rejected", data: review });
-  }
-  if (!await requireDb(res)) return;
-  const review = await getReviewOrFail(req.params.id, res);
+  const review = await updatePostgresReviewOrFail(req.params.id, { status: "rejected" }, res);
   if (!review) return;
-  review.status = "rejected";
-  await review.save();
   return res.status(200).json({ success: true, message: "Review rejected", data: review });
 }
 
 export async function toggleFeatureReview(req, res) {
-  if (isPostgresPreview()) {
-    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-    const existing = await getPostgresReviewById(req.params.id);
-    if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
-    const review = await updatePostgresReview(req.params.id, { featured: req.body.featured !== undefined ? Boolean(req.body.featured) : !existing.featured });
-    return res.status(200).json({ success: true, message: "Review feature status updated", data: review });
-  }
-  if (!await requireDb(res)) return;
-  const review = await getReviewOrFail(req.params.id, res);
-  if (!review) return;
-  review.featured = req.body.featured !== undefined ? Boolean(req.body.featured) : !review.featured;
-  await review.save();
+  if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+  const existing = await getPostgresReviewById(req.params.id);
+  if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
+  const review = await updatePostgresReview(req.params.id, { featured: req.body.featured !== undefined ? Boolean(req.body.featured) : !existing.featured });
   return res.status(200).json({ success: true, message: "Review feature status updated", data: review });
 }
 
 export async function toggleVerifyReview(req, res) {
-  if (isPostgresPreview()) {
-    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-    const existing = await getPostgresReviewById(req.params.id);
-    if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
-    const review = await updatePostgresReview(req.params.id, { verified: req.body.verified !== undefined ? Boolean(req.body.verified) : !existing.verified });
-    return res.status(200).json({ success: true, message: "Verified Client status updated", data: review });
-  }
-  if (!await requireDb(res)) return;
-  const review = await getReviewOrFail(req.params.id, res);
-  if (!review) return;
-  review.verified = req.body.verified !== undefined ? Boolean(req.body.verified) : !review.verified;
-  await review.save();
+  if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
+  const existing = await getPostgresReviewById(req.params.id);
+  if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
+  const review = await updatePostgresReview(req.params.id, { verified: req.body.verified !== undefined ? Boolean(req.body.verified) : !existing.verified });
   return res.status(200).json({ success: true, message: "Verified Client status updated", data: review });
 }
 
 export async function replyToReview(req, res) {
-  if (isPostgresPreview()) {
-    const review = await updatePostgresReviewOrFail(req.params.id, {
-      adminReply: {
-        message: sanitizeText(req.body.message || req.body.reply || req.body.replyMessage || ""),
-        repliedAt: new Date(),
-        repliedBy: req.user?.email || req.user?.name || "admin"
-      }
-    }, res);
-    if (!review) return;
-    return res.status(200).json({ success: true, message: "Admin reply saved", data: review });
-  }
-  if (!await requireDb(res)) return;
-  const review = await getReviewOrFail(req.params.id, res);
+  const review = await updatePostgresReviewOrFail(req.params.id, {
+    adminReply: {
+      message: sanitizeText(req.body.message || req.body.reply || req.body.replyMessage || ""),
+      repliedAt: new Date(),
+      repliedBy: req.user?.email || req.user?.name || "admin"
+    }
+  }, res);
   if (!review) return;
-  review.adminReply = {
-    message: sanitizeText(req.body.message || req.body.reply || req.body.replyMessage || ""),
-    repliedAt: new Date(),
-    repliedBy: req.user?.email || req.user?.name || "admin"
-  };
-  await review.save();
   return res.status(200).json({ success: true, message: "Admin reply saved", data: review });
 }
 
 export async function updateAdminReview(req, res) {
-  if (isPostgresPreview()) {
-    const allowed = ["name", "company", "projectType", "rating", "title", "message", "country", "city", "profileImage", "projectImage", "verified", "featured", "status"];
-    const update = {};
-    allowed.forEach((key) => {
-      if (req.body[key] !== undefined) update[key] = typeof req.body[key] === "string" ? sanitizeText(req.body[key]) : req.body[key];
-    });
-    const review = await updatePostgresReviewOrFail(req.params.id, update, res);
-    if (!review) return;
-    return res.status(200).json({ success: true, message: "Review updated", data: review });
-  }
-  if (!await requireDb(res)) return;
-  if (!validObjectId(req.params.id)) {
-    return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-  }
-  const existing = await Review.findById(req.params.id);
-  if (!existing) return res.status(404).json({ success: false, message: "Review not found", data: null });
   const allowed = ["name", "company", "projectType", "rating", "title", "message", "country", "city", "profileImage", "projectImage", "verified", "featured", "status"];
   const update = {};
   allowed.forEach((key) => {
     if (req.body[key] !== undefined) update[key] = typeof req.body[key] === "string" ? sanitizeText(req.body[key]) : req.body[key];
   });
-  const review = await Review.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
-  const currentMedia = new Set(extractMediaPaths(review));
-  await deleteUnreferencedMedia(extractMediaPaths(existing).filter((url) => !currentMedia.has(url)));
+  const review = await updatePostgresReviewOrFail(req.params.id, update, res);
+  if (!review) return;
   return res.status(200).json({ success: true, message: "Review updated", data: review });
 }
 
 export async function deleteReview(req, res) {
-  if (isPostgresPreview()) {
-    if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-    const deleted = await deletePostgresReview(req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, message: "Review not found", data: null });
-    await deleteUnreferencedMedia(extractMediaPaths(deleted));
-    return res.status(200).json({ success: true, message: "Review deleted successfully", data: { id: req.params.id } });
-  }
-  if (!await requireDb(res)) return;
   if (!validObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid review ID", data: null });
-  const deleted = await Review.findByIdAndDelete(req.params.id);
+  const deleted = await deletePostgresReview(req.params.id);
   if (!deleted) return res.status(404).json({ success: false, message: "Review not found", data: null });
   await deleteUnreferencedMedia(extractMediaPaths(deleted));
   return res.status(200).json({ success: true, message: "Review deleted successfully", data: { id: req.params.id } });
 }
 
 export async function bulkReviewAction(req, res) {
-  if (isPostgresPreview()) {
-    const { ids = [], action } = req.body;
-    const validIds = Array.isArray(ids) ? ids.filter(validObjectId) : [];
-    if (!Array.isArray(ids) || validIds.length !== ids.length) {
-      return res.status(400).json({ success: false, message: "One or more review IDs are invalid.", data: null });
-    }
-    const result = await bulkPostgresReviewAction(validIds.map(String), action);
-    if (!result) return res.status(400).json({ success: false, message: "Unsupported bulk action.", data: null });
-    if (action === "delete") await deleteUnreferencedMedia(result.deletedReviews.flatMap(extractMediaPaths));
-    return res.status(200).json({ success: true, message: "Bulk action completed successfully", data: { affectedCount: result.affectedCount } });
-  }
-  if (!await requireDb(res)) return;
   const { ids = [], action } = req.body;
   const validIds = Array.isArray(ids) ? ids.filter(validObjectId) : [];
   if (!Array.isArray(ids) || validIds.length !== ids.length) {
     return res.status(400).json({ success: false, message: "One or more review IDs are invalid.", data: null });
   }
-  if (action === "delete") {
-    const reviews = await Review.find({ _id: { $in: validIds } });
-    const result = await Review.deleteMany({ _id: { $in: validIds } });
-    await deleteUnreferencedMedia(reviews.flatMap(extractMediaPaths));
-    return res.status(200).json({ success: true, message: "Bulk action completed successfully", data: { affectedCount: result.deletedCount } });
-  }
-  const actionUpdates = {
-    approve: { status: "approved" },
-    reject: { status: "rejected" },
-    hide: { status: "hidden" },
-    feature: { featured: true },
-    unfeature: { featured: false },
-    verify: { verified: true },
-    unverify: { verified: false }
-  };
-  const update = actionUpdates[action];
-  if (!update) return res.status(400).json({ success: false, message: "Unsupported bulk action.", data: null });
-  const result = await Review.updateMany({ _id: { $in: validIds } }, { $set: update });
-  return res.status(200).json({ success: true, message: "Bulk action completed successfully", data: { affectedCount: result.modifiedCount } });
+  const result = await bulkPostgresReviewAction(validIds.map(String), action);
+  if (!result) return res.status(400).json({ success: false, message: "Unsupported bulk action.", data: null });
+  if (action === "delete") await deleteUnreferencedMedia(result.deletedReviews.flatMap(extractMediaPaths));
+  return res.status(200).json({ success: true, message: "Bulk action completed successfully", data: { affectedCount: result.affectedCount } });
 }
 
 export async function exportReviewsCsv(req, res) {
-  let reviews;
-  if (isPostgresPreview()) {
-    reviews = await listAllPostgresReviews();
-  } else {
-    if (!await requireDb(res)) return;
-    reviews = await Review.find().sort({ createdAt: -1 }).lean();
-  }
+  const reviews = await listAllPostgresReviews();
   const rows = reviews.map((r) =>
     `"${sanitizeCsvCell(r._id)}","${sanitizeCsvCell(r.name)}","${sanitizeCsvCell(r.rating)}","${sanitizeCsvCell(r.title)}","${sanitizeCsvCell(r.message)}"`
   );

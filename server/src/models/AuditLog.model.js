@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const auditLogSchema = new mongoose.Schema(
+const auditLogSchema = new Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     userEmail: {
@@ -30,7 +30,7 @@ const auditLogSchema = new mongoose.Schema(
       default: ""
     },
     details: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: {}
     },
     ipAddress: {
@@ -48,7 +48,7 @@ const auditLogSchema = new mongoose.Schema(
       index: true
     },
     metadata: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: {}
     }
   },
@@ -57,4 +57,4 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.AuditLog || mongoose.model("AuditLog", auditLogSchema);
+export default model("AuditLog", auditLogSchema);

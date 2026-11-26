@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const jobSchema = new mongoose.Schema(
+const jobSchema = new Schema(
   {
     title: {
       type: String,
@@ -76,6 +76,6 @@ const jobSchema = new mongoose.Schema(
 
 jobSchema.index({ status: 1, order: 1, createdAt: -1 });
 
-const Job = mongoose.models.Job || mongoose.model("Job", jobSchema);
+const Job = model("Job", jobSchema);
 export { Job };
 export default Job;

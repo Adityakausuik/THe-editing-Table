@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const workingHoursSchema = new mongoose.Schema(
+const workingHoursSchema = new Schema(
   {
     dayFrom: {
       type: String,
@@ -47,11 +47,11 @@ const workingHoursSchema = new mongoose.Schema(
       index: true
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -61,7 +61,6 @@ const workingHoursSchema = new mongoose.Schema(
 workingHoursSchema.index({ status: 1, deletedAt: 1, order: 1 });
 
 const WorkingHours =
-  mongoose.models.WorkingHours ||
-  mongoose.model("WorkingHours", workingHoursSchema);
+  model("WorkingHours", workingHoursSchema);
 
 export default WorkingHours;

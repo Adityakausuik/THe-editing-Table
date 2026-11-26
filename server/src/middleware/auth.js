@@ -1,10 +1,6 @@
-import mongoose from "mongoose";
 import { verifyAccessToken } from "../lib/jwt.js";
-import Session from "../models/Session.model.js";
-import User from "../models/User.model.js";
 import { env } from "../config/env.js";
 import { sha256, timingSafeEqualText } from "../utils/security.js";
-import { isPostgresAuthEnabled, isPostgresSelected } from "../config/databaseMode.js";
 import { findPostgresActiveAuthUser, findPostgresAuthSession, touchPostgresAuthSession } from "../db/authRepository.js";
 
 export function csrfTokenForSession(sessionId) {
@@ -24,33 +20,18 @@ export async function authenticate(req, res, next) {
     if (payload.type !== "access" || !payload.sid || payload.sid.startsWith("fallback-")) {
       throw new Error("Invalid session token");
     }
-    if (!isPostgresSelected() && mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
-    }
 
     let session;
     let user;
-    if (isPostgresSelected()) {
-      if (!isPostgresAuthEnabled()) {
-        return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
-      }
-      try {
-        [session, user] = await Promise.all([
-          findPostgresAuthSession(payload.sid, payload.id),
-          findPostgresActiveAuthUser(payload.id)
-        ]);
-      } catch {
-        return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
-      }
-    } else {
-      session = await Session.findOne({
-        _id: payload.sid,
-        user: payload.id,
-        revokedAt: null,
-        expiresAt: { $gt: new Date() }
-      });
-      user = await User.findOne({ _id: payload.id, isActive: true });
+    try {
+      [session, user] = await Promise.all([
+        findPostgresAuthSession(payload.sid, payload.id),
+        findPostgresActiveAuthUser(payload.id)
+      ]);
+    } catch {
+      return res.status(503).json({ success: false, message: "Authentication service is unavailable.", data: null });
     }
+
     if (!session) throw new Error("Session revoked or expired");
     if (!user) throw new Error("Account unavailable");
 
@@ -62,11 +43,7 @@ export async function authenticate(req, res, next) {
       }
     }
 
-    if (isPostgresSelected()) {
-      touchPostgresAuthSession(session._id).catch(() => null);
-    } else {
-      Session.updateOne({ _id: session._id }, { $set: { lastSeenAt: new Date() } }).catch(() => null);
-    }
+    touchPostgresAuthSession(session._id).catch(() => null);
     req.authSession = session;
     req.userDocument = user;
     req.user = {

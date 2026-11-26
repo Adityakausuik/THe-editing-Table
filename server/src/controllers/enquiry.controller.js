@@ -14,16 +14,7 @@ export async function createEnquiry(req, res, next) {
       });
     }
 
-    // Enquiries are PostgreSQL-backed on the migration branch. Never route a
-    // Preview submission through the legacy MongoDB model or a Production URI.
-    if (!isPostgresSelected()) {
-      return res.status(503).json({
-        success: false,
-        code: "POSTGRES_NOT_SELECTED",
-        message: "Database service is temporarily offline. Please reach out via email or phone while we reconnect.",
-        data: null
-      });
-    }
+    // Enquiries are purely stored in Neon PostgreSQL.
 
     const postgresReady = await checkPostgresConnection().catch(() => false);
     if (!postgresReady) {

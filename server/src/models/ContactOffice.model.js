@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const contactOfficeSchema = new mongoose.Schema(
+const contactOfficeSchema = new Schema(
   {
     officeName: {
       type: String,
@@ -69,11 +69,11 @@ const contactOfficeSchema = new mongoose.Schema(
       index: true
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -83,7 +83,6 @@ const contactOfficeSchema = new mongoose.Schema(
 contactOfficeSchema.index({ status: 1, deletedAt: 1, order: 1 });
 
 const ContactOffice =
-  mongoose.models.ContactOffice ||
-  mongoose.model("ContactOffice", contactOfficeSchema);
+  model("ContactOffice", contactOfficeSchema);
 
 export default ContactOffice;

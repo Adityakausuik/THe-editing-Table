@@ -1,53 +1,9 @@
-import mongoose from "mongoose";
-import { connectDatabase } from "../config/db.js";
 import AboutMe from "../models/AboutMe.model.js";
-import AuditLog from "../models/AuditLog.model.js";
-import { isPostgresSelected } from "../config/databaseMode.js";
 import { findAboutMe, saveAboutMe, writeAboutMeAudit } from "../db/aboutMeRepository.js";
 
-function usesPostgres() {
-  return isPostgresSelected();
-}
-
-function isDbConnected() {
-  return mongoose.connection.readyState === 1;
-}
-
-async function requireDb(res) {
-  if (isDbConnected()) return true;
-  try {
-    await connectDatabase();
-    if (isDbConnected()) return true;
-  } catch (err) {
-    console.warn("[aboutMe:requireDb] Auto-connect attempt failed:", err.message);
-  }
-  res.status(503).json({
-    success: false,
-    message: "MongoDB is unavailable. About Me content cannot be retrieved or updated.",
-    data: null
-  });
-  return false;
-}
-
 async function logAudit(user, action, entity, entityId, details) {
-  if (usesPostgres()) {
-    try {
-      await writeAboutMeAudit(user, action, entityId, details);
-    } catch {
-      // Fail silently for audit logs
-    }
-    return;
-  }
-  if (!isDbConnected()) return;
   try {
-    await AuditLog.create({
-      user: user?.id,
-      userEmail: user?.email || "system",
-      action,
-      entity,
-      entityId,
-      details
-    });
+    await writeAboutMeAudit(user, action, entityId, details);
   } catch {
     // Fail silently for audit logs
   }
@@ -62,48 +18,17 @@ function getDefaultAboutMeData() {
  */
 export async function getPublicAboutMe(req, res) {
   try {
-    if (usesPostgres()) {
-      const doc = await findAboutMe();
-      return res.json({
-        success: true,
-        message: "About Me content retrieved successfully",
-        data: doc || getDefaultAboutMeData()
-      });
-    }
-
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.json({
-        success: true,
-        message: "About Me content retrieved (offline fallback)",
-        data: getDefaultAboutMeData()
-      });
-    }
-
-    let doc = await AboutMe.findOne({ key: "about_me_content" }).lean();
-    if (!doc) {
-      doc = await AboutMe.create({ key: "about_me_content" });
-      doc = doc.toObject();
-    }
+    const doc = await findAboutMe();
     return res.json({
       success: true,
       message: "About Me content retrieved successfully",
-      data: doc
+      data: doc || getDefaultAboutMeData()
     });
   } catch {
-    if (usesPostgres()) {
-      return res.status(503).json({
-        success: false,
-        message: "PostgreSQL is unavailable. About Me content could not be retrieved.",
-        data: null
-      });
-    }
-    return res.json({
-      success: true,
-      message: "About Me content retrieved (offline fallback)",
-      data: getDefaultAboutMeData()
+    return res.status(503).json({
+      success: false,
+      message: "PostgreSQL is unavailable. About Me content could not be retrieved.",
+      data: null
     });
   }
 }
@@ -113,48 +38,17 @@ export async function getPublicAboutMe(req, res) {
  */
 export async function getAdminAboutMe(req, res) {
   try {
-    if (usesPostgres()) {
-      const doc = await findAboutMe();
-      return res.json({
-        success: true,
-        message: "Admin About Me content retrieved successfully",
-        data: doc || getDefaultAboutMeData()
-      });
-    }
-
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.json({
-        success: true,
-        message: "Admin About Me content retrieved (offline fallback)",
-        data: getDefaultAboutMeData()
-      });
-    }
-
-    let doc = await AboutMe.findOne({ key: "about_me_content" }).lean();
-    if (!doc) {
-      doc = await AboutMe.create({ key: "about_me_content" });
-      doc = doc.toObject();
-    }
+    const doc = await findAboutMe();
     return res.json({
       success: true,
       message: "Admin About Me content retrieved successfully",
-      data: doc
+      data: doc || getDefaultAboutMeData()
     });
   } catch {
-    if (usesPostgres()) {
-      return res.status(503).json({
-        success: false,
-        message: "PostgreSQL is unavailable. About Me content could not be retrieved.",
-        data: null
-      });
-    }
-    return res.json({
-      success: true,
-      message: "Admin About Me content retrieved (offline fallback)",
-      data: getDefaultAboutMeData()
+    return res.status(503).json({
+      success: false,
+      message: "PostgreSQL is unavailable. About Me content could not be retrieved.",
+      data: null
     });
   }
 }
@@ -223,46 +117,23 @@ export async function updateAboutMe(req, res) {
       }));
     }
 
-    if (usesPostgres()) {
-      try {
-        const updated = await saveAboutMe(updateFields);
-        await logAudit(req.user, "UPDATE_ABOUT_ME", "AboutMe", "about_me_content", {
-          updatedFields: Object.keys(updateFields)
-        });
-        return res.json({
-          success: true,
-          message: "About Me content updated successfully",
-          data: updated
-        });
-      } catch {
-        return res.status(503).json({
-          success: false,
-          message: "PostgreSQL is unavailable. About Me content was not updated.",
-          data: null
-        });
-      }
+    try {
+      const updated = await saveAboutMe(updateFields);
+      await logAudit(req.user, "UPDATE_ABOUT_ME", "AboutMe", "about_me_content", {
+        updatedFields: Object.keys(updateFields)
+      });
+      return res.json({
+        success: true,
+        message: "About Me content updated successfully",
+        data: updated
+      });
+    } catch {
+      return res.status(503).json({
+        success: false,
+        message: "PostgreSQL is unavailable. About Me content was not updated.",
+        data: null
+      });
     }
-
-    if (!await requireDb(res)) return;
-
-    const updated = await AboutMe.findOneAndUpdate(
-      { key: "about_me_content" },
-      {
-        $set: updateFields,
-        $setOnInsert: { key: "about_me_content" }
-      },
-      { upsert: true, new: true, runValidators: true }
-    ).lean();
-
-    await logAudit(req.user, "UPDATE_ABOUT_ME", "AboutMe", "about_me_content", {
-      updatedFields: Object.keys(updateFields)
-    });
-
-    return res.json({
-      success: true,
-      message: "About Me content updated successfully",
-      data: updated
-    });
   } catch (error) {
     return res.status(400).json({
       success: false,

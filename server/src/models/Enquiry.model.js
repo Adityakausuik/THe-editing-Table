@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const enquirySchema = new mongoose.Schema(
+const enquirySchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 120 },
@@ -20,6 +20,6 @@ const enquirySchema = new mongoose.Schema(
 
 enquirySchema.index({ createdAt: -1 });
 
-const Enquiry = mongoose.models.Enquiry || mongoose.model("Enquiry", enquirySchema);
+const Enquiry = model("Enquiry", enquirySchema);
 export { Enquiry };
 export default Enquiry;

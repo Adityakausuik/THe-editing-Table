@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const heroBackgroundVideoSchema = new mongoose.Schema(
+const heroBackgroundVideoSchema = new Schema(
   {
     title: {
       type: String,
@@ -57,7 +57,7 @@ const heroBackgroundVideoSchema = new mongoose.Schema(
       max: 2.0
     },
     fileMetadata: {
-      type: mongoose.Schema.Types.Mixed,
+      type: Schema.Types.Mixed,
       default: () => ({})
     },
     version: {
@@ -87,5 +87,4 @@ const heroBackgroundVideoSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.HeroBackgroundVideo ||
-  mongoose.model("HeroBackgroundVideo", heroBackgroundVideoSchema);
+export default model("HeroBackgroundVideo", heroBackgroundVideoSchema);

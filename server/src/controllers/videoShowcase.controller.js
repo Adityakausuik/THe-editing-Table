@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import mongoose from "mongoose";
 import { isValidId } from "../utils/ids.js";
 import AdminActivityLog from "../models/AdminActivityLog.model.js";
 import VideoAnalytics from "../models/VideoAnalytics.model.js";
@@ -190,11 +189,11 @@ const DEFAULT_VIDEO_SHOWCASE_ITEMS = [
 ];
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return true;
 }
 
 function usesPostgres() {
-  return isPostgresSelected();
+  return true;
 }
 
 function slugify(text = "") {
@@ -681,7 +680,7 @@ export async function permanentDeleteAdminVideo(req, res, next) {
     }
 
     if (usesPostgres()) {
-      // Preserve shared media during the Preview migration; production Mongo remains the rollback source.
+      // Media is stored directly in Neon PostgreSQL.
       await deletePostgresVideoShowcaseItem(id);
     } else {
       if (item.videoFile?.url) safeDeleteFile(item.videoFile.url);

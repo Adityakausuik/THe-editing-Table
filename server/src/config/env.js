@@ -6,16 +6,6 @@ import { z } from "zod";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../.env") });
 
-export function isRemoteMongoUri(uri) {
-  try {
-    const parsed = new URL(uri);
-    return ["mongodb:", "mongodb+srv:"].includes(parsed.protocol) &&
-      !["localhost", "127.0.0.1", "::1"].includes(parsed.hostname.toLowerCase());
-  } catch {
-    return false;
-  }
-}
-
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(5000),
@@ -23,7 +13,6 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.string().url().optional(),
   DATABASE_URL: z.string().url().optional(),
   PREVIEW_DATABASE_URL: z.string().url().optional(),
-  DATABASE_BACKEND: z.enum(["mongodb", "postgres"]).default("postgres"),
   MIGRATION_WRITE_FREEZE: z.string().default("false").transform((value) => ["true", "1", "on", "enabled"].includes(value.trim().toLowerCase())),
   PREVIEW_POSTGRES_AUTH_ENABLED: z.string().default("true").transform((value) => ["true", "1", "on", "enabled"].includes(value.trim().toLowerCase())),
   POSTGRES_AUTH_ENABLED: z.string().default("true").transform((value) => ["true", "1", "on", "enabled"].includes(value.trim().toLowerCase())),
@@ -31,9 +20,6 @@ const envSchema = z.object({
   BLOB_PRIVATE_READ_WRITE_TOKEN: z.string().min(1).optional(),
   CRON_SECRET: z.string().min(16).optional(),
   VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
-  MONGODB_URI: z.string().min(1).optional(),
-  GRIDFS_MONGODB_URI: z.string().min(1).optional(),
-  PREVIEW_GRIDFS_MONGODB_URI: z.string().min(1).optional(),
   JWT_SECRET: z.string().min(24).default("development-only-change-this-secret"),
   JWT_EXPIRES_IN: z.string().default("1d"),
   TWO_FACTOR_ENCRYPTION_KEY: z.string().min(32).optional(),
@@ -48,7 +34,7 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).optional().default("lax"),
   ADMIN_2FA_ENABLED: z.string().optional().transform((val) => {
-    if (val === undefined || val === null || val === "") return false; // Default: false (2FA disabled by default)
+    if (val === undefined || val === null || val === "") return false;
     const normalized = String(val).trim().toLowerCase();
     return normalized === "true" || normalized === "1" || normalized === "enabled" || normalized === "on";
   })
@@ -58,9 +44,6 @@ const envSchema = z.object({
   }
   if (value.NODE_ENV === "production" && !value.TWO_FACTOR_ENCRYPTION_KEY) {
     console.warn("[CONFIG] TWO_FACTOR_ENCRYPTION_KEY is omitted in production; falling back to JWT_SECRET.");
-  }
-  if (value.NODE_ENV === "production" && value.MONGODB_URI && !isRemoteMongoUri(value.MONGODB_URI)) {
-    console.warn("[CONFIG] MONGODB_URI is pointing to localhost in production. Ensure remote MongoDB connection string is set in Vercel.");
   }
   if (value.VERCEL_ENV === "preview" && !value.PREVIEW_DATABASE_URL && !value.DATABASE_URL) {
     console.warn("[CONFIG] PREVIEW_DATABASE_URL is not set in Vercel Preview; using default DATABASE_URL.");
@@ -80,7 +63,6 @@ const databaseUrl = data.DATABASE_URL || data.PREVIEW_DATABASE_URL;
 
 export const env = {
   ...data,
-  MONGODB_URI: data.MONGODB_URI || "mongodb://127.0.0.1:27017/the-editing-table",
   DATABASE_URL: databaseUrl,
   SMTP_PASS: (data.SMTP_PASS || data.GMAIL_APP_PASSWORD || "").replace(/\s+/g, ""),
   GMAIL_APP_PASSWORD: (data.GMAIL_APP_PASSWORD || data.SMTP_PASS || "").replace(/\s+/g, ""),

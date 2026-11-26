@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { isValidId } from "../utils/ids.js";
 import QRCode from "qrcode";
 import User from "../models/User.model.js";
@@ -8,7 +7,6 @@ import SecurityPolicy from "../models/SecurityPolicy.model.js";
 import EmailOtp from "../models/EmailOtp.model.js";
 import { signAccessToken, signPreAuthToken, verifyPreAuthToken } from "../lib/jwt.js";
 import { env } from "../config/env.js";
-import { connectDatabase } from "../config/db.js";
 import { csrfTokenForSession } from "../middleware/auth.js";
 import { sendOtpEmail } from "../services/email.service.js";
 import {
@@ -51,21 +49,13 @@ async function getSecurityPolicy() {
 }
 
 async function ensureDbConnected() {
-  if (isPostgresSelected()) {
-    if (!isPostgresAuthEnabled()) return false;
-    await bootstrapDatabase().catch(() => {});
-    return checkPostgresConnection().catch(() => false);
-  }
-  if (mongoose.connection.readyState !== 1) {
-    await connectDatabase().catch(() => {});
-  }
-  return mongoose.connection.readyState === 1;
+  if (!isPostgresAuthEnabled()) return false;
+  await bootstrapDatabase().catch(() => {});
+  return checkPostgresConnection().catch(() => false);
 }
 
 function isDbConnected() {
-  return isPostgresSelected()
-    ? isPostgresAuthEnabled()
-    : mongoose.connection.readyState === 1;
+  return true;
 }
 
 function baseCookieOptions() {

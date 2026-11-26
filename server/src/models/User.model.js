@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import { Schema, model } from "../db/modelSchema.js";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     name: {
       type: String,
@@ -86,4 +86,5 @@ userSchema.statics.hashPassword = async function (password) {
   return bcrypt.hash(password, salt);
 };
 
-export default mongoose.models.User || mongoose.model("User", userSchema);
+const User = model("User", userSchema, "users");
+export default User;

@@ -1,7 +1,7 @@
 import { createApp } from "./app.js";
-import { connectDatabase } from "./config/db.js";
+import { bootstrapPostgresDatabase } from "./config/bootstrap.js";
+import { closePostgresPool } from "./db/postgres.js";
 import { env } from "./config/env.js";
-import mongoose from "mongoose";
 import net from "node:net";
 
 function assertPortAvailable(port) {
@@ -44,7 +44,7 @@ function listen(app, port) {
 async function bootstrap() {
   const port = Number(env.PORT);
   await assertPortAvailable(port);
-  await connectDatabase();
+  await bootstrapPostgresDatabase();
 
   const app = createApp();
   const server = await listen(app, port);
@@ -52,7 +52,7 @@ async function bootstrap() {
   const shutdown = async (signal) => {
     console.log(`${signal} received. Shutting down API.`);
     server.close(async () => {
-      await mongoose.disconnect();
+      await closePostgresPool();
       process.exit(0);
     });
   };

@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const contactPhoneSchema = new mongoose.Schema(
+const contactPhoneSchema = new Schema(
   {
     country: {
       type: String,
@@ -51,11 +51,11 @@ const contactPhoneSchema = new mongoose.Schema(
       index: true
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -65,7 +65,6 @@ const contactPhoneSchema = new mongoose.Schema(
 contactPhoneSchema.index({ status: 1, deletedAt: 1, order: 1 });
 
 const ContactPhone =
-  mongoose.models.ContactPhone ||
-  mongoose.model("ContactPhone", contactPhoneSchema);
+  model("ContactPhone", contactPhoneSchema);
 
 export default ContactPhone;

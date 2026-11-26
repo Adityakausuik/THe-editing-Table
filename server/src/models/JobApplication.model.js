@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const jobApplicationSchema = new mongoose.Schema(
+const jobApplicationSchema = new Schema(
   {
     jobId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Job",
       default: null,
       index: true
@@ -71,6 +71,6 @@ const jobApplicationSchema = new mongoose.Schema(
 
 jobApplicationSchema.index({ status: 1, createdAt: -1 });
 
-const JobApplication = mongoose.models.JobApplication || mongoose.model("JobApplication", jobApplicationSchema);
+const JobApplication = model("JobApplication", jobApplicationSchema);
 export { JobApplication };
 export default JobApplication;

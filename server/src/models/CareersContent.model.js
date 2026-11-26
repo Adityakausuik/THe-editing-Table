@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const whyJoinUsCardSchema = new mongoose.Schema(
+const whyJoinUsCardSchema = new Schema(
   {
     id: { type: String, required: true },
     title: { type: String, required: true, trim: true },
@@ -12,7 +12,7 @@ const whyJoinUsCardSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const careersContentSchema = new mongoose.Schema(
+const careersContentSchema = new Schema(
   {
     key: {
       type: String,
@@ -97,6 +97,6 @@ const careersContentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const CareersContent = mongoose.models.CareersContent || mongoose.model("CareersContent", careersContentSchema);
+const CareersContent = model("CareersContent", careersContentSchema);
 export { CareersContent };
 export default CareersContent;

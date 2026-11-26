@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const contactEmailSchema = new mongoose.Schema(
+const contactEmailSchema = new Schema(
   {
     email: {
       type: String,
@@ -33,11 +33,11 @@ const contactEmailSchema = new mongoose.Schema(
       index: true
     },
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     },
     updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User"
     }
   },
@@ -47,7 +47,6 @@ const contactEmailSchema = new mongoose.Schema(
 contactEmailSchema.index({ status: 1, deletedAt: 1, order: 1 });
 
 const ContactEmail =
-  mongoose.models.ContactEmail ||
-  mongoose.model("ContactEmail", contactEmailSchema);
+  model("ContactEmail", contactEmailSchema);
 
 export default ContactEmail;

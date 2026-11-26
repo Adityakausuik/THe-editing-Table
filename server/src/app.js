@@ -6,11 +6,8 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import mongoose from "mongoose";
 import morgan from "morgan";
 import { API_PREFIX } from "../../shared/constants.js";
-import { connectDatabase } from "./config/db.js";
-import { isPostgresSelected } from "./config/databaseMode.js";
 import { env } from "./config/env.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import migrationWriteFreeze from "./middleware/migrationWriteFreeze.js";
@@ -151,19 +148,6 @@ export function createApp() {
   // This runs before any database connection is opened for a write request.
   app.use(migrationWriteFreeze);
 
-  // Auto-connect to database in serverless runtime environments
-  app.use(async (req, res, next) => {
-    // PostgreSQL repositories acquire their Neon pool lazily. Never probe or
-    // open the legacy Mongoose connection on Preview/PostgreSQL requests.
-    if (!isPostgresSelected() && mongoose.connection.readyState !== 1 && env.NODE_ENV !== "test") {
-      try {
-        await connectDatabase({ bootstrap: false });
-      } catch {
-        // Non-blocking: individual controllers that require DB will handle 503 if DB is down
-      }
-    }
-    next();
-  });
 
   app.use(API_PREFIX, (req, res, next) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
@@ -215,20 +199,18 @@ export function createApp() {
     }
 
     // 2. Stream from Neon PostgreSQL media_chunks
-    if (isPostgresSelected()) {
-      try {
-        const media = await getMediaMetadata(subPath);
-        if (media) {
-          const streamed = await streamMediaFromNeon(req, res, media);
-          if (streamed) return;
-        }
-      } catch (neonErr) {
-        console.error("[media:stream] Streaming error:", neonErr);
-        if (!res.headersSent) {
-          return res.status(500).json({ success: false, message: "Media streaming failed." });
-        }
-        return;
+    try {
+      const media = await getMediaMetadata(subPath);
+      if (media) {
+        const streamed = await streamMediaFromNeon(req, res, media);
+        if (streamed) return;
       }
+    } catch (neonErr) {
+      console.error("[media:stream] Streaming error:", neonErr);
+      if (!res.headersSent) {
+        return res.status(500).json({ success: false, message: "Media streaming failed." });
+      }
+      return;
     }
 
     return next();

@@ -117,57 +117,6 @@ export async function bootstrapPostgresDatabase() {
 export async function bootstrapDatabase() {
   if (hasBootstrapped) return;
   hasBootstrapped = true;
-
-  if (isPostgresSelected()) {
-    return bootstrapPostgresDatabase();
-  }
-
-  try {
-    const adminEmail = (env.ADMIN_EMAIL || "").trim().toLowerCase();
-    const targetPassword = env.ADMIN_PASSWORD;
-    if (!adminEmail || !targetPassword) {
-      throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be configured before bootstrap can create an administrator.");
-    }
-    const passwordHash = await User.hashPassword(targetPassword);
-
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (!existingAdmin) {
-      await User.create({
-        name: "Administrator",
-        email: adminEmail,
-        passwordHash,
-        role: "superadmin",
-        isActive: true,
-        failedPasswordAttempts: 0,
-        accountLockUntil: undefined,
-        twoFactor: { enabled: false, required: false }
-      });
-      console.log(`[BOOTSTRAP] Administrator created: ${adminEmail}`);
-    }
-
-    // Seed policy defaults only for a new database. Existing production policy is source data.
-    await SecurityPolicy.updateOne(
-      { key: "global" },
-      {
-        $setOnInsert: {
-          requireAdmin2FA: true,
-          requireUser2FA: false
-        }
-      },
-      { upsert: true }
-    );
-
-    // Ensure baseline settings exist
-    for (const setting of defaultSettings) {
-      await SiteSetting.updateOne(
-        { key: setting.key },
-        { $setOnInsert: setting },
-        { upsert: true }
-      );
-    }
-
-  } catch (error) {
-    console.error(`[BOOTSTRAP] Database bootstrap notice: ${error.message}`);
-    hasBootstrapped = false; // Allow retry on next request if DB wasn't ready
-  }
+  return bootstrapPostgresDatabase();
 }
+

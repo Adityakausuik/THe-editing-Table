@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const blogPostSchema = new mongoose.Schema(
+const blogPostSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true, index: true },
@@ -27,6 +27,6 @@ const blogPostSchema = new mongoose.Schema(
 
 blogPostSchema.index({ publishedAt: -1 });
 
-const BlogPost = mongoose.models.BlogPost || mongoose.model("BlogPost", blogPostSchema);
+const BlogPost = model("BlogPost", blogPostSchema);
 export { BlogPost };
 export default BlogPost;

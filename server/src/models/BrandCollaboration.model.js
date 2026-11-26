@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const brandCollaborationSchema = new mongoose.Schema(
+const brandCollaborationSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true, index: true },
@@ -22,6 +22,6 @@ const brandCollaborationSchema = new mongoose.Schema(
 );
 
 const BrandCollaboration =
-  mongoose.models.BrandCollaboration || mongoose.model("BrandCollaboration", brandCollaborationSchema);
+  model("BrandCollaboration", brandCollaborationSchema);
 export { BrandCollaboration };
 export default BrandCollaboration;

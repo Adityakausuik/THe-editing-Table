@@ -23,15 +23,14 @@ function responseRecorder() {
   };
 }
 
-test("PostgreSQL CMS user creation validates input without requiring MongoDB", async () => {
+test("PostgreSQL CMS user creation validates input properly", async () => {
   const res = responseRecorder();
   await createUser({ body: {} }, res);
   assert.equal(res.statusCode, 400);
   assert.match(res.body.message, /required/i);
-  assert.doesNotMatch(res.body.message, /MongoDB is unavailable/i);
 });
 
-test("PostgreSQL CMS user deletion validates IDs without requiring MongoDB", async () => {
+test("PostgreSQL CMS user deletion validates IDs properly", async () => {
   const res = responseRecorder();
   await deleteUser({ params: { id: "invalid" }, user: { id: "other" } }, res);
   assert.equal(res.statusCode, 400);

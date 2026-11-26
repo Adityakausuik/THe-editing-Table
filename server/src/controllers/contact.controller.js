@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
 import { isValidId } from "../utils/ids.js";
-import { connectDatabase } from "../config/db.js";
 import { env } from "../config/env.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 import {
@@ -133,23 +131,15 @@ const DEFAULT_HOURS = [
 ];
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return true;
 }
 
 function usesPostgres() {
-  return isPostgresSelected();
+  return true;
 }
 
-async function requireContactStore(res) {
-  if (usesPostgres()) return true;
-  if (env.VERCEL_ENV === "preview") {
-    res.status(503).json({ success: false, message: "Contact database is not configured.", data: null });
-    return false;
-  }
-  if (!isDbConnected()) await connectDatabase().catch(() => {});
-  if (isDbConnected()) return true;
-  res.status(503).json({ success: false, message: "Contact database is unavailable.", data: null });
-  return false;
+async function requireContactStore() {
+  return true;
 }
 
 async function listContactRecords(Model, filter = {}) {

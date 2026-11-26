@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
 import { isValidId } from "../utils/ids.js";
-import { connectDatabase } from "../config/db.js";
 import { env } from "../config/env.js";
 import {
   createPostgresCmsRecord,
@@ -27,11 +25,11 @@ import { isPostgresSelected } from "../config/databaseMode.js";
 import { deleteMediaFromNeon, getMediaMetadata, streamMediaFromNeon } from "../db/neonMediaStorage.js";
 
 function isDbConnected() {
-  return mongoose.connection.readyState === 1;
+  return true;
 }
 
 function usesPostgres() {
-  return isPostgresSelected();
+  return true;
 }
 
 async function createPostgresRecord(Model, payload) {
@@ -60,20 +58,8 @@ async function updatePostgresRecord(Model, id, payload) {
   return updatePostgresCmsRecord(Model, id, updates);
 }
 
-async function requireDb(res) {
-  if (isDbConnected()) return true;
-  try {
-    await connectDatabase();
-    if (isDbConnected()) return true;
-  } catch (err) {
-    console.warn("[careers:requireDb] Auto-connect attempt failed:", err.message);
-  }
-  res.status(503).json({
-    success: false,
-    message: "MongoDB is unavailable. Careers data cannot be retrieved or changed.",
-    data: null
-  });
-  return false;
+async function requireDb() {
+  return true;
 }
 
 // ==========================================
@@ -95,25 +81,7 @@ export async function getPublicJobs(req, res) {
       });
       return res.json({ success: true, data: jobs });
     }
-
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.json({
-        success: true,
-        data: []
-      });
-    }
-
-    const jobs = await Job.find({ status: "Active" })
-      .sort({ order: 1, createdAt: -1 })
-      .lean();
-
-    return res.json({
-      success: true,
-      data: jobs
-    });
+    return res.status(503).json({ success: false, message: "Careers data is temporarily unavailable.", data: null });
   } catch {
     if (usesPostgres() || env.VERCEL_ENV === "preview") {
       return res.status(503).json({ success: false, message: "Careers data is temporarily unavailable.", data: null });
@@ -168,25 +136,9 @@ export async function getCareersContent(req, res) {
         data: records[0] || new CareersContent().toObject()
       });
     }
-
-    if (!isDbConnected()) {
-      await connectDatabase().catch(() => {});
-    }
-    if (!isDbConnected()) {
-      return res.json({
-        success: true,
-        data: new CareersContent().toObject()
-      });
-    }
-
-    let content = await CareersContent.findOne({ key: "careers_page_content" }).lean();
-    if (!content) {
-      content = await CareersContent.create({ key: "careers_page_content" });
-    }
-
     return res.json({
       success: true,
-      data: content
+      data: new CareersContent().toObject()
     });
   } catch {
     if (usesPostgres() || env.VERCEL_ENV === "preview") {

@@ -2,7 +2,6 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { deleteFromGridFS } from "./gridfs.js";
 import { isPostgresSelected } from "../config/databaseMode.js";
 import { deleteVercelBlob, isVercelBlobUrl } from "./blobStorage.js";
 import { deleteMediaFromNeon } from "../db/neonMediaStorage.js";
@@ -163,18 +162,7 @@ export function safeDeleteFile(relativePathOrUrl, { allowPostgresBlobDeletion = 
       }
     }
 
-    // Keep the Atlas copy intact while PostgreSQL is active so rollback still
-    // has the original media objects available.
-    if (!isPostgresSelected()) {
-      deleteFromGridFS(uploadsRelativePath).catch(() => {});
-      const ext = path.extname(uploadsRelativePath);
-      if (ext) {
-        const thumbRelative = uploadsRelativePath.replace(ext, `-thumb${ext}`);
-        deleteFromGridFS(thumbRelative).catch(() => {});
-      }
-    } else {
-      deleteMediaFromNeon(uploadsRelativePath).catch(() => {});
-    }
+    deleteMediaFromNeon(uploadsRelativePath).catch(() => {});
 
     return deletedFromDisk;
   } catch (err) {

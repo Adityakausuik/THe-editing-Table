@@ -77,7 +77,7 @@ test("CMS user deletion preserves the final active superadministrator", () => {
   assert.deepEqual(buildPostgresCmsUserDeleteDecision({ role: "editor", is_active: true }, 1), { deleted: true, reason: null });
 });
 
-test("hydrated PostgreSQL auth users preserve Mongoose password behavior and collect nested updates", () => {
+test("hydrated PostgreSQL auth users preserve password behavior and collect nested updates", () => {
   const user = hydratePostgresAuthUser({
     _id: "0123456789abcdef01234567",
     name: "Admin",

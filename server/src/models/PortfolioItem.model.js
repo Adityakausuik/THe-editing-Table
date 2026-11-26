@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const portfolioItemSchema = new mongoose.Schema(
+const portfolioItemSchema = new Schema(
   {
     title: {
       type: String,
@@ -68,4 +68,4 @@ const portfolioItemSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.PortfolioItem || mongoose.model("PortfolioItem", portfolioItemSchema);
+export default model("PortfolioItem", portfolioItemSchema);

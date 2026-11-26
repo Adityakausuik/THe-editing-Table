@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const adminActivityLogSchema = new mongoose.Schema({
+const adminActivityLogSchema = new Schema({
   adminId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
@@ -33,10 +33,10 @@ const adminActivityLogSchema = new mongoose.Schema({
     default: "VideoShowcase"
   },
   entityId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: Schema.Types.ObjectId
   },
   changes: {
-    type: mongoose.Schema.Types.Mixed
+    type: Schema.Types.Mixed
   },
   createdAt: {
     type: Date,
@@ -46,7 +46,6 @@ const adminActivityLogSchema = new mongoose.Schema({
 });
 
 const AdminActivityLog =
-  mongoose.models.AdminActivityLog ||
-  mongoose.model("AdminActivityLog", adminActivityLogSchema);
+  model("AdminActivityLog", adminActivityLogSchema);
 
 export default AdminActivityLog;

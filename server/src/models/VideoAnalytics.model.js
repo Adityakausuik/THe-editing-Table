@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import { Schema, model } from '../db/modelSchema.js';
 
-const videoAnalyticsSchema = new mongoose.Schema({
+const videoAnalyticsSchema = new Schema({
   videoId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "VideoShowcaseItem",
     required: true,
     index: true
@@ -49,7 +49,6 @@ videoAnalyticsSchema.index({ eventType: 1, createdAt: -1 });
 videoAnalyticsSchema.index({ sessionId: 1, videoId: 1 });
 
 const VideoAnalytics =
-  mongoose.models.VideoAnalytics ||
-  mongoose.model("VideoAnalytics", videoAnalyticsSchema);
+  model("VideoAnalytics", videoAnalyticsSchema);
 
 export default VideoAnalytics;
