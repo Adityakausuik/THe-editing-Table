@@ -58,6 +58,7 @@ export async function createEnquiry(req, res, next) {
       success: true,
       message: "Your enquiry has been received successfully! Our creative director will respond within 24 hours.",
       data: {
+        _id: enquiry._id ?? enquiry.id,
         id: enquiry._id ?? enquiry.id,
         createdAt: enquiry.createdAt
       }

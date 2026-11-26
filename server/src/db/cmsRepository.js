@@ -1,4 +1,5 @@
 import { getPostgresPool } from "./postgres.js";
+import { isValidId } from "../utils/ids.js";
 
 const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
 
@@ -18,13 +19,18 @@ function setPathValue(value, schemaPath, next) {
 }
 
 function schemaFields(Model) {
+  const allPaths = Object.keys(Model.schema.paths);
   return Object.entries(Model.schema.paths)
-    .filter(([name]) => !["_id", "__v", "createdAt", "updatedAt"].includes(name));
+    .filter(([name]) => {
+      if (["_id", "__v", "createdAt", "updatedAt"].includes(name)) return false;
+      const hasChildren = allPaths.some((p) => p.startsWith(`${name}.`));
+      return !hasChildren;
+    });
 }
 
 function fromRow(Model, row) {
   if (!row) return null;
-  const doc = { _id: row._id, __v: row.__v ?? 0 };
+  const doc = { _id: row._id, id: row._id, __v: row.__v ?? 0 };
   for (const [name] of schemaFields(Model)) {
     const value = row[columnName(name)];
     if (value !== undefined) setPathValue(doc, name, value);
@@ -44,6 +50,11 @@ function jsonValue(field, value) {
   if (value === undefined) return undefined;
   if (field.instance === "ObjectId" && value != null) {
     return typeof value.toHexString === "function" ? value.toHexString() : String(value);
+  }
+  if (field.instance === "Date" && value != null) {
+    if (typeof value === "number") return new Date(value);
+    if (typeof value === "string" && /^\d+$/.test(value)) return new Date(Number(value));
+    return value;
   }
   return ["Array", "Map", "Mixed", "Embedded", "Decimal128"].includes(field.instance)
     ? JSON.stringify(value)
@@ -101,8 +112,16 @@ export async function listPostgresCmsRecords(Model, options = {}) {
   return result.rows.map((row) => fromRow(Model, row));
 }
 
-export async function getPostgresCmsRecord(Model, id, publicFilter = {}) {
-  const { clauses, values } = buildFilter(Model, { id, publicFilter });
+export async function getPostgresCmsRecord(Model, idOrSlug, publicFilter = {}) {
+  let filterOptions = { publicFilter };
+  if (isValidId(idOrSlug)) {
+    filterOptions.id = idOrSlug;
+  } else if (Model.schema.paths.slug) {
+    filterOptions.publicFilter = { ...publicFilter, slug: idOrSlug };
+  } else {
+    return null;
+  }
+  const { clauses, values } = buildFilter(Model, filterOptions);
   const result = await getPostgresPool().query(`SELECT * FROM ${quote(Model.collection.collectionName)}${clauses} LIMIT 1`, values);
   return fromRow(Model, result.rows[0]);
 }

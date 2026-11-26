@@ -18,7 +18,7 @@ const blogPostSchema = new Schema(
     status: { type: String, enum: ["draft", "published"], default: "published", index: true },
     featured: { type: Boolean, default: false, index: true },
     order: { type: Number, default: 0, index: true },
-    publishedAt: { type: Date, default: Date.now },
+    publishedAt: { type: Date, default: () => new Date() },
     seoTitle: { type: String, default: "" },
     seoDescription: { type: String, default: "" }
   },

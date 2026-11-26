@@ -77,4 +77,4 @@ const mediaSchema = new Schema(
   }
 );
 
-export default model("Media", mediaSchema);
+export default model("Media", mediaSchema, "media");

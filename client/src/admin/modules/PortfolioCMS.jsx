@@ -92,9 +92,13 @@ export default function PortfolioCMS() {
     setModalError(null);
     try {
       const isNew = !editingItem;
+      const targetId = editingItem?._id || editingItem?.id;
+      if (!isNew && !targetId) {
+        throw new Error("Unable to update: Record ID is missing.");
+      }
       const url = isNew
         ? "/api/v1/cms/portfolio"
-        : `/api/v1/cms/portfolio/${editingItem._id}`;
+        : `/api/v1/cms/portfolio/${targetId}`;
       const method = isNew ? "POST" : "PATCH";
 
       const payload = {
@@ -124,10 +128,15 @@ export default function PortfolioCMS() {
   };
 
   const handleToggleStatus = async (item) => {
+    const targetId = item?._id || item?.id;
+    if (!targetId) {
+      setError("Unable to update status: Record ID is missing.");
+      return;
+    }
     const nextStatus = !item.active;
     setError(null);
     try {
-      await apiFetch(`/api/v1/cms/portfolio/${item._id}/status`, {
+      await apiFetch(`/api/v1/cms/portfolio/${targetId}/status`, {
         method: "PATCH",
         body: JSON.stringify({ active: nextStatus })
       });
@@ -138,11 +147,16 @@ export default function PortfolioCMS() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (rawId) => {
+    const targetId = typeof rawId === "string" ? rawId : (rawId?._id || rawId?.id);
+    if (!targetId) {
+      setError("Unable to delete: Record ID is missing.");
+      return;
+    }
     if (!confirm("Are you sure you want to delete this portfolio item?")) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/cms/portfolio/${id}`, {
+      await apiFetch(`/api/v1/cms/portfolio/${targetId}`, {
         method: "DELETE"
       });
       setSavedMsg("Portfolio item deleted successfully.");
@@ -155,14 +169,15 @@ export default function PortfolioCMS() {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    if (!confirm(`Delete ${selectedIds.length} selected portfolio items?`)) return;
+    const validSelected = selectedIds.filter(Boolean);
+    if (validSelected.length === 0) return;
+    if (!confirm(`Delete ${validSelected.length} selected portfolio items?`)) return;
 
     setError(null);
     try {
       await apiFetch("/api/v1/cms/portfolio/bulk-delete", {
         method: "POST",
-        body: JSON.stringify({ ids: selectedIds })
+        body: JSON.stringify({ ids: validSelected })
       });
 
       setSelectedIds([]);
@@ -252,10 +267,11 @@ export default function PortfolioCMS() {
       <CollectionStatusFilter value={statusFilter} onChange={setStatusFilter} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
-          const isSelected = selectedIds.includes(item._id);
+          const itemId = item._id || item.id;
+          const isSelected = selectedIds.includes(itemId);
           return (
             <div
-              key={item._id}
+              key={itemId}
               className={`rounded-3xl border bg-sage-card p-5 shadow-soft hover:shadow-editorial transition-all space-y-3 relative ${
                 item.active ? "border-sage-border" : "border-rose-200 bg-rose-50/20"
               }`}
@@ -273,7 +289,7 @@ export default function PortfolioCMS() {
                   checked={isSelected}
                   onChange={() =>
                     setSelectedIds((prev) =>
-                      isSelected ? prev.filter((id) => id !== item._id) : [...prev, item._id]
+                      isSelected ? prev.filter((id) => id !== itemId) : [...prev, itemId]
                     )
                   }
                   className="absolute top-3 left-3 h-4 w-4 accent-copper rounded cursor-pointer z-10"
@@ -293,7 +309,7 @@ export default function PortfolioCMS() {
                   <CmsOrderControls
                     collection={items}
                     setCollection={setItems}
-                    itemId={item._id}
+                    itemId={itemId}
                     endpoint="/api/v1/cms/portfolio"
                     onError={setError}
                   />
@@ -318,7 +334,7 @@ export default function PortfolioCMS() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(item._id)}
+                    onClick={() => handleDelete(itemId)}
                     className="p-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />

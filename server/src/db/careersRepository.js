@@ -28,7 +28,7 @@ export function buildPostgresJobApplicationsQuery({ jobId, status, search, sort 
   const where = clauses.length ? ` WHERE ${clauses.join(" AND ")}` : "";
   const direction = sort === "oldest" ? "ASC" : "DESC";
   return {
-    text: `SELECT applications.*, CASE WHEN jobs."_id" IS NULL THEN NULL ELSE jsonb_build_object('_id', jobs."_id", 'title', jobs."title", 'department', jobs."department", 'location', jobs."location') END AS "populated_job" ` +
+    text: `SELECT applications.*, CASE WHEN jobs."_id" IS NULL THEN NULL ELSE jsonb_build_object('_id', jobs."_id", 'title', jobs."title", 'department', jobs."department", 'location', jobs."location") END AS "populated_job" ` +
       `FROM "jobapplications" AS applications LEFT JOIN "jobs" AS jobs ON jobs."_id" = applications."job_id"${where} ORDER BY applications."created_at" ${direction} NULLS LAST`,
     values
   };

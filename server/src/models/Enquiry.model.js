@@ -20,6 +20,6 @@ const enquirySchema = new Schema(
 
 enquirySchema.index({ createdAt: -1 });
 
-const Enquiry = model("Enquiry", enquirySchema);
+const Enquiry = model("Enquiry", enquirySchema, "enquiries");
 export { Enquiry };
 export default Enquiry;

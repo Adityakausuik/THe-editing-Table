@@ -136,7 +136,7 @@ export async function submitReview(req, res) {
     return res.status(201).json({
       success: true,
       message: "Thank you! Your review has been submitted and is awaiting admin approval.",
-      data: { id: review._id }
+      data: { _id: review._id, id: review._id }
     });
   } catch (error) {
     return res.status(500).json({
@@ -201,15 +201,17 @@ export async function getAdminReviews(req, res) {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
 
     const result = await listPostgresAdminReviews({ page: pageNum, limit: limitNum, status, rating, sort, search, featured });
+    const reviews = Array.isArray(result) ? result : (result?.reviews || []);
+    const total = Array.isArray(result) ? result.length : (result?.total || 0);
     return res.status(200).json({
       success: true,
       message: "Admin reviews retrieved",
-      data: result.reviews,
+      data: reviews,
       pagination: {
         page: pageNum,
         limit: limitNum,
-        total: result.total,
-        pages: Math.ceil(result.total / limitNum) || 1
+        total,
+        pages: Math.ceil(total / limitNum) || 1
       }
     });
   } catch (error) {

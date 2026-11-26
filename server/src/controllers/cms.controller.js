@@ -97,10 +97,11 @@ const ENTITY_CONFIG = {
       if (next.active !== undefined && next.status === undefined) next.status = next.active ? "published" : "draft";
       if (next.isPublished !== undefined && next.status === undefined) next.status = next.isPublished ? "published" : "draft";
       if (typeof next.author === "string") next.author = { name: next.author };
-      if (next.authorName || next.authorAvatar) {
+      if (next.authorName || next.authorAvatar || next.authorRole) {
         next.author = {
           ...(typeof next.author === "object" ? next.author : {}),
           ...(next.authorName ? { name: next.authorName } : {}),
+          ...(next.authorRole ? { role: next.authorRole } : {}),
           ...(next.authorAvatar ? { avatar: next.authorAvatar } : {})
         };
       }
@@ -109,6 +110,7 @@ const ENTITY_CONFIG = {
       delete next.active;
       delete next.isPublished;
       delete next.authorName;
+      delete next.authorRole;
       delete next.authorAvatar;
       return next;
     }
@@ -124,13 +126,14 @@ const ENTITY_CONFIG = {
       if (!next.designation && next.role) next.designation = next.role;
       if (!next.shortBio && next.bio) next.shortBio = next.bio;
       if (!next.fullBio && (next.bio || next.shortBio)) next.fullBio = next.bio || next.shortBio;
-      if (!next.profileImage && next.avatar) next.profileImage = next.avatar;
+      if (!next.profileImage && (next.avatar || next.image)) next.profileImage = next.avatar || next.image;
       if (!next.slug && (next.fullName || next.name)) next.slug = slugify(next.fullName || next.name);
       delete next.order;
       delete next.name;
       delete next.role;
       delete next.bio;
       delete next.avatar;
+      delete next.image;
       return next;
     }
   }
@@ -222,6 +225,8 @@ async function validatePostgresUpdate(Model, existing, payload) {
 function normalizeDocForClient(doc, entityName) {
   const item = toPlain(doc);
   if (!item) return item;
+  if (!item.id && item._id) item.id = item._id;
+  if (!item._id && item.id) item._id = item.id;
 
   if (entityName === "Service") {
     item.active = item.isPublished !== false;
@@ -768,9 +773,18 @@ function createCRUDActions(Model, entityName) {
     getOne: async (req, res) => {
       try {
         if (usesPostgres()) {
-          if (!isValidId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
-          const item = await getPostgresCmsRecord(Model, req.params.id, config.publicFilter);
-          if (!item) return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          const idOrSlug = req.params.id;
+          if (!idOrSlug || idOrSlug === "undefined" || idOrSlug === "null") {
+            return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
+          }
+
+          const item = await getPostgresCmsRecord(Model, idOrSlug, config.publicFilter);
+          if (!item) {
+            if (!isValidId(idOrSlug) && !Model.schema.paths.slug) {
+              return res.status(400).json({ success: false, message: "Invalid record ID", data: null });
+            }
+            return res.status(404).json({ success: false, message: `${entityName} not found`, data: null });
+          }
           return res.json({ success: true, message: `${entityName} retrieved successfully`, data: normalizeDocForClient(item, entityName) });
         }
 
@@ -1077,7 +1091,9 @@ export async function updateEnquiryStatus(req, res) {
     if (!isValidId(id)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry ID", data: null });
     }
-    if (!Enquiry.schema.path("status").enumValues.includes(status)) {
+    const statusField = Enquiry.schema.path("status");
+    const allowedStatuses = statusField?.enumValues || statusField?.enum || statusField?.options?.enum || [];
+    if (allowedStatuses.length && !allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid enquiry status", data: null });
     }
     const item = postgres
@@ -1228,7 +1244,9 @@ export async function updateSiteSetting(req, res) {
     if (value === undefined) {
       return res.status(400).json({ success: false, message: "Setting value is required", data: null });
     }
-    if (!SiteSetting.schema.path("group").enumValues.includes(group)) {
+    const groupField = SiteSetting.schema.path("group");
+    const allowedGroups = groupField?.enumValues || groupField?.enum || groupField?.options?.enum || [];
+    if (allowedGroups.length && !allowedGroups.includes(group)) {
       return res.status(400).json({ success: false, message: "Invalid setting group", data: null });
     }
     const setting = postgres

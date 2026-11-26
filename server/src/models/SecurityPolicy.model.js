@@ -24,4 +24,4 @@ securityPolicySchema.statics.getGlobal = function () {
   );
 };
 
-export default model("SecurityPolicy", securityPolicySchema);
+export default model("SecurityPolicy", securityPolicySchema, "securitypolicies");

@@ -91,7 +91,8 @@ export function buildPublicReviewFilter({ rating, projectType, search }) {
   return { where: clauses.join(" AND "), values };
 }
 
-export async function createPostgresReview(review) {
+export async function createPostgresReview(reviewOrId, maybePayload) {
+  const review = typeof reviewOrId === "string" ? { _id: reviewOrId, ...maybePayload } : reviewOrId;
   const values = [
     review._id, review.name, review.email, review.phone, review.company, review.projectType,
     review.rating, review.title, review.message, review.profileImage, review.projectImage,
@@ -102,7 +103,7 @@ export async function createPostgresReview(review) {
     `INSERT INTO "reviews" ("_id", "name", "email", "phone", "company", "project_type", "rating", "title", "message", "profile_image", "project_image", "country", "city", "verified", "featured", "status", "ip_address", "created_at", "updated_at") VALUES (${values.map((_, index) => `$${index + 1}`).join(", ")})`,
     values
   );
-  return { _id: review._id };
+  return { _id: review._id, id: review._id };
 }
 
 export async function listPostgresPublicReviews({ rating, projectType, search, page, limit, sort }) {

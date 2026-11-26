@@ -10,7 +10,8 @@ export default function CmsOrderControls({
   onError
 }) {
   const [saving, setSaving] = useState(false);
-  const index = collection.findIndex((item) => item._id === itemId);
+  const targetId = typeof itemId === "object" ? (itemId?._id || itemId?.id) : itemId;
+  const index = collection.findIndex((item) => (item._id || item.id) === targetId);
 
   const move = async (direction) => {
     const targetIndex = index + direction;
@@ -28,7 +29,7 @@ export default function CmsOrderControls({
         method: "PUT",
         body: JSON.stringify({
           items: normalized.map((item, orderIndex) => ({
-            id: item._id,
+            id: item._id || item.id,
             order: orderIndex + 1
           }))
         })

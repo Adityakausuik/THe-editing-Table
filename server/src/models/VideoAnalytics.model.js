@@ -49,6 +49,6 @@ videoAnalyticsSchema.index({ eventType: 1, createdAt: -1 });
 videoAnalyticsSchema.index({ sessionId: 1, videoId: 1 });
 
 const VideoAnalytics =
-  model("VideoAnalytics", videoAnalyticsSchema);
+  model("VideoAnalytics", videoAnalyticsSchema, "videoanalytics");
 
 export default VideoAnalytics;
