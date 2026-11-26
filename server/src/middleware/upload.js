@@ -9,14 +9,68 @@ import { isPostgresSelected } from "../config/databaseMode.js";
 export const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 export const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 export const UPLOAD_CHUNK_SIZE = 3 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const ALLOWED_VIDEO_TYPES = new Set(["video/mp4"]);
+
+export const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/x-png",
+  "image/webp",
+  "image/gif"
+]);
+
+export const ALLOWED_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm"
+]);
+
+/**
+ * Normalizes varied and browser-specific MIME types and file extensions to standard MIME strings.
+ */
+export function normalizeMimeType(rawMime, filename = "") {
+  const mime = String(rawMime || "").toLowerCase().trim().split(";")[0].trim();
+  const ext = path.extname(filename || "").toLowerCase();
+
+  if (
+    mime === "image/jpeg" ||
+    mime === "image/jpg" ||
+    mime === "image/pjpeg" ||
+    ext === ".jpg" ||
+    ext === ".jpeg"
+  ) {
+    return "image/jpeg";
+  }
+  if (mime === "image/png" || mime === "image/x-png" || ext === ".png") {
+    return "image/png";
+  }
+  if (mime === "image/webp" || ext === ".webp") {
+    return "image/webp";
+  }
+  if (mime === "image/gif" || ext === ".gif") {
+    return "image/gif";
+  }
+  if (mime === "video/mp4" || ext === ".mp4") {
+    return "video/mp4";
+  }
+  if (mime === "video/webm" || ext === ".webm") {
+    return "video/webm";
+  }
+
+  if (ALLOWED_IMAGE_TYPES.has(mime) || ALLOWED_VIDEO_TYPES.has(mime)) {
+    return mime;
+  }
+
+  return mime || "application/octet-stream";
+}
 
 // Memory storage for Sharp buffer processing
 const memoryStorage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (ALLOWED_IMAGE_TYPES.has(file.mimetype) || ALLOWED_VIDEO_TYPES.has(file.mimetype)) {
+  const normalizedMime = normalizeMimeType(file.mimetype, file.originalname);
+  if (ALLOWED_IMAGE_TYPES.has(normalizedMime) || ALLOWED_VIDEO_TYPES.has(normalizedMime)) {
+    file.mimetype = normalizedMime;
     cb(null, true);
   } else {
     cb(new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, and MP4."), false);
@@ -29,16 +83,18 @@ export const uploadMiddleware = multer({
   limits: { fileSize: MAX_VIDEO_SIZE }
 });
 
+// Chunks are raw binary slices; overall file validation occurs at /chunked/start and /chunked/finish
 export const uploadChunkMiddleware = multer({
   storage: memoryStorage,
-  fileFilter,
   limits: { fileSize: UPLOAD_CHUNK_SIZE }
 });
 
-export function validateUploadMetadata({ mimeType, size }) {
+export function validateUploadMetadata({ mimeType, size, originalName = "" }) {
   const normalizedSize = Number(size);
-  const isImage = ALLOWED_IMAGE_TYPES.has(mimeType);
-  const isVideo = ALLOWED_VIDEO_TYPES.has(mimeType);
+  const normalizedMime = normalizeMimeType(mimeType, originalName);
+  const isImage = ALLOWED_IMAGE_TYPES.has(normalizedMime);
+  const isVideo = ALLOWED_VIDEO_TYPES.has(normalizedMime);
+
   if (!isImage && !isVideo) {
     const error = new Error("Unsupported file type. Permitted formats: JPG, PNG, WEBP, GIF, and MP4.");
     error.status = 415;
@@ -50,21 +106,16 @@ export function validateUploadMetadata({ mimeType, size }) {
     error.status = 413;
     throw error;
   }
-  return { size: normalizedSize, isVideo };
+  return { size: normalizedSize, isVideo, mimeType: normalizedMime };
 }
 
 export async function processAndSaveFile(file, requestedFolder = "general") {
   const folder = ALLOWED_MODULE_FOLDERS.includes(requestedFolder) ? requestedFolder : "general";
   const useBlob = isBlobStorageConfigured("public");
-  const usePostgres = isPostgresSelected();
-  if (usePostgres && !useBlob) {
+  const isPreviewOrServerless = isServerlessEnvironment() || process.env.VERCEL_ENV === "preview";
+
+  if (!useBlob && isPreviewOrServerless) {
     const error = new Error("Public media storage is not configured. Configure the Preview public Blob store before uploading.");
-    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
-    error.status = 503;
-    throw error;
-  }
-  if (!useBlob && isServerlessEnvironment()) {
-    const error = new Error("Durable media storage is unavailable. Configure the deployment's public Blob store.");
     error.code = "BLOB_STORAGE_NOT_CONFIGURED";
     error.status = 503;
     throw error;
@@ -77,18 +128,23 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
   }
 
   const { cleanName, uniqueSuffix } = sanitizeFilename(file.originalname);
-  const { isVideo } = validateUploadMetadata({ mimeType: file.mimetype, size: file.size });
+  const { isVideo, mimeType: normalizedMime } = validateUploadMetadata({
+    mimeType: file.mimetype,
+    size: file.size,
+    originalName: file.originalname
+  });
+  file.mimetype = normalizedMime;
 
   if (isVideo) {
-    const signature = file.buffer.subarray(0, 16).toString("latin1");
-    const isMp4Family = signature.includes("ftyp");
+    const signature = file.buffer.subarray(0, 64).toString("latin1");
+    const isMp4Family = signature.includes("ftyp") || (normalizedMime === "video/webm" && signature.includes("webm"));
     if (!isMp4Family) {
       const error = new Error("Uploaded video content does not match an allowed media format.");
       error.status = 400;
       throw error;
     }
 
-    const ext = path.extname(file.originalname) || ".mp4";
+    const ext = path.extname(file.originalname) || (normalizedMime === "video/webm" ? ".webm" : ".mp4");
     const filename = `${cleanName}-${uniqueSuffix}${ext}`;
     if (useBlob) {
       const blob = await putVercelBlob(`${folder}/${filename}`, file.buffer, { access: "public", contentType: file.mimetype, multipart: true });
@@ -117,7 +173,7 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
     throw error;
   }
   const detectedMime = ({ jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif" })[metadata.format];
-  if (!detectedMime || detectedMime !== file.mimetype) {
+  if (!detectedMime || detectedMime !== normalizedMime) {
     const error = new Error("The file contents do not match the selected image type.");
     error.status = 415;
     throw error;
@@ -127,8 +183,10 @@ export async function processAndSaveFile(file, requestedFolder = "general") {
   const webpPath = useBlob ? null : path.join(targetDir, webpFilename);
   const thumbPath = useBlob ? null : path.join(targetDir, thumbFilename);
 
+  const isAnimated = Boolean(metadata.pages && metadata.pages > 1);
+
   // Main WebP optimization
-  const processedBuffer = await sharp(file.buffer)
+  const processedBuffer = await sharp(file.buffer, isAnimated ? { animated: true } : {})
     .rotate() // Auto-orient based on EXIF
     .resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true })
     .webp({ quality: 82 })

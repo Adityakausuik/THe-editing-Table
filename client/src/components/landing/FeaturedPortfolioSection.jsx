@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
+import { getYouTubeId } from "../../utils/youtube.js";
 import Container from "../ui/Container.jsx";
 
 // Curated authentic fallback items matching the visual direction of the editorial mockup
@@ -458,13 +459,23 @@ export default function FeaturedPortfolioSection() {
 
             {/* Video Player */}
             <div className="aspect-[16/9] w-full bg-black flex items-center justify-center">
-              <video
-                src={activeVideoModal.videoUrl}
-                controls
-                autoPlay
-                playsInline
-                className="h-full w-full object-contain"
-              />
+              {getYouTubeId(activeVideoModal.videoUrl) ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(activeVideoModal.videoUrl)}?autoplay=1&playsinline=1`}
+                  title={activeVideoModal.title || "Portfolio Video"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="h-full w-full border-0"
+                />
+              ) : (
+                <video
+                  src={mediaUrl(activeVideoModal.videoUrl)}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="h-full w-full object-contain"
+                />
+              )}
             </div>
           </div>
         </div>

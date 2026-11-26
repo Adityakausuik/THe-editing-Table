@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { getYouTubeId } from "../../utils/youtube.js";
 
 /**
  * The Editing Table – Minimal, Editorial Hero Section.
@@ -170,20 +171,6 @@ h1{
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-export function getYouTubeId(url) {
-  if (!url || typeof url !== "string") return null;
-  const trimmed = url.trim();
-  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
-  if (shortMatch) return shortMatch[1];
-  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
-  if (watchMatch) return watchMatch[1];
-  const embedMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
-  if (embedMatch) return embedMatch[1];
-  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i);
-  if (shortsMatch) return shortsMatch[1];
-  return null;
-}
 
 export default function HeroSection() {
   const bgVideoRef = useRef(null);

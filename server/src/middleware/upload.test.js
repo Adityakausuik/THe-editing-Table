@@ -7,12 +7,14 @@ test("upload metadata accepts supported images and MP4 at their advertised limit
   for (const mimeType of ["image/jpeg", "image/png", "image/webp", "image/gif"]) {
     assert.deepEqual(validateUploadMetadata({ mimeType, size: MAX_IMAGE_SIZE }), {
       size: MAX_IMAGE_SIZE,
-      isVideo: false
+      isVideo: false,
+      mimeType
     });
   }
   assert.deepEqual(validateUploadMetadata({ mimeType: "video/mp4", size: MAX_VIDEO_SIZE }), {
     size: MAX_VIDEO_SIZE,
-    isVideo: true
+    isVideo: true,
+    mimeType: "video/mp4"
   });
 });
 

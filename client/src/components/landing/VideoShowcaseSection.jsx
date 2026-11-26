@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
+import { getYouTubeId } from "../../utils/youtube.js";
 import Container from "../ui/Container.jsx";
 
 const DEFAULT_VIDEOS = [
@@ -540,6 +541,7 @@ export default function VideoShowcaseSection() {
 
               const videoSrc = mediaUrl(video.videoFile?.url || video.videoUrl);
               const thumbSrc = mediaUrl(video.thumbnail?.url || video.thumbnail);
+              const youtubeId = getYouTubeId(video.videoFile?.url || video.videoUrl);
               const isHovered = hoveredIndex === videoIndex;
 
               // Responsive Card Styling & Scale Hierarchy
@@ -612,8 +614,17 @@ export default function VideoShowcaseSection() {
                     }`}
                   />
 
-                  {/* HTML5 Video element for center active or hovered video */}
-                  {(isCenter || isHovered) && videoSrc && (
+                  {/* Video Presentation: YouTube IFrame or Native HTML5 Video */}
+                  {youtubeId && (isCenter || isHovered) ? (
+                    <div className="absolute inset-0 h-full w-full overflow-hidden pointer-events-none">
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=${isCenter && settings.centerAutoplay ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&playsinline=1`}
+                        title={video.title || "Showcase Video"}
+                        allow="autoplay; encrypted-media"
+                        className="h-full w-full object-cover border-0"
+                      />
+                    </div>
+                  ) : !youtubeId && (isCenter || isHovered) && videoSrc ? (
                     <video
                       ref={(el) => (videoRefs.current[video._id || videoIndex] = el)}
                       src={videoSrc}
@@ -629,7 +640,7 @@ export default function VideoShowcaseSection() {
                         }
                       }}
                     />
-                  )}
+                  ) : null}
 
                   {/* Dark Vignette Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-forest/90 via-forest/20 to-transparent opacity-80 group-hover:opacity-70 transition-opacity" />

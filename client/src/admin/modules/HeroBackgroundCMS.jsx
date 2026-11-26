@@ -27,6 +27,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, mediaUrl } from "../../lib/api.js";
 import { uploadFileInChunks } from "../components/MediaUploadDropzone.jsx";
+import { getYouTubeId } from "../../utils/youtube.js";
 
 const PLAYBACK_SPEED_OPTIONS = [
   { label: "0.5x (Slow Motion)", value: 0.5 },
@@ -42,20 +43,6 @@ const POSITION_OPTIONS = [
   { label: "Top Focused", value: "top" },
   { label: "Bottom Focused", value: "bottom" }
 ];
-
-export function getYouTubeId(url) {
-  if (!url || typeof url !== "string") return null;
-  const trimmed = url.trim();
-  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
-  if (shortMatch) return shortMatch[1];
-  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
-  if (watchMatch) return watchMatch[1];
-  const embedMatch = trimmed.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
-  if (embedMatch) return embedMatch[1];
-  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i);
-  if (shortsMatch) return shortsMatch[1];
-  return null;
-}
 
 function formatBytes(bytes, decimals = 1) {
   if (!bytes || bytes === 0) return "0 B";

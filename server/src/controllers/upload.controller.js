@@ -157,7 +157,7 @@ export async function beginChunkedUpload(req, res) {
     if (!usesPostgres()) await cleanupExpiredUploadParts().catch((error) => {
       console.warn("[upload] Expired temporary upload cleanup failed:", error.message);
     });
-    const { size } = validateUploadMetadata(req.body || {});
+    const { size, mimeType: validatedMime } = validateUploadMetadata(req.body || {});
     const folder = req.body.folder || "general";
     if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
       return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
@@ -165,7 +165,7 @@ export async function beginChunkedUpload(req, res) {
     const uploadId = randomUUID().replace(/-/g, "");
     if (usesPostgres()) {
       const partCount = buildPostgresMediaUploadPartCount(size, UPLOAD_CHUNK_SIZE);
-      await createPostgresMediaUploadSession({ uploadId, userId: req.user?.id, folder, mimeType: req.body.mimeType, totalSize: size, partCount });
+      await createPostgresMediaUploadSession({ uploadId, userId: req.user?.id, folder, mimeType: validatedMime, totalSize: size, partCount });
     }
     return res.status(201).json({
       success: true,
@@ -204,7 +204,7 @@ export async function finishChunkedUpload(req, res, next) {
   try {
     if (!await requireDb(res)) return;
     const { mimeType, originalName, size, folder = "general" } = req.body || {};
-    const validation = validateUploadMetadata({ mimeType, size });
+    const validation = validateUploadMetadata({ mimeType, size, originalName });
     if (!ALLOWED_MODULE_FOLDERS.includes(folder)) {
       return res.status(400).json({ success: false, message: "Invalid upload folder.", data: null });
     }
@@ -212,7 +212,7 @@ export async function finishChunkedUpload(req, res, next) {
     let buffer;
     if (usesPostgres()) {
       const upload = await readPostgresMediaUpload({ uploadId, userId: req.user?.id });
-      if (upload.folder !== folder || upload.mime_type !== mimeType || Number(upload.total_size) !== validation.size || Number(upload.part_count) !== chunkCount) {
+      if (upload.folder !== folder || upload.mime_type !== validation.mimeType || Number(upload.total_size) !== validation.size || Number(upload.part_count) !== chunkCount) {
         const error = new Error("Upload metadata does not match the started upload session.");
         error.status = 400;
         throw error;
@@ -220,7 +220,7 @@ export async function finishChunkedUpload(req, res, next) {
       buffer = upload.buffer;
     } else buffer = await readUploadParts(uploadId, chunkCount, validation.size);
     const safeOriginalName = String(originalName || "upload").slice(0, 240);
-    const file = { originalname: safeOriginalName, mimetype: mimeType, size: buffer.length, buffer };
+    const file = { originalname: safeOriginalName, mimetype: validation.mimeType, size: buffer.length, buffer };
     const saved = await processAndSaveFile(file, folder);
     try {
       const payload = {

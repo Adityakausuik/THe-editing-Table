@@ -23,6 +23,7 @@ import { apiFetch, mediaUrl } from "../../lib/api.js";
 import { useAdmin } from "../AdminContext.jsx";
 import CmsOrderControls from "../components/CmsOrderControls.jsx";
 import MediaUploadDropzone from "../components/MediaUploadDropzone.jsx";
+import { getYouTubeId } from "../../utils/youtube.js";
 
 const DEFAULT_SETTINGS = {
   heading: "We Turn Your Raw Footage Into Stories Worth Watching",
@@ -268,6 +269,7 @@ export default function VideoShowcaseCMS() {
       const payload = {
         ...formData,
         tags: tagsArray,
+        videoUrl: formData.videoUrl || formData.videoFileUrl,
         videoFile: formData.videoFileUrl ? { url: formData.videoFileUrl } : undefined,
         mobileVideoFile: formData.mobileVideoUrl ? { url: formData.mobileVideoUrl } : undefined,
         thumbnail: formData.thumbnailUrl ? { url: formData.thumbnailUrl } : undefined,
@@ -1046,13 +1048,45 @@ export default function VideoShowcaseCMS() {
                   </div>
                 </div>
 
-                <MediaUploadDropzone
-                  folder="video-showcase/videos"
-                  value={formData.videoFileUrl}
-                  onChange={(url) => setFormData({ ...formData, videoFileUrl: url })}
-                  label="Desktop Video File (MP4/WebM)"
-                  description="Drag and drop raw video or upload file"
-                />
+                {formData.sourceType === "youtube" ? (
+                  <div className="space-y-2 rounded-2xl border border-sage-border bg-white p-4 shadow-2xs">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-site">
+                      YouTube Video URL or ID *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                      value={formData.videoUrl || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const ytId = getYouTubeId(val);
+                        setFormData((prev) => ({
+                          ...prev,
+                          videoUrl: val,
+                          ...(ytId && !prev.thumbnailUrl ? { thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` } : {})
+                        }));
+                      }}
+                      className="field-luxury text-sm"
+                      required
+                    />
+                    <div className="flex items-center justify-between text-[11px] text-sage-muted">
+                      <span>Supports watch URLs, youtu.be, embed, and shorts</span>
+                      {getYouTubeId(formData.videoUrl) && (
+                        <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          Valid YouTube ID: {getYouTubeId(formData.videoUrl)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <MediaUploadDropzone
+                    folder="video-showcase/videos"
+                    value={formData.videoFileUrl}
+                    onChange={(url) => setFormData({ ...formData, videoFileUrl: url, videoUrl: url })}
+                    label="Desktop Video File (MP4/WebM)"
+                    description="Drag and drop raw video or upload file"
+                  />
+                )}
 
                 <MediaUploadDropzone
                   folder="video-showcase/thumbnails"

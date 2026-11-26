@@ -4,12 +4,22 @@ import multer from "multer";
 import { isBlobStorageConfigured, putVercelBlob } from "../utils/blobStorage.js";
 import { ensureUploadDirectories, resolveUploadsDirectory, sanitizeFilename } from "../utils/fileUtils.js";
 
+import { normalizeMimeType } from "./upload.js";
+
 // Configurable size limits
 export const MAX_HERO_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 export const MAX_HERO_POSTER_SIZE = 15 * 1024 * 1024; // 15MB
 
 const ALLOWED_VIDEO_MIMES = new Set(["video/mp4", "video/webm"]);
-const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_IMAGE_MIMES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/x-png",
+  "image/webp",
+  "image/gif"
+]);
 
 const memoryStorage = multer.memoryStorage();
 
@@ -17,13 +27,15 @@ export const heroVideoUploadMiddleware = multer({
   storage: memoryStorage,
   limits: { fileSize: MAX_HERO_VIDEO_SIZE },
   fileFilter: (req, file, cb) => {
-    const isVideo = ALLOWED_VIDEO_MIMES.has(file.mimetype);
-    const isImage = ALLOWED_IMAGE_MIMES.has(file.mimetype);
+    const normalized = normalizeMimeType(file.mimetype, file.originalname);
+    const isVideo = ALLOWED_VIDEO_MIMES.has(normalized);
+    const isImage = ALLOWED_IMAGE_MIMES.has(normalized);
     if (!isVideo && !isImage) {
-      const err = new Error("Unsupported file format. Permitted formats: MP4, WebM for video; JPG, PNG, WEBP for poster.");
+      const err = new Error("Unsupported file format. Permitted formats: MP4, WebM for video; JPG, PNG, WEBP, GIF for poster.");
       err.status = 415;
       return cb(err, false);
     }
+    file.mimetype = normalized;
     cb(null, true);
   }
 });
@@ -93,6 +105,17 @@ export function validateFileSignature(buffer, mimetype, originalname) {
       throw err;
     }
     return { isVideo: false, format: "webp" };
+  }
+
+  // 6. GIF (GIF87a or GIF89a: 0x47 0x49 0x46 0x38)
+  if (mimetype === "image/gif" || ext === ".gif") {
+    const gifHeader = buffer.subarray(0, 6).toString("latin1");
+    if (!gifHeader.startsWith("GIF87a") && !gifHeader.startsWith("GIF89a")) {
+      const err = new Error("Invalid GIF image signature.");
+      err.status = 400;
+      throw err;
+    }
+    return { isVideo: false, format: "gif" };
   }
 
   const err = new Error(`Unsupported media signature for type ${mimetype}`);

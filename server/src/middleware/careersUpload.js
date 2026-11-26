@@ -55,13 +55,6 @@ export async function processAndSaveResume(file) {
     return { filename: blob.pathname.split("/").pop(), url: blob.url, path: blob.pathname, originalName: file.originalname, size: file.size, mimeType };
   }
 
-  if (isPostgresSelected()) {
-    const error = new Error("Private resume storage is not configured. Configure the Preview private Blob store before accepting resumes.");
-    error.code = "BLOB_STORAGE_NOT_CONFIGURED";
-    error.status = 503;
-    throw error;
-  }
-
   if (isServerlessEnvironment()) {
     const error = new Error("Durable resume storage is unavailable. Configure the deployment's private Blob store.");
     error.code = "BLOB_STORAGE_NOT_CONFIGURED";
