@@ -46,18 +46,23 @@ export default function Navbar() {
 
   return (
     <header
-      className={`liquid-header pointer-events-auto fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        isScrolled || isOpen
-          ? "bg-[#F8FBF7]/90 backdrop-blur-md border-b border-[#E3ECE0]/80 shadow-[0_2px_12px_rgba(40,60,35,0.04)]"
-          : "bg-transparent border-b border-transparent shadow-none"
+      className={`liquid-header pointer-events-auto fixed z-50 transition-colors duration-200 ${
+        isOpen
+          ? "inset-0 h-dvh bg-[#F8FBF7] flex flex-col"
+          : isScrolled
+          ? "inset-x-0 top-0 bg-[#F8FBF7]/90 backdrop-blur-md border-b border-[#E3ECE0]/80 shadow-[0_2px_12px_rgba(40,60,35,0.04)]"
+          : "inset-x-0 top-0 bg-transparent border-b border-transparent shadow-none"
       }`}
     >
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
 
-      <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-10 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-        {/* Left Side: Original Logo Asset */}
+      {/* Header Top Bar */}
+      <div className={`w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-10 h-16 sm:h-[72px] flex items-center justify-between gap-4 shrink-0 ${
+        isOpen ? "border-b border-[#E3ECE0]/80" : ""
+      }`}>
+        {/* Left Side: Brand Logo */}
         <NavLink
           to="/"
           className="flex items-center shrink-0 group py-1"
@@ -117,14 +122,14 @@ export default function Navbar() {
 
         {/* Mobile Hamburger Toggle Button */}
         <button
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#1B3322] hover:bg-[#1B3322]/5 transition-colors min-[1080px]:hidden no-liquid-control touch-manipulation"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#1B3322] hover:bg-[#1B3322]/5 transition-colors min-[1080px]:hidden no-liquid-control touch-manipulation cursor-pointer"
           type="button"
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={isOpen}
           aria-controls="mobile-navigation"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {isOpen ? <X className="h-6 w-6 stroke-[2.2]" /> : <Menu className="h-6 w-6 stroke-[2.2]" />}
         </button>
       </div>
 
@@ -133,23 +138,22 @@ export default function Navbar() {
         {isOpen && (
           <m.div
             id="mobile-navigation"
-            style={{ backgroundColor: "#F8FBF7" }}
-            className="fixed inset-x-0 top-[64px] sm:top-[72px] bottom-0 z-40 bg-[#F8FBF7] border-b border-[#E3ECE0] px-6 py-6 overflow-y-auto overflow-x-hidden min-[1080px]:hidden flex flex-col justify-between shadow-2xl"
+            className="flex-1 w-full max-w-[1360px] mx-auto px-6 py-6 overflow-y-auto overflow-x-hidden min-[1080px]:hidden flex flex-col justify-between bg-[#F8FBF7]"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
           >
-            <nav className="flex flex-col gap-3 py-2" aria-label="Mobile navigation">
+            <nav className="flex flex-col gap-2 py-2" aria-label="Mobile navigation">
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.href}
                   to={link.href}
                   end={link.href === "/"}
                   className={({ isActive }) =>
-                    `flex items-center justify-between py-2.5 min-h-[44px] text-[17px] font-medium transition-colors no-liquid-control ${
+                    `flex items-center justify-between py-3 min-h-[48px] text-[17px] font-medium transition-colors no-liquid-control border-b border-[#E3ECE0]/50 ${
                       isActive
-                        ? "text-[#1B3322] font-semibold border-b-2 border-[#487D48] w-fit"
+                        ? "text-[#1B3322] font-semibold text-[#487D48]"
                         : "text-[#2C3B28] hover:text-[#487D48]"
                     }`
                   }
@@ -170,7 +174,7 @@ export default function Navbar() {
               ))}
             </nav>
 
-            <div className="pt-6 pb-6 border-t border-[#E3ECE0]">
+            <div className="pt-6 pb-6 border-t border-[#E3ECE0] mt-auto">
               <NavLink
                 to="/contactus"
                 className="flex items-center justify-center gap-2 rounded-full bg-[#487D48] px-6 py-3.5 text-[15px] font-medium text-white shadow-sm hover:bg-[#3D6E3D] transition-all no-liquid-control"

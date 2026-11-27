@@ -365,35 +365,27 @@ export async function commitChunkedUploadToNeon({
       throw err;
     }
 
-    // 2. Fetch all parts in order
-    const partsRes = await client.query(
-      `SELECT "part_index", "data" 
+    // 2. Verify all parts in order, calculate total size and overall sha256 directly in PostgreSQL
+    const partsAggRes = await client.query(
+      `SELECT 
+         COUNT(*)::INT AS "count",
+         COALESCE(SUM(octet_length("data")), 0)::BIGINT AS "total_size",
+         encode(sha256(string_agg("data", ''::bytea ORDER BY "part_index" ASC)), 'hex') AS "overall_hash"
        FROM "media_upload_parts" 
-       WHERE "upload_id" = $1 
-       ORDER BY "part_index" ASC`,
+       WHERE "upload_id" = $1`,
       [uploadId]
     );
 
     const partCount = Number(session.part_count);
-    if (partsRes.rowCount !== partCount) {
-      const err = new Error(`Upload incomplete. Expected ${partCount} parts, found ${partsRes.rowCount}.`);
+    const agg = partsAggRes.rows[0];
+    const actualCount = Number(agg?.count || 0);
+    const calculatedTotalSize = Number(agg?.total_size || 0);
+    const overallHash = agg?.overall_hash || "";
+
+    if (actualCount !== partCount) {
+      const err = new Error(`Upload incomplete. Expected ${partCount} parts, found ${actualCount}.`);
       err.status = 400;
       throw err;
-    }
-
-    // Verify chunk continuity and calculate overall hash & offsets
-    const hash = crypto.createHash("sha256");
-    let calculatedTotalSize = 0;
-
-    for (let i = 0; i < partCount; i++) {
-      const part = partsRes.rows[i];
-      if (Number(part.part_index) !== i) {
-        const err = new Error(`Missing chunk at index ${i}.`);
-        err.status = 400;
-        throw err;
-      }
-      calculatedTotalSize += part.data.length;
-      hash.update(part.data);
     }
 
     if (calculatedTotalSize !== Number(size)) {
@@ -402,7 +394,6 @@ export async function commitChunkedUploadToNeon({
       throw err;
     }
 
-    const overallHash = hash.digest("hex");
     const isVideo = mimeType.startsWith("video/");
     const { cleanName, uniqueSuffix } = sanitizeFilename(originalName);
     const ext = path.extname(originalName) || (isVideo ? ".mp4" : ".webp");
@@ -417,7 +408,7 @@ export async function commitChunkedUploadToNeon({
       if (userCheck.rows.length) validUserId = userId;
     }
 
-    // 3. Insert into "media"
+    // 3. Insert persistent record into "media"
     await client.query(
       `INSERT INTO "media" (
         "_id", "filename", "original_name", "mime_type", "size", 
@@ -432,40 +423,29 @@ export async function commitChunkedUploadToNeon({
       ]
     );
 
-    // 4. Copy parts to "media_chunks" in optimized batches (up to 25 chunks per query)
-    let runningOffset = 0;
-    const batchSize = 25;
-    for (let b = 0; b < partCount; b += batchSize) {
-      const slice = partsRes.rows.slice(b, b + batchSize);
-      const values = [];
-      const placeholders = [];
-
-      for (let s = 0; s < slice.length; s++) {
-        const i = b + s;
-        const part = slice[s];
-        const chunkSize = part.data.length;
-        const offsetStart = runningOffset;
-        const offsetEnd = runningOffset + chunkSize - 1;
-        const chunkHash = crypto.createHash("sha256").update(part.data).digest("hex");
-
-        const offsetIndex = values.length;
-        values.push(mediaId, i, chunkSize, offsetStart, offsetEnd, part.data, chunkHash);
-        placeholders.push(
-          `($${offsetIndex + 1}, $${offsetIndex + 2}, $${offsetIndex + 3}, $${offsetIndex + 4}, $${offsetIndex + 5}, $${offsetIndex + 6}, $${offsetIndex + 7})`
-        );
-
-        runningOffset += chunkSize;
-      }
-
-      await client.query(
-        `INSERT INTO "media_chunks" (
-          "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
-        ) VALUES ${placeholders.join(", ")}`,
-        values
-      );
-    }
+    // 4. In-Database Zero-Network Chunk Migration:
+    // Move all binary chunks directly from media_upload_parts into media_chunks inside Postgres.
+    // Window functions compute byte offset_start and offset_end with sub-millisecond efficiency.
+    await client.query(
+      `INSERT INTO "media_chunks" (
+        "media_id", "chunk_index", "chunk_size", "offset_start", "offset_end", "data", "sha256"
+      )
+      SELECT 
+        $1,
+        "part_index",
+        octet_length("data"),
+        COALESCE(SUM(octet_length("data")) OVER (ORDER BY "part_index" ASC ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0)::BIGINT,
+        (SUM(octet_length("data")) OVER (ORDER BY "part_index" ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) - 1)::BIGINT,
+        "data",
+        encode(sha256("data"), 'hex')
+      FROM "media_upload_parts"
+      WHERE "upload_id" = $2
+      ORDER BY "part_index" ASC`,
+      [mediaId, uploadId]
+    );
 
     // 5. Cleanup temporary session and parts
+    await client.query(`DELETE FROM "media_upload_parts" WHERE "upload_id" = $1`, [uploadId]);
     await client.query(`DELETE FROM "media_upload_sessions" WHERE "upload_id" = $1`, [uploadId]);
 
     await client.query("COMMIT");
@@ -492,6 +472,7 @@ export async function commitChunkedUploadToNeon({
     // Warm metadata cache immediately
     await setCache(`media:meta:${mediaPath}`, committedMedia, 3600);
     await setCache(`media:meta:${mediaId}`, committedMedia, 3600);
+    await setCache(`media:meta:${mediaUrl}`, committedMedia, 3600);
 
     return committedMedia;
   } catch (error) {
