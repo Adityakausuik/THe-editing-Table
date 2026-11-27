@@ -49,9 +49,17 @@ async function getSecurityPolicy() {
 }
 
 async function ensureDbConnected() {
-  if (!isPostgresAuthEnabled()) return false;
-  await bootstrapDatabase().catch(() => {});
-  return checkPostgresConnection().catch(() => false);
+  if (!isPostgresAuthEnabled()) {
+    console.warn("[AUTH] Postgres auth is disabled by configuration.");
+    return false;
+  }
+  await bootstrapDatabase().catch((err) => {
+    console.warn("[AUTH] Bootstrap database notice:", err.message);
+  });
+  return checkPostgresConnection().catch((err) => {
+    console.error("[AUTH] Postgres connection failed in ensureDbConnected:", err.message);
+    return false;
+  });
 }
 
 function isDbConnected() {

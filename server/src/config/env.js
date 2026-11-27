@@ -11,7 +11,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5000),
   CLIENT_URL: z.string().url().optional(),
   CLIENT_ORIGIN: z.string().url().optional(),
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().optional().default(() => (process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL || "").trim()),
   PREVIEW_DATABASE_URL: z.string().url().optional(),
   MIGRATION_WRITE_FREEZE: z.string().default("false").transform((value) => ["true", "1", "on", "enabled"].includes(value.trim().toLowerCase())),
   PREVIEW_POSTGRES_AUTH_ENABLED: z.string().default("true").transform((value) => ["true", "1", "on", "enabled"].includes(value.trim().toLowerCase())),

@@ -1,7 +1,16 @@
-import { Pool } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { env } from "../config/env.js";
 import { INITIAL_SCHEMA_SQL } from "./initialSchemaSql.js";
+
+// In serverless / Node environments (such as Vercel Serverless Functions),
+// configure the WebSocket constructor and enable poolQueryViaFetch so queries
+// can seamlessly fall back to HTTP fetch without failing if WebSockets are unavailable.
+if (!neonConfig.webSocketConstructor) {
+  neonConfig.webSocketConstructor = ws;
+}
+neonConfig.poolQueryViaFetch = true;
 
 let pool;
 let database;
@@ -19,7 +28,13 @@ export const REQUIRED_POSTGRES_TABLES = Object.freeze([
 ]);
 
 function requireDatabaseUrl() {
-  const connectionString = env.DATABASE_URL?.trim();
+  const connectionString = (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    env.DATABASE_URL
+  )?.trim();
   if (!connectionString) {
     const error = new Error("DATABASE_URL is not configured.");
     error.code = "DATABASE_URL_MISSING";
@@ -51,8 +66,13 @@ export function getPostgresDatabase() {
 }
 
 export async function checkPostgresConnection() {
-  const result = await getPostgresPool().query("SELECT 1 AS connected");
-  return result.rows[0]?.connected === 1;
+  try {
+    const result = await getPostgresPool().query("SELECT 1 AS connected");
+    return result.rows[0]?.connected === 1;
+  } catch (err) {
+    console.error("[POSTGRES] Connection check failed:", err.message);
+    return false;
+  }
 }
 
 export async function inspectPostgresSchema() {
@@ -107,7 +127,12 @@ export async function ensurePostgresSchema() {
 
   // Ensure media storage schema migrations (checksum, chunks, indexes) are applied
   try {
-    await getPostgresPool().query(MEDIA_STORAGE_MIGRATION_SQL);
+    const statements = MEDIA_STORAGE_MIGRATION_SQL.split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const stmt of statements) {
+      await getPostgresPool().query(stmt);
+    }
   } catch (err) {
     console.warn(`[POSTGRES] Note on media storage migration: ${err.message}`);
   }
