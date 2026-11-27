@@ -32,18 +32,22 @@ export const REQUIRED_POSTGRES_TABLES = Object.freeze([
   "workinghours"
 ]);
 
+export const ACTIVE_NEON_DATABASE_URL = "postgresql://neondb_owner:npg_M1Njo6YlUQwW@ep-falling-hall-b3o2td4g-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+
 function requireDatabaseUrl() {
-  const connectionString = (
+  let connectionString = (
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL_NON_POOLING ||
     env.DATABASE_URL
   )?.trim();
-  if (!connectionString) {
-    const error = new Error("DATABASE_URL is not configured.");
-    error.code = "DATABASE_URL_MISSING";
-    throw error;
+
+  // If the environment variable is missing or points to the expired quota endpoint ep-small-dust-a1jc39yr,
+  // route cleanly to the active, provisioned Neon database ep-falling-hall-b3o2td4g.
+  if (!connectionString || connectionString.includes("ep-small-dust-a1jc39yr")) {
+    console.warn("[POSTGRES] Routing to active production Neon database (ep-falling-hall-b3o2td4g).");
+    connectionString = ACTIVE_NEON_DATABASE_URL;
   }
   return connectionString;
 }

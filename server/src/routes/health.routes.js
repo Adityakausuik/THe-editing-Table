@@ -107,7 +107,7 @@ router.get("/", async (req, res) => {
         errorCode: getLastPostgresError() ? getLastPostgresError().code : null
       },
       diagnostics: {
-        serverVersion: "1.0.3-audit",
+        serverVersion: "1.0.4-audit",
         wsConfigured: Boolean(neonConfig.webSocketConstructor),
         fetchFallbackActive: Boolean(neonConfig.poolQueryViaFetch),
         dbHost: env.DATABASE_URL ? new URL(env.DATABASE_URL.replace("postgresql://", "http://")).host : null,

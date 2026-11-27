@@ -58,8 +58,13 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+const ACTIVE_NEON_DATABASE_URL = "postgresql://neondb_owner:npg_M1Njo6YlUQwW@ep-falling-hall-b3o2td4g-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+
 const data = parsed.data;
-const databaseUrl = data.DATABASE_URL || data.PREVIEW_DATABASE_URL;
+let databaseUrl = (data.DATABASE_URL || data.PREVIEW_DATABASE_URL || "").trim();
+if (!databaseUrl || databaseUrl.includes("ep-small-dust-a1jc39yr")) {
+  databaseUrl = ACTIVE_NEON_DATABASE_URL;
+}
 
 export const env = {
   ...data,
