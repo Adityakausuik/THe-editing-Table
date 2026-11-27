@@ -1,5 +1,5 @@
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronLeft, ChevronRight, Maximize2, Palette, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Container from "../ui/Container.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
@@ -256,66 +256,6 @@ export default function ColourShowcaseSection() {
               </div>
             </m.div>
           </AnimatePresence>
-        </div>
-
-        {/* Thumbnail Selector Strip: Displays Both Project Grades Side-by-Side */}
-        <div className="pt-8 border-t border-sage-border/60">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-[#487D48]" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#263D2D]">
-                Featured Color Grading Suites (Click to inspect)
-              </span>
-            </div>
-            <span className="text-xs text-sage-muted hidden sm:inline">
-              Use arrow keys or click any suite to preview
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
-            {SHOWCASE_ITEMS.map((item, idx) => {
-              const isSelected = idx === currentIndex;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setDirection(idx > currentIndex ? 1 : -1);
-                    setCurrentIndex(idx);
-                  }}
-                  className={`group relative text-left rounded-2xl overflow-hidden border transition-all duration-300 p-3 bg-white cursor-pointer ${
-                    isSelected
-                      ? "border-[#487D48] ring-2 ring-[#487D48]/20 shadow-md"
-                      : "border-sage-border hover:border-[#487D48]/50 shadow-xs"
-                  }`}
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-forest/5 mb-3">
-                    <img
-                      src={item.photo}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute bottom-2 left-2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full">
-                      {item.palette.slice(0, 4).map((sw) => (
-                        <span
-                          key={sw.name}
-                          className="w-2.5 h-2.5 rounded-full border border-white/40"
-                          style={{ backgroundColor: sw.hex }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <h4 className="font-serif text-base font-semibold text-[#263D2D] truncate">
-                    {item.title}
-                  </h4>
-                  <p className="text-xs text-sage-muted truncate mt-0.5">
-                    {item.subtitle}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
         </div>
       </Container>
 
