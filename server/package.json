@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "build": "node ../scripts/copy-dist.mjs",
+    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('../scripts/copy-dist.mjs')) require('child_process').execSync('node ../scripts/copy-dist.mjs', {stdio:'inherit'}); else console.log('[BUILD] standalone server build ready');\"",
     "start": "node src/index.js",
     "db:seed": "node src/seed.js",
     "db:create": "node src/seed.js",

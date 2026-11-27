@@ -14,6 +14,11 @@ neonConfig.poolQueryViaFetch = true;
 
 let pool;
 let database;
+let lastConnectionError = null;
+
+export function getLastPostgresError() {
+  return lastConnectionError;
+}
 
 export const REQUIRED_POSTGRES_TABLES = Object.freeze([
   "aboutmes", "adminactivitylogs", "auditlogs", "blogposts", "brandcollaborations",
@@ -53,6 +58,11 @@ export function getPostgresPool() {
       connectionTimeoutMillis: 10_000
     });
     pool.on("error", (error) => {
+      lastConnectionError = {
+        message: error.message,
+        code: error.code || null,
+        name: error.name || null
+      };
       console.error("PostgreSQL pool error:", error.message);
     });
   }
@@ -67,9 +77,16 @@ export function getPostgresDatabase() {
 
 export async function checkPostgresConnection() {
   try {
+    lastConnectionError = null;
     const result = await getPostgresPool().query("SELECT 1 AS connected");
     return result.rows[0]?.connected === 1;
   } catch (err) {
+    lastConnectionError = {
+      message: err.message,
+      code: err.code || null,
+      name: err.name || null,
+      stack: err.stack ? err.stack.split("\n").slice(0, 3).join(" | ") : null
+    };
     console.error("[POSTGRES] Connection check failed:", err.message);
     return false;
   }

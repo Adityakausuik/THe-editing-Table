@@ -1,6 +1,7 @@
 import { Router } from "express";
+import { neonConfig } from "@neondatabase/serverless";
 import { env } from "../config/env.js";
-import { checkPostgresConnection, inspectPostgresSchema, ensurePostgresSchema } from "../db/postgres.js";
+import { checkPostgresConnection, inspectPostgresSchema, ensurePostgresSchema, getLastPostgresError } from "../db/postgres.js";
 import { isPostgresAuthEnabled } from "../config/databaseMode.js";
 import { findPostgresAuthUserByEmail, getPostgresGlobalSecurityPolicy } from "../db/authRepository.js";
 import { bootstrapPostgresDatabase } from "../config/bootstrap.js";
@@ -101,7 +102,14 @@ router.get("/", async (req, res) => {
         missingTables,
         configured: Boolean(env.DATABASE_URL),
         readyForTraffic: readiness.status === "ok",
-        neonMediaStorageConfigured: Boolean(env.DATABASE_URL)
+        neonMediaStorageConfigured: Boolean(env.DATABASE_URL),
+        error: getLastPostgresError() ? getLastPostgresError().message : null,
+        errorCode: getLastPostgresError() ? getLastPostgresError().code : null
+      },
+      diagnostics: {
+        serverVersion: "1.0.2-audit",
+        wsConfigured: Boolean(neonConfig.webSocketConstructor),
+        fetchFallbackActive: Boolean(neonConfig.poolQueryViaFetch)
       },
       adminUser: adminInfo,
       securityPolicy: policyInfo,
