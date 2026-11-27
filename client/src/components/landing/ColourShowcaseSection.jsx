@@ -5,59 +5,15 @@ import Container from "../ui/Container.jsx";
 import SectionHeading from "../ui/SectionHeading.jsx";
 
 // Import exact uploaded showcase images
-import amritToorCard from "../../assets/colour-showcase/showcase-card-amrit-toor.jpg";
-import amritToorPhoto from "../../assets/colour-showcase/photo-amrit-toor.jpg";
-import prabhSimarCard from "../../assets/colour-showcase/showcase-card-prabh-simar.jpg";
-import prabhSimarPhoto from "../../assets/colour-showcase/photo-prabh-simar.jpg";
 import champagnePeachPhoto from "../../assets/colour-showcase/colour-grade-champagne-peach.jpg";
 import royalCeremonyPhoto from "../../assets/colour-showcase/colour-grade-royal-ceremony.jpg";
 
 const SHOWCASE_ITEMS = [
   {
-    id: "amrit-toor",
-    title: "Amrit Toor",
-    subtitle: "Emerald Depths & Antique Gold",
-    cardPosition: "left", // Reference Image 1: Card on Left, Photo on Right
-    cardBg: "#FAF4F0",
-    photo: amritToorPhoto,
-    fullCardImage: amritToorCard,
-    aspectRatio: "aspect-[1/1.05]",
-    palette: [
-      { name: "Velvet Emerald", hex: "#163024" },
-      { name: "Antique Gold", hex: "#C5A059" },
-      { name: "Royal Wine", hex: "#8C2D3B" },
-      { name: "Porcelain Ivory", hex: "#EADAC9" }
-    ],
-    editorialNote:
-      "Raman and the team at Deep Photography were great to work with. I got exactly what I wanted and in amazing high quality video. They were very easy to work with and very timely getting the videos back to us. The editing was great, you can tell he really cares about his craft and strives to give you the best possible product. Raman is very creative and he can sense what moments are going to look great on camera. I highly recommend Raman and his team at Deep Photography.",
-    colorScience: "Custom skin tone isolation preserving natural highlights while enriching deep velvet greens, intricate kundan jewelry micro-contrast, and golden embroidery luminosity without digital clipping.",
-    linkText: "View her story"
-  },
-  {
-    id: "prabh-simar",
-    title: "Prabh & Simar",
-    subtitle: "35mm Crimson Velvet & Daylight Warmth",
-    cardPosition: "right", // Reference Image 2: Photo on Left, Card on Right
-    cardBg: "#FAF3EF",
-    photo: prabhSimarPhoto,
-    fullCardImage: prabhSimarCard,
-    aspectRatio: "aspect-[1/1.37]",
-    palette: [
-      { name: "Silk Crimson", hex: "#961C24" },
-      { name: "Tuscan Shadow", hex: "#2D221E" },
-      { name: "Golden Hour Glow", hex: "#DF9C75" },
-      { name: "Warm Skin Highlight", hex: "#F7ECE6" }
-    ],
-    editorialNote:
-      "Deep Photography covered our entire wedding and did an absolutely amazing job. I was blown away by his team's work and he completed and delivered the content in a timely manner. Everyone in our family loved his work. The photography and videography were top notch. We needed to make adjustments to the content and he made sure to have it all done on time. His prices were also the best on the market. Above all, his team was very kind, supportive, understanding and adaptive throughout the entire process. I will always recommend Deep Photography to anyone that needs photography/videography work done. My family and I are 100% satisfied.",
-    colorScience: "Kodachrome-inspired split-toning calibrated for deep silk red fabrics, preserving natural warm daylight skin roll-off, shadow detail recovery, and clean contrast without digital harshness.",
-    linkText: "View story"
-  },
-  {
     id: "champagne-peach",
     title: "Heritage Bridal Reception",
     subtitle: "Soft Pastel Champagne & Pearl Tones",
-    cardPosition: "left",
+    cardPosition: "left", // Card on Left, Photo on Right
     cardBg: "#F7F4F0",
     photo: champagnePeachPhoto,
     fullCardImage: champagnePeachPhoto,
@@ -70,14 +26,15 @@ const SHOWCASE_ITEMS = [
     ],
     editorialNote:
       "A delicate, high-key celebration captured with luminous champagne hues. Our color timing unified contrasting blush and peach bridesmaid ensembles against intricate silver bridal zardozi work. By preserving organic highlight roll-off and silky skin tones, the final grade captures the radiant, airy emotion of the celebration.",
-    colorScience: "High-key luxury bridal grading balancing multi-subject pastel silk attire, ambient white drapery highlight recovery, fine silver embroidery sparkle, and authentic luminous skin tones.",
+    colorScience:
+      "High-key luxury bridal grading balancing multi-subject pastel silk attire, ambient white drapery highlight recovery, fine silver embroidery sparkle, and authentic luminous skin tones.",
     linkText: "View full grade"
   },
   {
     id: "royal-ceremony",
     title: "Traditional Royal Ceremony",
     subtitle: "Regal Warmth & Multi-Tone Archway",
-    cardPosition: "right",
+    cardPosition: "right", // Photo on Left, Card on Right
     cardBg: "#FAF4EE",
     photo: royalCeremonyPhoto,
     fullCardImage: royalCeremonyPhoto,
@@ -90,7 +47,8 @@ const SHOWCASE_ITEMS = [
     ],
     editorialNote:
       "An intricate ceremony under an earthen terracotta archway celebrating generational family traditions. Our color grading engineered distinct chromatic separation between rich bridal crimson, pistachio green, and golden silk, while maintaining authentic warmth across varying complexions in ambient room illumination.",
-    colorScience: "Complex multi-palette calibration balancing contrasting bridal red, pistachio sage, and sandy architectural arches under warm ceremony lighting with cinematic color separation.",
+    colorScience:
+      "Complex multi-palette calibration balancing contrasting bridal red, pistachio sage, and sandy architectural arches under warm ceremony lighting with cinematic color separation.",
     linkText: "View ceremony grade"
   }
 ];
@@ -300,13 +258,13 @@ export default function ColourShowcaseSection() {
           </AnimatePresence>
         </div>
 
-        {/* Thumbnail Selector Strip: Displays All 4 Provided Images Side-by-Side */}
+        {/* Thumbnail Selector Strip: Displays Both Project Grades Side-by-Side */}
         <div className="pt-8 border-t border-sage-border/60">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-[#487D48]" />
               <span className="text-xs font-semibold uppercase tracking-wider text-[#263D2D]">
-                All Color Grading Suites (Click to inspect)
+                Featured Color Grading Suites (Click to inspect)
               </span>
             </div>
             <span className="text-xs text-sage-muted hidden sm:inline">
@@ -314,7 +272,7 @@ export default function ColourShowcaseSection() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {SHOWCASE_ITEMS.map((item, idx) => {
               const isSelected = idx === currentIndex;
               return (
@@ -325,21 +283,21 @@ export default function ColourShowcaseSection() {
                     setDirection(idx > currentIndex ? 1 : -1);
                     setCurrentIndex(idx);
                   }}
-                  className={`group relative text-left rounded-2xl overflow-hidden border transition-all duration-300 p-2.5 bg-white cursor-pointer ${
+                  className={`group relative text-left rounded-2xl overflow-hidden border transition-all duration-300 p-3 bg-white cursor-pointer ${
                     isSelected
                       ? "border-[#487D48] ring-2 ring-[#487D48]/20 shadow-md"
                       : "border-sage-border hover:border-[#487D48]/50 shadow-xs"
                   }`}
                 >
-                  <div className="relative aspect-[16/11] overflow-hidden rounded-xl bg-forest/5 mb-2.5">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-forest/5 mb-3">
                     <img
                       src={item.photo}
                       alt={item.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
-                    <div className="absolute bottom-2 left-2 flex gap-1 bg-black/40 backdrop-blur-sm p-1 rounded-full">
-                      {item.palette.slice(0, 3).map((sw) => (
+                    <div className="absolute bottom-2 left-2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full">
+                      {item.palette.slice(0, 4).map((sw) => (
                         <span
                           key={sw.name}
                           className="w-2.5 h-2.5 rounded-full border border-white/40"
@@ -348,10 +306,10 @@ export default function ColourShowcaseSection() {
                       ))}
                     </div>
                   </div>
-                  <h4 className="font-serif text-sm font-semibold text-[#263D2D] truncate">
+                  <h4 className="font-serif text-base font-semibold text-[#263D2D] truncate">
                     {item.title}
                   </h4>
-                  <p className="text-[11px] text-sage-muted truncate mt-0.5">
+                  <p className="text-xs text-sage-muted truncate mt-0.5">
                     {item.subtitle}
                   </p>
                 </button>
