@@ -127,8 +127,11 @@ export async function listPostgresPublicReviews({ rating, projectType, search, p
     ratingTotal += Number(row.rating) * count;
   }
   const totalCount = Number(countRows[0]?.total || 0);
+  const items = rows.map(reviewFromRow);
   return {
-    items: rows.map(reviewFromRow),
+    items,
+    reviews: items,
+    total: totalCount,
     pagination: { page, limit, totalCount, totalPages: Math.ceil(totalCount / limit) || 1 },
     stats: {
       averageRating: totalApproved ? ratingTotal / totalApproved : 0,

@@ -134,12 +134,23 @@ export const MEDIA_STORAGE_MIGRATION_SQL = `
   ON CONFLICT (version) DO NOTHING;
 `;
 
+export async function executeMultiStatementSql(poolOrClient, sql) {
+  const target = poolOrClient && typeof poolOrClient.query === "function" ? poolOrClient : getPostgresPool();
+  const statements = String(sql || "")
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const stmt of statements) {
+    await target.query(stmt);
+  }
+}
+
 export async function ensurePostgresSchema() {
   let schema = await inspectPostgresSchema();
   if (schema.status !== "ready") {
     console.log(`[POSTGRES] Missing ${schema.missingTables.length} tables. Applying initial schema...`);
     try {
-      await getPostgresPool().query(INITIAL_SCHEMA_SQL);
+      await executeMultiStatementSql(getPostgresPool(), INITIAL_SCHEMA_SQL);
       schema = await inspectPostgresSchema();
     } catch (err) {
       console.error(`[POSTGRES] Error applying schema: ${err.message}`);
@@ -148,12 +159,7 @@ export async function ensurePostgresSchema() {
 
   // Ensure media storage schema migrations (checksum, chunks, indexes) are applied
   try {
-    const statements = MEDIA_STORAGE_MIGRATION_SQL.split(";")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    for (const stmt of statements) {
-      await getPostgresPool().query(stmt);
-    }
+    await executeMultiStatementSql(getPostgresPool(), MEDIA_STORAGE_MIGRATION_SQL);
   } catch (err) {
     console.warn(`[POSTGRES] Note on media storage migration: ${err.message}`);
   }

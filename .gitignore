@@ -35,7 +35,7 @@ Thumbs.db
 *.local
 .vscode/
 .idea/
-.vercel
 .vercel/
 *.example
+animation1.mp4
 *.mp4

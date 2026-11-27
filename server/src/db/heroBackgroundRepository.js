@@ -72,7 +72,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS "idx_herobackgroundvideos_single_published" ON
 let ensureTablePromise = null;
 export async function ensureHeroBackgroundTable(pool) {
   if (!ensureTablePromise) {
-    ensureTablePromise = pool.query(HERO_BACKGROUND_TABLE_SQL).catch((err) => {
+    ensureTablePromise = (async () => {
+      const statements = HERO_BACKGROUND_TABLE_SQL.split(";")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const stmt of statements) {
+        await pool.query(stmt);
+      }
+    })().catch((err) => {
       ensureTablePromise = null;
       throw err;
     });

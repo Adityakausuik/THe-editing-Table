@@ -57,22 +57,33 @@ export async function deletePostgresMediaRecord(Model, id) {
 export async function isPostgresMediaReferenced(url) {
   if (!url || typeof url !== "string") return false;
   const tables = [
-    "aboutmes", "adminactivitylogs", "blogposts", "brandcollaborations", "careerscontents",
-    "contactemails", "contactoffices", "contactphones", "contactsettings", "enquiries",
-    "heroslides", "jobs", "jobapplications",
-    "portfolioitems", "reviews", "services", "teammembers", "videoanalytics",
-    "videoshowcaseitems", "videoshowcasesettings", "workinghours"
+    "aboutmes", "blogposts", "brandcollaborations", "careerscontents",
+    "heroslides", "portfolioitems", "reviews", "services",
+    "teammembers", "videoshowcaseitems"
   ];
   const pool = getPostgresPool();
-  for (const table of tables) {
-    const result = await pool.query(
-      `SELECT 1 FROM ${quote(table)} WHERE strpos(to_jsonb(${quote(table)})::text, $1) > 0 LIMIT 1`,
-      [url]
-    ).catch((error) => {
-      if (error.code === "42P01") return null;
-      throw error;
-    });
-    if (result?.rowCount) return true;
+  try {
+    const checks = tables.map((table) =>
+      `(SELECT 1 FROM ${quote(table)} WHERE strpos(to_jsonb(${quote(table)})::text, $1) > 0 LIMIT 1)`
+    );
+    const combinedQuery = `SELECT 1 FROM (${checks.join(" UNION ALL ")}) AS matched_refs LIMIT 1`;
+    const result = await pool.query(combinedQuery, [url]);
+    return Boolean(result?.rowCount && result.rowCount > 0);
+  } catch (error) {
+    if (error.code !== "42P01") {
+      console.warn("[mediaRepository] Combined reference check failed, using fallback:", error.message);
+    }
+    for (const table of tables) {
+      try {
+        const res = await pool.query(
+          `SELECT 1 FROM ${quote(table)} WHERE strpos(to_jsonb(${quote(table)})::text, $1) > 0 LIMIT 1`,
+          [url]
+        );
+        if (res?.rowCount) return true;
+      } catch (err) {
+        if (err.code === "42P01") continue;
+      }
+    }
+    return false;
   }
-  return false;
 }

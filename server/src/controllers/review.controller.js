@@ -154,15 +154,17 @@ export async function getPublicReviews(req, res) {
     const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 9));
 
     const result = await listPostgresPublicReviews({ page: pageNum, limit: limitNum, rating, sort, projectType });
+    const reviews = result.reviews || result.items || [];
+    const total = result.total ?? result.pagination?.totalCount ?? reviews.length;
     return res.status(200).json({
       success: true,
       message: "Reviews retrieved successfully",
-      data: result.reviews,
+      data: reviews,
       pagination: {
         page: pageNum,
         limit: limitNum,
-        total: result.total,
-        pages: Math.ceil(result.total / limitNum) || 1
+        total,
+        pages: Math.ceil(total / limitNum) || 1
       },
       stats: result.stats
     });
