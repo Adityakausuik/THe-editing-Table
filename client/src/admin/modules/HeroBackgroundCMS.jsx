@@ -436,14 +436,15 @@ export default function HeroBackgroundCMS() {
 
     try {
       setPublishing(true);
-      await apiFetch("/api/v1/admin/hero-video/draft", {
+      const draftRes = await apiFetch("/api/v1/admin/hero-video/draft", {
         method: "POST",
         body: JSON.stringify(form)
       });
 
+      const publishId = draftRes?.data?._id || draftRes?.data?.id || form.id;
       const res = await apiFetch("/api/v1/admin/hero-video/publish", {
         method: "POST",
-        body: JSON.stringify({ id: form.id })
+        body: JSON.stringify({ id: publishId })
       });
 
       if (res?.data) {

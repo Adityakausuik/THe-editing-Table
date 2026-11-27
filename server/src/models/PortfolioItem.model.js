@@ -38,7 +38,7 @@ const portfolioItemSchema = new Schema(
     },
     image: {
       type: String,
-      required: true
+      default: ""
     },
     coverImage: {
       type: String,

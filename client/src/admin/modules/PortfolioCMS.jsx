@@ -1,7 +1,7 @@
 /* global confirm, console */
 import { AlertCircle, CheckCircle2, Edit3, Eye, EyeOff, Film, Image as ImageIcon, Plus, RefreshCw, Search, Star, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch, mediaUrl } from "../../lib/api.js";
+import { apiFetch, mediaUrl, notifyCmsChanged } from "../../lib/api.js";
 import MediaUploadDropzone from "../components/MediaUploadDropzone.jsx";
 import CmsOrderControls from "../components/CmsOrderControls.jsx";
 import { CollectionPagination, CollectionStatusFilter, useAdminCollectionView } from "../components/AdminCollectionView.jsx";
@@ -105,6 +105,9 @@ export default function PortfolioCMS() {
 
       const payload = {
         ...formData,
+        isPublished: formData.active !== false,
+        published: formData.active !== false,
+        isFeatured: Boolean(formData.featured),
         deliverables: typeof formData.deliverables === "string"
           ? formData.deliverables.split(",").map((d) => d.trim()).filter(Boolean)
           : formData.deliverables
@@ -115,6 +118,7 @@ export default function PortfolioCMS() {
         body: JSON.stringify(payload)
       });
 
+      notifyCmsChanged("portfolio");
       setSavedMsg(`Portfolio item ${isNew ? "created" : "updated"} successfully!`);
       setTimeout(() => setSavedMsg(""), 3000);
       setIsModalOpen(false);
@@ -142,6 +146,7 @@ export default function PortfolioCMS() {
         method: "PATCH",
         body: JSON.stringify({ active: nextStatus })
       });
+      notifyCmsChanged("portfolio");
       fetchPortfolio();
     } catch (err) {
       console.error("Status toggle error:", err);
@@ -161,6 +166,7 @@ export default function PortfolioCMS() {
       await apiFetch(`/api/v1/cms/portfolio/${targetId}`, {
         method: "DELETE"
       });
+      notifyCmsChanged("portfolio");
       setSavedMsg("Portfolio item deleted successfully.");
       setTimeout(() => setSavedMsg(""), 3000);
       fetchPortfolio();
@@ -182,6 +188,7 @@ export default function PortfolioCMS() {
         body: JSON.stringify({ ids: validSelected })
       });
 
+      notifyCmsChanged("portfolio");
       setSelectedIds([]);
       setSavedMsg("Bulk deletion completed.");
       setTimeout(() => setSavedMsg(""), 3000);

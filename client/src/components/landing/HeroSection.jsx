@@ -490,6 +490,7 @@ export default function HeroSection() {
               <video
                 key={heroVideo.videoUrl}
                 ref={bgVideoRef}
+                src={mediaUrl(heroVideo.videoUrl)}
                 className="h-full w-full object-cover"
                 style={{
                   objectPosition: heroVideo.videoPosition || "center"

@@ -295,12 +295,13 @@ export async function publishHeroVideo(req, res, next) {
     let targetId = req.body?.id;
 
     if (!targetId) {
-      // Default to current draft
+      // Default to current draft or active
       const adminState = await getAdminHeroBackground();
-      if (!adminState.draft?._id) {
+      const fallback = adminState.draft || adminState.active;
+      if (!fallback?._id && !fallback?.id) {
         return res.status(400).json({ success: false, message: "No active draft found to publish." });
       }
-      targetId = adminState.draft._id;
+      targetId = fallback._id || fallback.id;
     }
 
     const published = await publishHeroBackground(targetId, req.user);
@@ -315,7 +316,9 @@ export async function publishHeroVideo(req, res, next) {
     });
 
     await deleteCache("cms:hero:video:active");
+    await deleteCache("cms:hero-video:active");
     await invalidateCmsCache("hero");
+    await invalidateCmsCache("hero-video");
     return res.json({
       success: true,
       message: `Version ${published.version} published to live homepage successfully.`,

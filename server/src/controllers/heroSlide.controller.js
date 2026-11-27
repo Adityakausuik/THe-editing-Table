@@ -83,6 +83,15 @@ function buildHeroPayload(payload = {}) {
     if (payload[field] !== undefined) next[field] = sanitize(payload[field]);
   });
 
+  if (!next.slideKey && (payload.title || payload.label || payload.eyebrow)) {
+    const base = (payload.title || payload.label || payload.eyebrow)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 32);
+    next.slideKey = `slide-${base || Date.now().toString(36)}`;
+  }
+
   HERO_ARRAY_FIELDS.forEach((field) => {
     if (payload[field] !== undefined) {
       next[field] = Array.isArray(payload[field])
@@ -320,8 +329,13 @@ export async function deleteHeroSlide(req, res) {
 
 export async function reorderHeroSlides(req, res) {
   try {
-    const orderedIds = req.body.orderedIds ||
-      (Array.isArray(req.body.slides) ? req.body.slides.map((item) => item.id || item._id) : []);
+    const rawItems = req.body.items || req.body.orderedIds || req.body.slides;
+    let orderedIds = [];
+    if (Array.isArray(rawItems)) {
+      orderedIds = rawItems.map((item) => (typeof item === "string" ? item : (item?.id || item?._id))).filter(Boolean);
+    } else if (Array.isArray(req.body.orderedIds)) {
+      orderedIds = req.body.orderedIds.map((item) => (typeof item === "string" ? item : (item?.id || item?._id))).filter(Boolean);
+    }
 
     if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
       return res.status(400).json({
@@ -332,21 +346,30 @@ export async function reorderHeroSlides(req, res) {
     }
 
     const validIds = orderedIds.filter((id) => isValidId(id));
-    const totalSlides = (await listPostgresHeroSlides()).length;
-    if (
-      validIds.length !== orderedIds.length ||
-      new Set(validIds.map(String)).size !== validIds.length ||
-      validIds.length !== totalSlides
-    ) {
+    const allSlides = await listPostgresHeroSlides();
+    const totalSlides = allSlides.length;
+
+    if (validIds.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Reorder must contain every Hero slide exactly once.",
+        message: "No valid Hero slide IDs provided for reorder.",
         data: null
       });
     }
 
-    const existingCount = (await Promise.all(validIds.map((id) => getPostgresHeroSlide(id)))).filter(Boolean).length;
-    if (existingCount !== validIds.length) {
+    // Reconcile list: ensure all existing slides are accounted for
+    const orderedSet = new Set(validIds.map(String));
+    const reconciledIds = [...validIds];
+    for (const slide of allSlides) {
+      const sId = String(slide.id || slide._id);
+      if (!orderedSet.has(sId)) {
+        reconciledIds.push(sId);
+        orderedSet.add(sId);
+      }
+    }
+
+    const existingCount = (await Promise.all(reconciledIds.map((id) => getPostgresHeroSlide(id)))).filter(Boolean).length;
+    if (existingCount !== reconciledIds.length) {
       return res.status(404).json({
         success: false,
         message: "One or more Hero slides no longer exist.",
@@ -354,7 +377,7 @@ export async function reorderHeroSlides(req, res) {
       });
     }
 
-    await reorderPostgresHeroSlides(validIds);
+    await reorderPostgresHeroSlides(reconciledIds);
     await invalidateCmsCache("hero");
     await writeAudit(req, "HERO_SLIDE_REORDER", "bulk");
 

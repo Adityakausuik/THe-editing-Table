@@ -58,7 +58,9 @@ const ENTITY_CONFIG = {
     publishField: "isPublished",
     normalizePayload(payload = {}) {
       const next = { ...payload };
-      if (next.active !== undefined && next.isPublished === undefined) next.isPublished = Boolean(next.active);
+      if (next.active !== undefined) next.isPublished = Boolean(next.active);
+      if (next.featured !== undefined && next.isFeatured === undefined) next.isFeatured = Boolean(next.featured);
+      if (next.isFeatured !== undefined && next.featured === undefined) next.featured = Boolean(next.isFeatured);
       if (!next.image && next.coverImage) next.image = next.coverImage;
       if (!next.coverImage && next.image) next.coverImage = next.image;
       if (!next.slug && next.title) next.slug = slugify(next.title);
@@ -233,8 +235,13 @@ function normalizeDocForClient(doc, entityName) {
     item.active = item.isPublished !== false;
   }
   if (entityName === "PortfolioItem") {
-    item.active = item.isPublished !== false;
+    item.active = item.isPublished !== false && item.active !== false;
+    item.isPublished = item.active;
     item.coverImage = item.coverImage || item.image || "";
+    item.image = item.coverImage || item.image || "";
+    item.videoUrl = item.videoUrl || "";
+    item.isFeatured = Boolean(item.isFeatured || item.featured);
+    item.featured = item.isFeatured;
   }
   if (entityName === "BrandCollaboration") {
     item.active = item.published !== false;

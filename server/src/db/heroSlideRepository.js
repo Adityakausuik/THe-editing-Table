@@ -45,7 +45,7 @@ export function fromPostgresHeroSlide(row) {
 
 export async function listPublishedHeroSlides() {
   const result = await getPostgresPool().query(
-    'SELECT * FROM "heroslides" WHERE "active" = TRUE AND "status" = $1 ORDER BY "order" ASC, "created_at" ASC',
+    'SELECT * FROM "heroslides" WHERE ("active" = TRUE OR "active" IS NULL) AND ("status" = $1 OR "status" IS NULL OR "status" = \'\') ORDER BY "order" ASC, "created_at" ASC',
     ["published"]
   );
   return result.rows.map(fromPostgresHeroSlide);

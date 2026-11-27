@@ -1,9 +1,10 @@
-import { m } from "framer-motion";
-import { ArrowUpRight, Film, Play } from "lucide-react";
+import { AnimatePresence, m } from "framer-motion";
+import { ArrowUpRight, Film, Play, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import Container from "../components/ui/Container.jsx";
 import { mediaUrl } from "../lib/api.js";
 import { useCmsCollection } from "../lib/useCmsCollection.js";
+import { getYouTubeId } from "../utils/youtube.js";
 
 const DEFAULT_PORTFOLIO_ITEMS = [
   {
@@ -60,6 +61,7 @@ export default function PortfolioPage() {
   const { items: incomingItems, loading, error } = useCmsCollection("/api/v1/cms/portfolio", "portfolio");
   const items = Array.isArray(incomingItems) && incomingItems.length > 0 ? incomingItems : DEFAULT_PORTFOLIO_ITEMS;
   const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const categories = useMemo(
     () => ["All", ...new Set(items.map((item) => item.category).filter(Boolean))],
     [items]
@@ -113,7 +115,12 @@ export default function PortfolioPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: idx * 0.05 }}
-              className="group relative rounded-2xl overflow-hidden border border-sage-border/80 bg-white transition-all duration-300 hover:border-site/50 shadow-xs"
+              onClick={() => setSelectedVideo(item)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${item.title} showcase`}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVideo(item); }}
+              className="group relative rounded-2xl overflow-hidden border border-sage-border/80 bg-white transition-all duration-300 hover:border-site/50 shadow-xs cursor-pointer text-left"
             >
               <div className="relative aspect-[16/10] overflow-hidden bg-forest/10">
                 <img
@@ -147,6 +154,71 @@ export default function PortfolioPage() {
           ))}
         </div>
       </Container>
+
+      {/* Video Lightbox Modal */}
+      <AnimatePresence>
+        {selectedVideo && (
+          <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-forest/90 p-4 backdrop-blur-md"
+            onClick={() => setSelectedVideo(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedVideo.title} showcase`}
+          >
+            <div
+              className="relative max-w-4xl w-full rounded-3xl overflow-hidden border border-sage-light/40 bg-obsidian shadow-deep p-4 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedVideo(null)}
+                aria-label="Close showcase"
+                className="absolute top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-sage-light/40 bg-forest/60 text-white hover:bg-[rgb(72,125,72)] cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                {selectedVideo.videoUrl ? (
+                  getYouTubeId(selectedVideo.videoUrl) ? (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${getYouTubeId(selectedVideo.videoUrl)}?autoplay=1&playsinline=1`}
+                      title={selectedVideo.title || "Portfolio Video"}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : (
+                    <video
+                      src={mediaUrl(selectedVideo.videoUrl)}
+                      controls
+                      autoPlay
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-contain"
+                    />
+                  )
+                ) : (
+                  <img src={mediaUrl(selectedVideo.coverImage || selectedVideo.image)} alt="" className="h-full w-full object-cover filter brightness-75" />
+                )}
+              </div>
+
+              <div className="px-2 space-y-1 text-white">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#9dc07a]">
+                  {selectedVideo.category} Showcase
+                </span>
+                <h3 className="font-heading text-2xl text-white">{selectedVideo.title}</h3>
+                {selectedVideo.description && (
+                  <p className="text-xs text-white/70">{selectedVideo.description}</p>
+                )}
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
