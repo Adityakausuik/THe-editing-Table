@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 70" width="120" height="70">
+  <defs>
+    <clipPath id="canada-clip">
+      <path d="M 15 15 Q 40 5 70 8 Q 95 10 110 25 Q 105 45 90 58 Q 65 65 35 60 Q 10 50 15 15 Z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#canada-clip)">
+    <rect x="0" y="0" width="32" height="70" fill="#FF0000"/>
+    <rect x="32" y="0" width="56" height="70" fill="#FFFFFF"/>
+    <rect x="88" y="0" width="32" height="70" fill="#FF0000"/>
+    <!-- Maple Leaf -->
+    <path d="M 60 18 L 64 28 L 72 26 L 67 34 L 74 40 L 64 40 L 60 52 L 56 40 L 46 40 L 53 34 L 48 26 L 56 28 Z" fill="#FF0000"/>
+  </g>
+  <path d="M 15 15 Q 40 5 70 8 Q 95 10 110 25 Q 105 45 90 58 Q 65 65 35 60 Q 10 50 15 15 Z" fill="none" stroke="#5C4A3D" stroke-width="2"/>
+</svg>
