@@ -6,7 +6,6 @@ import ContactSection from "../components/landing/ContactSection.jsx";
 import GlobalReachSection from "../components/landing/GlobalReachSection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import ProcessSection from "../components/landing/ProcessSection.jsx";
-import ServicesSection from "../components/landing/ServicesSection.jsx";
 import StatsSection from "../components/landing/StatsSection.jsx";
 import TestimonialsSection from "../components/landing/TestimonialsSection.jsx";
 import WhyChooseUsSection from "../components/landing/WhyChooseUsSection.jsx";
@@ -24,7 +23,6 @@ export default function LandingPage() {
         >
           <HeroSection />
           <GlobalReachSection />
-          <ServicesSection />
           <BeforeAfterSection />
           <ProcessSection />
           <StatsSection />
