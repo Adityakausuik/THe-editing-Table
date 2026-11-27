@@ -192,10 +192,10 @@ export default function ColourShowcaseSection() {
           <AnimatePresence mode="wait">
             <m.div
               key={activeItem.id}
-              initial={{ opacity: 0, x: direction * 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction * -40 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="w-full"
             >
               <div
@@ -205,10 +205,10 @@ export default function ColourShowcaseSection() {
               >
                 {/* Editorial Overlapping Card */}
                 <div
-                  className={`w-full lg:w-[58%] z-20 rounded-2xl sm:rounded-3xl p-8 sm:p-12 lg:p-14 shadow-lg border border-[#F0E6DF] transition-all duration-500 text-center ${
+                  className={`w-full max-w-xl lg:max-w-none lg:w-[58%] z-20 rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-14 shadow-lg border border-[#F0E6DF] transition-all duration-500 text-center ${
                     activeItem.cardPosition === "left"
-                      ? "lg:-mr-16 text-center lg:text-left"
-                      : "lg:-ml-16 text-center lg:text-left"
+                      ? "lg:-mr-16 lg:text-left"
+                      : "lg:-ml-16 lg:text-left"
                   }`}
                   style={{ backgroundColor: activeItem.cardBg }}
                 >
@@ -239,18 +239,18 @@ export default function ColourShowcaseSection() {
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-[#78866A] block mb-2">
                       Engineered Color Palette
                     </span>
-                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3">
                       {activeItem.palette.map((swatch) => (
                         <div
                           key={swatch.name}
-                          className="flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 border border-[#263D2D]/10 shadow-2xs"
+                          className="flex items-center gap-1.5 rounded-full bg-white/75 px-3 py-1 border border-[#263D2D]/10 shadow-2xs"
                           title={`${swatch.name} (${swatch.hex})`}
                         >
                           <span
                             className="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0"
                             style={{ backgroundColor: swatch.hex }}
                           />
-                          <span className="text-[11px] font-medium text-[#263D2D]/80">{swatch.name}</span>
+                          <span className="text-[11px] font-medium text-[#263D2D]/90 whitespace-nowrap">{swatch.name}</span>
                         </div>
                       ))}
                     </div>
