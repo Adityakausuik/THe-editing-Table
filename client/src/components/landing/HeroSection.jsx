@@ -404,10 +404,15 @@ export default function HeroSection() {
     };
   }, [fetchActiveHeroVideo, fetchHeroSlides]);
 
-  // Adjust playback velocity
+  // Adjust playback velocity and guarantee autoplay
   useEffect(() => {
-    if (bgVideoRef.current && heroVideo?.playbackSpeed) {
-      bgVideoRef.current.playbackRate = heroVideo.playbackSpeed;
+    if (bgVideoRef.current) {
+      bgVideoRef.current.defaultMuted = true;
+      bgVideoRef.current.muted = true;
+      if (heroVideo?.playbackSpeed) {
+        bgVideoRef.current.playbackRate = heroVideo.playbackSpeed;
+      }
+      bgVideoRef.current.play().catch(() => {});
     }
   }, [heroVideo]);
 
@@ -441,13 +446,26 @@ export default function HeroSection() {
       <main className="hero">
         {/* Dynamic Media Background Layer (Slide Media or Global Hero Video) */}
         {activeSlideMedia ? (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none z-0"
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", overflow: "hidden" }}
+            aria-hidden="true"
+          >
             {isSlideVideo && !prefersReducedMotion() ? (
               <video
                 key={activeSlideMedia}
                 className="h-full w-full object-cover"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover"
+                }}
                 autoPlay
                 muted
+                defaultMuted
                 loop
                 playsInline
                 preload="auto"
@@ -459,18 +477,38 @@ export default function HeroSection() {
                 src={mediaUrl(activeSlideMedia)}
                 alt=""
                 className="h-full w-full object-cover"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover"
+                }}
               />
             )}
             {/* Adjustable Darkness Overlay */}
             <div
               className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
               style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 1)",
                 opacity: typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
               }}
             />
           </div>
         ) : heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) ? (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none z-0"
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", overflow: "hidden" }}
+            aria-hidden="true"
+          >
             {youtubeId && !prefersReducedMotion() ? (
               <div className="relative w-full h-full overflow-hidden pointer-events-none">
                 <iframe
@@ -493,12 +531,19 @@ export default function HeroSection() {
                 src={mediaUrl(heroVideo.videoUrl)}
                 className="h-full w-full object-cover"
                 style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
                   objectPosition: heroVideo.videoPosition || "center"
                 }}
-                autoPlay={heroVideo.playbackSettings?.autoplay ?? true}
-                muted={heroVideo.playbackSettings?.muted ?? true}
-                loop={heroVideo.playbackSettings?.loop ?? true}
-                playsInline={heroVideo.playbackSettings?.playsInline ?? true}
+                autoPlay
+                muted
+                defaultMuted
+                loop
+                playsInline
                 preload="auto"
                 poster={heroVideo.posterUrl ? mediaUrl(heroVideo.posterUrl) : undefined}
               >
@@ -512,7 +557,15 @@ export default function HeroSection() {
                 src={mediaUrl(heroVideo.posterUrl)}
                 alt=""
                 className="h-full w-full object-cover"
-                style={{ objectPosition: heroVideo.videoPosition || "center" }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: heroVideo.videoPosition || "center"
+                }}
               />
             ) : null}
 
@@ -520,7 +573,15 @@ export default function HeroSection() {
             <div
               className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
               style={{
-                opacity: typeof heroVideo.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 1)",
+                opacity: typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
               }}
             />
           </div>
