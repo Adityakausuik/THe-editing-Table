@@ -211,6 +211,7 @@ export default function ContactSection() {
                     <select
                       {...register("service", { required: "Select a service" })}
                       defaultValue=""
+                      style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}
                       className="w-full bg-transparent border-b border-[#283924]/35 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1B291A] transition-colors appearance-none cursor-pointer"
                     >
                       <option value="" disabled className="text-gray-500 bg-[#A4B397]">
@@ -238,6 +239,7 @@ export default function ContactSection() {
                     <select
                       {...register("budgetRange", { required: "Select budget range" })}
                       defaultValue=""
+                      style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}
                       className="w-full bg-transparent border-b border-[#283924]/35 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1B291A] transition-colors appearance-none cursor-pointer"
                     >
                       <option value="" disabled className="text-gray-500 bg-[#A4B397]">
@@ -265,7 +267,12 @@ export default function ContactSection() {
                     <input
                       {...register("deliveryDate")}
                       type="date"
-                      className="w-full bg-transparent border-b border-[#283924]/35 py-2 pr-7 text-sm sm:text-base text-[#152315] placeholder:italic outline-none focus:border-[#1B291A] transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        if (typeof e.target.showPicker === "function") {
+                          try { e.target.showPicker(); } catch {}
+                        }
+                      }}
+                      className="w-full bg-transparent border-b border-[#283924]/35 py-2 pr-7 text-sm sm:text-base text-[#152315] placeholder:italic outline-none focus:border-[#1B291A] transition-colors cursor-pointer [color-scheme:light]"
                     />
                     <Calendar className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 text-[#283924] pointer-events-none" />
                   </div>
