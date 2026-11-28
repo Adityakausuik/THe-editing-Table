@@ -2,10 +2,10 @@ import { useRef, useEffect } from "react";
 
 /**
  * InquiryVideoShowcase Component
- * Highly optimized, direct video display:
- * - No card boxes, no shadows, no white borders, no heavy SVG filters
- * - IntersectionObserver pauses video when off-screen to preserve 100% CPU/GPU resources
- * - Uses preload="metadata" and faststart stream for smooth 60fps/30fps playback on laptops
+ * - Blends seamlessly into the light-green plaster wall background via a soft feathered perimeter mask
+ * - Completely removes rectangular box borders, outlines, card backgrounds, and corner spacing
+ * - Fully responsive with zero horizontal overflow on mobile/tablet/desktop
+ * - Optimized with IntersectionObserver for smooth 60fps/30fps playback on laptops
  */
 export default function InquiryVideoShowcase() {
   const videoRef = useRef(null);
@@ -14,12 +14,10 @@ export default function InquiryVideoShowcase() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Guaranteed muted & playsInline for cross-browser silent autoplay
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
 
-    // IntersectionObserver to pause playback when out of view and resume when visible
     let observer;
     if (typeof IntersectionObserver !== "undefined") {
       observer = new IntersectionObserver(
@@ -31,7 +29,7 @@ export default function InquiryVideoShowcase() {
             video.pause();
           }
         },
-        { threshold: 0.2 }
+        { threshold: 0.15 }
       );
       observer.observe(video);
     } else {
@@ -44,12 +42,18 @@ export default function InquiryVideoShowcase() {
   }, []);
 
   return (
-    <div className="w-full h-full flex items-center justify-center lg:justify-end select-none">
+    <div className="w-full flex items-center justify-center lg:justify-end p-0 m-0 select-none">
       {/* 
-        Direct video presentation without boxed card containers,
-        shadows, or white borders, maintaining original aspect ratio.
+        Video Wrapper with soft perimeter mask to blend edges naturally into the wall.
+        No box, no card, no border, no shadow, no corner padding.
       */}
-      <div className="w-full max-w-[480px] lg:max-w-[500px] overflow-hidden rounded-md">
+      <div
+        className="relative w-full max-w-[560px] aspect-video flex items-center justify-center p-0 m-0 bg-transparent"
+        style={{
+          maskImage: "radial-gradient(ellipse 90% 86% at 50% 50%, black 60%, rgba(0, 0, 0, 0.7) 78%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 90% 86% at 50% 50%, black 60%, rgba(0, 0, 0, 0.7) 78%, transparent 100%)"
+        }}
+      >
         <video
           ref={videoRef}
           autoPlay
@@ -57,7 +61,7 @@ export default function InquiryVideoShowcase() {
           loop
           playsInline
           preload="metadata"
-          className="w-full h-auto object-cover object-center block"
+          className="w-full h-full object-cover object-center block bg-transparent"
         >
           <source src="/videos/inquiry-showcase.mp4" type="video/mp4" />
           <source src="/videos/inquiry-showcase.mov" type="video/quicktime" />
