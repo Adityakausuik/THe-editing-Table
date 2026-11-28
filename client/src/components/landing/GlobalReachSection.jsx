@@ -2,8 +2,56 @@ import { useEffect, useState, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { ArrowRight } from "lucide-react";
 import { apiFetch, subscribeToCmsChanges } from "../../lib/api.js";
 import Container from "../ui/Container.jsx";
+import GlobalPhotoCollage from "./GlobalPhotoCollage.jsx";
 const Interactive3DGlobe = lazy(() => import("./Interactive3DGlobe.jsx"));
 import { GLOBAL_LOCATIONS, GLOBAL_REACH_CONFIG } from "../../data/globalLocations.js";
+
+/**
+ * Clean SVG / Flag representations ensuring crisp rendering across all browsers.
+ */
+function CountryFlag({ code, country }) {
+  const normalized = (code || "").toLowerCase();
+
+  if (normalized === "ch") {
+    // Switzerland Flag
+    return (
+      <svg viewBox="0 0 32 32" className="w-full h-full" aria-hidden="true">
+        <rect width="32" height="32" fill="#D52B1E" />
+        <rect x="13" y="6" width="6" height="20" fill="#FFFFFF" rx="0.5" />
+        <rect x="6" y="13" width="20" height="6" fill="#FFFFFF" rx="0.5" />
+      </svg>
+    );
+  }
+
+  if (normalized === "ca") {
+    // Canada Flag
+    return (
+      <svg viewBox="0 0 32 32" className="w-full h-full" aria-hidden="true">
+        <rect width="32" height="32" fill="#D80027" />
+        <rect x="8" width="16" height="32" fill="#F0F0F0" />
+        {/* Stylized Maple Leaf */}
+        <path
+          d="M16 8l1.5 3.5 2.5-.8-1 3.3 2.5 1-1.8 1.8.8 3.2-3-.8-1.5 4-1.5-4-3 .8.8-3.2-1.8-1.8 2.5-1-1-3.3 2.5.8L16 8z"
+          fill="#D80027"
+        />
+      </svg>
+    );
+  }
+
+  // Use high-res flagcdn with fallback
+  return (
+    <img
+      src={`https://flagcdn.com/w80/${normalized}.png`}
+      srcSet={`https://flagcdn.com/w160/${normalized}.png 2x`}
+      alt={`${country} flag`}
+      loading="lazy"
+      className="h-full w-full object-cover"
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+    />
+  );
+}
 
 export default function GlobalReachSection() {
   const [cmsConfig, setCmsConfig] = useState(null);
@@ -35,7 +83,6 @@ export default function GlobalReachSection() {
         })
       : null;
 
-    // Listen to BroadcastChannel directly for instant cross-tab sync
     let channel;
     if (typeof BroadcastChannel === "function") {
       try {
@@ -74,17 +121,17 @@ export default function GlobalReachSection() {
     return raw.filter((l) => l.active !== false);
   }, [cmsConfig?.locations]);
 
-  // Featured 4 locations for public 2x2 grid
+  // Featured 4 locations for public hubs strip (matching reference design)
   const cardLocations = useMemo(() => {
     const featured = allLocations.filter((l) => l.featured);
     const chosen = featured.length >= 4 ? featured.slice(0, 4) : allLocations.slice(0, 4);
     return chosen.length > 0 ? chosen : GLOBAL_LOCATIONS.slice(0, 4);
   }, [allLocations]);
 
-  // Active location highlighted on globe
+  // Active location highlighted on globe & collage
   const activeLocation = cardLocations[selectedIndex % cardLocations.length] || cardLocations[0];
 
-  // Automatic sequential location rotation (every 5 seconds)
+  // Automatic sequential location & photo rotation (every 5 seconds)
   useEffect(() => {
     if (isPaused || cardLocations.length === 0) return;
 
@@ -95,7 +142,7 @@ export default function GlobalReachSection() {
     return () => clearInterval(interval);
   }, [isPaused, cardLocations.length]);
 
-  // Handle manual card click
+  // Handle manual location pill click
   const handleCardClick = (index) => {
     setSelectedIndex(index);
     setIsPaused(true);
@@ -127,54 +174,90 @@ export default function GlobalReachSection() {
     <section
       id="global-reach"
       aria-label="Global Reach and International Collaborations"
-      className="relative z-10 border-b border-[#E3ECE0]/80 bg-[#FAFBF8] py-10 sm:py-12 lg:py-14 overflow-hidden transition-colors duration-500 scroll-mt-20"
+      className="relative z-10 border-b border-[#D8D2C2]/80 bg-[#EFE9DC] py-12 sm:py-16 lg:py-20 overflow-hidden transition-colors duration-500 scroll-mt-20"
+      style={{
+        background: "radial-gradient(ellipse at 50% 25%, #F6F2E9 0%, #EFE8DC 55%, #E6DEC9 100%)"
+      }}
     >
-      <Container className="max-w-[1240px]">
-        {/* Responsive Balanced Layout: 2 Columns on Desktop/Laptop, Single Column on Mobile/Tablet */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 xl:gap-12 items-center">
-          {/* ================= LEFT COLUMN: Editorial Intro & Supporting Content ================= */}
-          <div className="lg:col-span-5 flex flex-col justify-center space-y-3 sm:space-y-4 max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
-            {/* Eyebrow Label with decorative accent lines */}
-            <div className="flex items-center justify-center lg:justify-start gap-2.5 sm:gap-3 select-none">
-              <span className="h-[1px] w-6 sm:w-8 bg-[#CBD6C5]" aria-hidden="true" />
-              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-[#78866A]">
-                {GLOBAL_REACH_CONFIG.eyebrowLabel}
-              </span>
-              <span className="h-[1px] w-6 sm:w-8 bg-[#CBD6C5] lg:hidden" aria-hidden="true" />
-            </div>
+      {/* ================= EDITORIAL PAPER TEXTURE & NOISE OVERLAY ================= */}
+      {/* 
+        Creates the warm paper grain and natural texture matching reference image.
+        Uses pure SVG filter turbulence for zero latency and crisp rendering.
+      */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.24] mix-blend-multiply select-none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <filter id="paper-grain-texture">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.88  0 0 0 0 0.84  0 0 0 0 0.78  0 0 0 0.65 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#paper-grain-texture)" />
+      </svg>
 
-            {/* Heading in Deep Forest Green (#263D2D) */}
-            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-[1.95rem] xl:text-[2.2rem] font-normal tracking-tight text-[#263D2D] leading-[1.2]">
-              {heading}
-            </h2>
+      {/* Subtle giant quotation mark watermark in top-right matching reference mockup */}
+      <div
+        className="absolute -right-4 sm:right-6 lg:right-12 top-4 lg:top-8 select-none pointer-events-none text-[150px] sm:text-[190px] lg:text-[240px] font-serif leading-none text-[#5A6D52]/[0.06] font-bold"
+        aria-hidden="true"
+      >
+        “
+      </div>
 
-            {/* Supporting Description in Soft Grey (#777D76) */}
-            <p className="text-xs sm:text-[13px] md:text-sm text-[#777D76] leading-relaxed max-w-lg mx-auto lg:mx-0">
-              {description}
-            </p>
-
-            {/* Supporting Meta / Key Pillars */}
-            <div className="pt-1 sm:pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-2.5">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#D5E0CF] bg-[#F2F7F0]/90 px-3 py-1 text-[11px] sm:text-xs font-medium text-[#263D2D]">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#487D48] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#487D48]" />
-                </span>
-                <span>Active Global Studios</span>
-              </div>
-              <span className="text-[11px] sm:text-xs text-[#78866A] hidden sm:inline">
-                Worldwide Remote Editorial Delivery
-              </span>
-            </div>
+      <Container className="relative z-10 max-w-[1240px]">
+        {/* ================= 1. CENTERED EDITORIAL HEADER ================= */}
+        {/* Matches reference mockup (media_1795855490278_a695d164.jpg) */}
+        <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-12 lg:mb-16 select-none">
+          {/* Eyebrow with horizontal accent lines */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 select-none mb-3">
+            <span className="h-[1px] w-8 sm:w-16 bg-[#8C9C84]/60" aria-hidden="true" />
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.25em] text-[#4E6347]">
+              {GLOBAL_REACH_CONFIG.eyebrowLabel}
+            </span>
+            <span className="h-[1px] w-8 sm:w-16 bg-[#8C9C84]/60" aria-hidden="true" />
           </div>
 
-          {/* ================= RIGHT COLUMN: 3D Globe & Location Cards ================= */}
-          <div className="lg:col-span-7 flex flex-col items-center justify-center space-y-3 sm:space-y-4 w-full">
-            {/* 3D Interactive Earth Globe */}
-            <div className="w-full flex items-center justify-center min-h-[220px] sm:min-h-[280px] lg:min-h-[380px]">
+          {/* Bold Serif Heading */}
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-normal tracking-tight text-[#1D2B1F] leading-[1.18] uppercase">
+            {heading}
+          </h2>
+
+          {/* Subtitle / Editorial description */}
+          <p className="mt-3.5 text-xs sm:text-sm md:text-[15px] text-[#5C6757] leading-relaxed max-w-2xl mx-auto">
+            {description}
+          </p>
+        </div>
+
+        {/* ================= 2. MAIN SHOWCASE: PHOTOS (LEFT) + GLOBE (RIGHT) ================= */}
+        {/* 
+          Balanced layout:
+          Desktop: 2 columns with generous clearance so photos and globe do not collide.
+          Mobile: Stacked vertically without breaking globe layout or interactions.
+        */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-10 xl:gap-14 items-center">
+          {/* LEFT: Photo Showcase Collage */}
+          <div className="lg:col-span-6 w-full flex flex-col items-center justify-center">
+            <GlobalPhotoCollage
+              activeLocation={activeLocation}
+              rotationIndex={selectedIndex}
+              isPaused={isPaused}
+              onPhotoClick={() => {
+                // Pause rotation when user inspects photos
+                setIsPaused(true);
+                if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
+                pauseTimerRef.current = setTimeout(() => {
+                  setIsPaused(false);
+                }, GLOBAL_REACH_CONFIG.userPauseDurationMs);
+              }}
+            />
+          </div>
+
+          {/* RIGHT: 3D Interactive Earth Globe (Preserved completely intact!) */}
+          <div className="lg:col-span-6 w-full flex flex-col items-center justify-center">
+            <div className="w-full flex items-center justify-center min-h-[280px] sm:min-h-[340px] lg:min-h-[420px]">
               <Suspense
                 fallback={
-                  <div className="h-[220px] sm:h-[280px] lg:h-[380px] w-full flex items-center justify-center">
+                  <div className="h-[280px] sm:h-[340px] lg:h-[420px] w-full flex items-center justify-center">
                     <div className="h-8 w-8 rounded-full border-2 border-[#CBD6C5] border-t-[#263D2D] animate-spin" />
                   </div>
                 }
@@ -187,88 +270,65 @@ export default function GlobalReachSection() {
                 />
               </Suspense>
             </div>
+          </div>
+        </div>
 
-            {/* Compact 2-Column Location Cards Grid */}
-            <div className="w-full max-w-[540px]">
-              <div className="flex items-center justify-between mb-1.5 px-1 select-none">
-                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78866A] flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#487D48]" />
-                  Hubs & Locations
-                </span>
-              </div>
+        {/* ================= 3. BOTTOM HUBS & LOCATIONS PILL STRIP ================= */}
+        {/* Matches reference mockup (media_1795855490278_a695d164.jpg) */}
+        <div className="mt-10 sm:mt-12 lg:mt-16 w-full">
+          <div className="flex items-center gap-2 mb-3 px-1 select-none">
+            <span className="h-2 w-2 rounded-full bg-[#466640] animate-pulse" />
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#4E6347]">
+              HUBS &amp; LOCATIONS
+            </span>
+          </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full">
-                {cardLocations.map((loc, idx) => {
-                  const isSelected = idx === (selectedIndex % cardLocations.length);
-                  const flagCode = (loc.countryCode || "").toLowerCase();
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 w-full">
+            {cardLocations.map((loc, idx) => {
+              const isSelected = idx === (selectedIndex % cardLocations.length);
 
-                  return (
-                    <button
-                      key={loc.id || `${loc.country}-${loc.city}-${idx}`}
-                      type="button"
-                      onClick={() => handleCardClick(idx)}
-                      aria-pressed={isSelected}
-                      className={`group relative flex items-center justify-between rounded-xl px-2.5 sm:px-3.5 py-2 sm:py-2.5 transition-all duration-200 text-left outline-none cursor-pointer border ${
+              return (
+                <button
+                  key={loc.id || `${loc.country}-${loc.city}-${idx}`}
+                  type="button"
+                  onClick={() => handleCardClick(idx)}
+                  aria-pressed={isSelected}
+                  className={`group relative flex items-center justify-between rounded-full px-3.5 sm:px-4 py-2 sm:py-2.5 transition-all duration-200 text-left outline-none cursor-pointer border ${
+                    isSelected
+                      ? "bg-[#D6E2D1] border-[#4F6C47] shadow-[0_3px_12px_rgba(40,65,35,0.12)] scale-[1.01]"
+                      : "bg-[#F7F4EC]/90 border-[#DCD4C2] hover:border-[#839F77] hover:bg-white shadow-2xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    {/* Flag representation */}
+                    <span className="relative flex h-5 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[#C8C0AF] bg-[#EFECE4] shadow-xs">
+                      <CountryFlag code={loc.countryCode} country={loc.country} />
+                    </span>
+
+                    {/* Country & City Name */}
+                    <div className="min-w-0">
+                      <p className="font-heading text-xs sm:text-[13px] font-medium text-[#1E2E22] leading-tight truncate">
+                        {loc.country}
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4E6347] leading-tight truncate mt-0.5">
+                        {loc.city}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Arrow Icon */}
+                  <div className="shrink-0 pl-1.5">
+                    <ArrowRight
+                      className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-200 ${
                         isSelected
-                          ? "bg-[#E6EFE2] border-[#5E8252] shadow-[0_2px_10px_rgba(40,65,35,0.08)] scale-[1.01]"
-                          : "bg-white/95 border-[#E3ECE0] hover:border-[#8BAF79] hover:bg-white shadow-2xs"
+                          ? "text-[#1E2E22] translate-x-0.5"
+                          : "text-[#788870] group-hover:text-[#1E2E22] group-hover:translate-x-0.5"
                       }`}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                        {/* Flag Image with Emoji Fallback */}
-                        <span className="relative flex h-4 sm:h-5 w-6 sm:w-7 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[#D5E0CF] bg-[#F2F7F0]">
-                          {loc.flagUrl ? (
-                            <img
-                              src={loc.flagUrl}
-                              alt={`${loc.country} flag`}
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : flagCode ? (
-                            <img
-                              src={`https://flagcdn.com/w80/${flagCode}.png`}
-                              srcSet={`https://flagcdn.com/w160/${flagCode}.png 2x`}
-                              alt={`${loc.country} flag`}
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                                const fallback = e.currentTarget.parentElement?.querySelector(".fallback-flag");
-                                if (fallback) fallback.style.display = "inline";
-                              }}
-                            />
-                          ) : null}
-                          <span className="fallback-flag text-xs leading-none" aria-hidden="true">
-                            {loc.flag || "🌐"}
-                          </span>
-                        </span>
-
-                        {/* Country & City Name */}
-                        <div className="min-w-0">
-                          <p className="font-heading text-xs sm:text-[13px] font-medium text-[#263D2D] leading-tight truncate">
-                            {loc.country}
-                          </p>
-                          <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.12em] text-[#526B55] leading-tight truncate mt-0.5">
-                            {loc.city}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Right Arrow Icon */}
-                      <div className="shrink-0 pl-1">
-                        <ArrowRight
-                          className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-200 ${
-                            isSelected
-                              ? "text-[#263D2D] translate-x-0.5"
-                              : "text-[#78866A] group-hover:text-[#263D2D] group-hover:translate-x-0.5"
-                          }`}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                    />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </Container>
