@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { apiFetch, mediaUrl, subscribeToCmsChanges } from "../../lib/api.js";
 import { getYouTubeId } from "../../utils/youtube.js";
 import { isVideoMedia, isImageMedia } from "../../utils/mediaUtils.js";
+import HeroSectionVideo from "./HeroSectionVideo.jsx";
 
 /**
  * The Editing Table – Dynamic Multi-Slide Editorial Hero Section.
@@ -435,7 +436,7 @@ export default function HeroSection() {
   const activeSlideMedia = activeSlide?.mainImage || "";
   const isSlideVideo = isVideoMedia(activeSlideMedia);
   const isSlideImage = Boolean(activeSlideMedia && !isSlideVideo);
-  const hasMediaBackground = Boolean(activeSlideMedia || heroVideo?.videoUrl || heroVideo?.posterUrl);
+  const hasMediaBackground = true;
 
   return (
     <div
@@ -444,148 +445,10 @@ export default function HeroSection() {
     >
       <style>{CSS}</style>
       <main className="hero">
-        {/* Dynamic Media Background Layer (Slide Media or Global Hero Video) */}
-        {activeSlideMedia ? (
-          <div
-            className="absolute inset-0 overflow-hidden pointer-events-none z-0"
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", overflow: "hidden" }}
-            aria-hidden="true"
-          >
-            {isSlideVideo && !prefersReducedMotion() ? (
-              <video
-                key={activeSlideMedia}
-                className="h-full w-full object-cover"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover"
-                }}
-                autoPlay
-                muted
-                defaultMuted
-                loop
-                playsInline
-                preload="auto"
-                src={mediaUrl(activeSlideMedia)}
-              />
-            ) : (
-              <img
-                key={activeSlideMedia}
-                src={mediaUrl(activeSlideMedia)}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover"
-                }}
-              />
-            )}
-            {/* Adjustable Darkness Overlay */}
-            <div
-              className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 1)",
-                opacity: typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
-              }}
-            />
-          </div>
-        ) : heroVideo && (heroVideo.videoUrl || heroVideo.posterUrl) ? (
-          <div
-            className="absolute inset-0 overflow-hidden pointer-events-none z-0"
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", overflow: "hidden" }}
-            aria-hidden="true"
-          >
-            {youtubeId && !prefersReducedMotion() ? (
-              <div className="relative w-full h-full overflow-hidden pointer-events-none">
-                <iframe
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none border-0"
-                  style={{
-                    width: "100vw",
-                    height: "56.25vw",
-                    minWidth: "177.78vh",
-                    minHeight: "100vh"
-                  }}
-                  src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1`}
-                  title="Hero Background Video"
-                  allow="autoplay; encrypted-media"
-                />
-              </div>
-            ) : heroVideo.videoUrl && !prefersReducedMotion() ? (
-              <video
-                key={heroVideo.videoUrl}
-                ref={bgVideoRef}
-                src={mediaUrl(heroVideo.videoUrl)}
-                className="h-full w-full object-cover"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: heroVideo.videoPosition || "center"
-                }}
-                autoPlay
-                muted
-                defaultMuted
-                loop
-                playsInline
-                preload="auto"
-                poster={heroVideo.posterUrl ? mediaUrl(heroVideo.posterUrl) : undefined}
-              >
-                {heroVideo.mobileVideoUrl && (
-                  <source src={mediaUrl(heroVideo.mobileVideoUrl)} media="(max-width: 768px)" type="video/mp4" />
-                )}
-                <source src={mediaUrl(heroVideo.videoUrl)} type={heroVideo.videoType || "video/mp4"} />
-              </video>
-            ) : heroVideo.posterUrl ? (
-              <img
-                src={mediaUrl(heroVideo.posterUrl)}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: heroVideo.videoPosition || "center"
-                }}
-              />
-            ) : null}
-
-            {/* Adjustable Darkness Overlay */}
-            <div
-              className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 1)",
-                opacity: typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42
-              }}
-            />
-          </div>
-        ) : null}
+        {/* Continuous Sequential Local Background Videos (IMG_2952.MOV -> IMG_2953.MP4 -> Loop) */}
+        <HeroSectionVideo
+          overlayOpacity={typeof heroVideo?.overlayOpacity === "number" ? heroVideo.overlayOpacity : 0.42}
+        />
 
         {/* Dynamic Multi-Slide Carousel or Minimal Editorial Fallback */}
         {activeSlide ? (
