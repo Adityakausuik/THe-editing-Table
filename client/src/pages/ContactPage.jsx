@@ -171,7 +171,7 @@ export default function ContactPage() {
       </section>
 
       {/* Main Form & Info Section */}
-      <section className="py-14 sm:py-16">
+      <section id="inquiry-form" className="py-14 sm:py-16 scroll-mt-24">
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.3fr]">
           {/* Contact Information */}
           <div className="space-y-6">
