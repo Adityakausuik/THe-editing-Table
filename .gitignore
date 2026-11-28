@@ -40,3 +40,5 @@ Thumbs.db
 animation1.mp4
 *.mp4
 !client/public/hero-section-video/*
+
+!client/public/videos/*
