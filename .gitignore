@@ -39,3 +39,4 @@ Thumbs.db
 *.example
 animation1.mp4
 *.mp4
+!client/public/hero-section-video/*
