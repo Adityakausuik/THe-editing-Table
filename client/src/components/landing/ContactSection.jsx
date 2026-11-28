@@ -100,22 +100,15 @@ export default function ContactSection() {
 
       {/* 3. Centered Luxury Editorial Content */}
       <Container className="relative z-10 max-w-5xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center">
-        {/* Small Handwritten Heading */}
-        <span className="font-lavishly text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] text-[#F4F1EA]/95 font-normal lowercase tracking-wide mb-2 sm:mb-3 drop-shadow-sm">
+        {/* Handwritten Script Heading */}
+        <h2 className="font-lavishly text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5rem] text-[#FAF7F2] font-normal lowercase tracking-wide mb-6 sm:mb-8 drop-shadow-md select-none">
           get in touch
-        </span>
-
-        {/* Main Heading */}
-        <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.75rem] text-[#FAF7F2] font-normal uppercase tracking-[0.04em] sm:tracking-[0.06em] leading-[1.14] sm:leading-[1.12] drop-shadow-md">
-          LET’S CAPTURE THE<br />
-          MAGIC OF YOUR<br />
-          SPECIAL DAY
         </h2>
 
         {/* CTA Button */}
         <Link
           to="/contactus"
-          className="mt-8 sm:mt-11 inline-flex items-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full border border-[#FAF7F2]/60 hover:border-[#FAF7F2] bg-[#FAF7F2]/10 hover:bg-[#FAF7F2]/25 text-[#FAF7F2] text-xs sm:text-sm font-semibold uppercase tracking-[0.18em] backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer"
+          className="inline-flex items-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full border border-[#FAF7F2]/60 hover:border-[#FAF7F2] bg-[#FAF7F2]/10 hover:bg-[#FAF7F2]/25 text-[#FAF7F2] text-xs sm:text-sm font-semibold uppercase tracking-[0.18em] backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer"
           aria-label="Inquire Now for your special day"
         >
           <span>INQUIRE NOW</span>
