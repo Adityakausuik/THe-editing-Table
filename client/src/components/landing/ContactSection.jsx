@@ -96,8 +96,9 @@ export default function ContactSection() {
       className="relative z-10 py-16 sm:py-20 lg:py-24 overflow-hidden scroll-mt-20 border-t border-[#8B9D82]/40"
       style={{
         backgroundImage: "url('/inquiry-wall-texture.jpg')",
-        backgroundRepeat: "repeat",
-        backgroundSize: "440px auto",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         backgroundColor: "#DCE7D4"
       }}
     >
@@ -183,8 +184,13 @@ export default function ContactSection() {
                     <select
                       {...register("service", { required: "Select a service" })}
                       defaultValue=""
-                      style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}
-                      className="w-full bg-transparent border-b border-[#2C3E27]/40 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1D2E1B] transition-colors cursor-pointer"
+                      style={{
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        MozAppearance: "none",
+                        backgroundImage: "none"
+                      }}
+                      className="w-full bg-transparent border-b border-[#2C3E27]/40 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1D2E1B] transition-colors cursor-pointer bg-none !bg-none"
                     >
                       <option value="" disabled className="text-gray-500 bg-[#DCE7D4]">
                         Select Service
@@ -211,8 +217,13 @@ export default function ContactSection() {
                     <select
                       {...register("budgetRange", { required: "Select budget range" })}
                       defaultValue=""
-                      style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}
-                      className="w-full bg-transparent border-b border-[#2C3E27]/40 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1D2E1B] transition-colors cursor-pointer"
+                      style={{
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        MozAppearance: "none",
+                        backgroundImage: "none"
+                      }}
+                      className="w-full bg-transparent border-b border-[#2C3E27]/40 py-2 pr-7 text-sm sm:text-base text-[#152315] outline-none focus:border-[#1D2E1B] transition-colors cursor-pointer bg-none !bg-none"
                     >
                       <option value="" disabled className="text-gray-500 bg-[#DCE7D4]">
                         Select Scope Budget
